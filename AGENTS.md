@@ -28,5 +28,5 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 # Code Style Guidelines
 - **Simplicity & Conciseness**: Write simple, straightforward, and minimal code. Avoid over-engineering or complex boilerplate.
+- **JavaScript Only**: Do not use too much TypeScript, types, or interfaces; write simple and clean code Just use a normal simple syntax.
 - **No Comments in Code**: Do not write comments inside the code files.
-
