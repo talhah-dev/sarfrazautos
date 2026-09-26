@@ -117,7 +117,7 @@ export function CartSection({ className = "" }: { className?: string }) {
                 <p className="text-neutral-500 text-sm">Your shopping cart is empty.</p>
                 <Link
                   href="/retail"
-                  className="inline-flex items-center justify-center mt-4 px-5 py-2.5 rounded-lg bg-neutral-950 text-white text-xs font-medium hover:bg-neutral-800 transition-colors"
+                  className="inline-flex items-center justify-center mt-4 px-5 py-2.5 rounded-lg bg-[#e7000b] text-white text-xs font-medium hover:bg-red-500 transition-colors"
                 >
                   Explore Products
                 </Link>
