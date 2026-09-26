@@ -63,9 +63,9 @@ export interface NavbarProps {
 
 const defaultNavigation: NavLinkItem[] = [
   { title: "Home", href: "/", isActive: true },
-  { title: "Wholesale Portal", href: "/login", isActive: false },
-  { title: "Register Shop", href: "/signup", isActive: false },
-  { title: "Admin Portal", href: "/admin/login", isActive: false },
+  { title: "Retail Shop", href: "/retail", isActive: false },
+  { title: "Wholesale", href: "/wholesale", isActive: false },
+  { title: "Contact Us", href: "/contact", isActive: false },
 ];
 
 export function Navbar({ navigationData = defaultNavigation }: NavbarProps) {
@@ -103,8 +103,8 @@ export function Navbar({ navigationData = defaultNavigation }: NavbarProps) {
         )}
       >
         <a href="/" className="flex items-center gap-2">
-          <span className="text-xl sm:text-2xl font-black tracking-tight text-white uppercase">
-            Sarfraz<span className="text-red-600">.</span>Autos
+          <span className="text-xl sm:text-2xl font-medium tracking-tight text-white uppercase">
+            Sarfraz Autos
           </span>
         </a>
         <div>
