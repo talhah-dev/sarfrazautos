@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
+import { usePathname } from "next/navigation";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -59,20 +60,32 @@ function NavLink({ item }: NavLinkProps) {
 
 export interface NavbarProps {
   navigationData?: NavLinkItem[];
+  className?: string;
 }
 
 const defaultNavigation: NavLinkItem[] = [
-  { title: "Home", href: "/", isActive: true },
-  { title: "Retail Shop", href: "/retail", isActive: false },
-  { title: "Wholesale", href: "/wholesale", isActive: false },
-  { title: "Contact Us", href: "/contact", isActive: false },
+  { title: "Home", href: "/" },
+  { title: "Retail Shop", href: "/retail" },
+  { title: "Wholesale", href: "/wholesale" },
+  { title: "Contact Us", href: "/contact" },
 ];
 
-export function Navbar({ navigationData = defaultNavigation }: NavbarProps) {
+export function Navbar({ navigationData = defaultNavigation, className }: NavbarProps) {
+  const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
   const [sticky, setSticky] = useState(false);
   const headerRef = useRef<HTMLElement>(null);
   const isInView = useInView(headerRef, { once: true, amount: 0.1 });
+
+  const navItems = navigationData.map((item) => ({
+    ...item,
+    isActive:
+      item.isActive !== undefined && navigationData !== defaultNavigation
+        ? item.isActive
+        : item.href === "/"
+        ? pathname === "/" || pathname === "/home"
+        : pathname.startsWith(item.href),
+  }));
 
   const handleScroll = () => {
     setSticky(window.scrollY >= 80);
@@ -91,7 +104,8 @@ export function Navbar({ navigationData = defaultNavigation }: NavbarProps) {
       className={cn(
         "sticky top-0 z-50 w-full border-t-4 border-red-600 transition-all duration-500 ease-in-out h-20 flex items-center",
         "before:content-[''] before:absolute before:top-0 before:left-0 before:w-full before:h-0 before:bg-red-600 before:transition-all before:duration-500 before:ease-in-out",
-        sticky && "before:h-full"
+        sticky && "before:h-full",
+        className
       )}
     >
       <motion.nav
@@ -140,7 +154,7 @@ export function Navbar({ navigationData = defaultNavigation }: NavbarProps) {
                 </div>
                 <hr className="border-border" />
                 <ul className="flex flex-col gap-4 pb-4">
-                  {navigationData.map((menuItem, index) => (
+                  {navItems.map((menuItem, index) => (
                     <NavLink key={index} item={menuItem} />
                   ))}
                 </ul>

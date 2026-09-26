@@ -203,7 +203,7 @@ export function BranchesCards({
                         href={`https://maps.google.com/?q=${branch.mapQuery}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="mt-2 inline-flex items-center justify-center gap-1.5 w-full py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-semibold tracking-wide transition-colors"
+                        className="mt-2 inline-flex items-center justify-center gap-1.5 w-full py-2.5 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-semibold tracking-wide transition-colors"
                       >
                         Open In Google Maps
                         <ArrowUpRight className="size-3.5" />
