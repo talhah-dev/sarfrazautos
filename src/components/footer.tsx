@@ -30,7 +30,7 @@ export function Footer({ className = "" }: FooterProps) {
                   Sarfraz Autos
                 </span>
               </Link>
-              <p className="text-sm text-zinc-300 mt-3 max-w-sm leading-relaxed">
+              <p className="  text-zinc-300 mt-3 max-w-sm leading-relaxed">
                 Pakistan&apos;s leading distributor of genuine 70cc, 125cc, and 150cc motorcycle spare parts, engine assemblies, and bulk wholesale master cartons.
               </p>
             </div>
@@ -62,27 +62,27 @@ export function Footer({ className = "" }: FooterProps) {
 
           <div className="flex flex-wrap sm:flex-nowrap gap-12 sm:gap-20 md:gap-28">
             <div>
-              <h3 className="text-sm font-semibold text-white tracking-wider uppercase mb-4">
+              <h3 className="font-semibold text-lg text-white tracking-wider uppercase mb-4">
                 Platform
               </h3>
-              <ul className="space-y-3 text-sm">
+              <ul className="space-y-3 ">
                 <li>
-                  <Link href="/" className="text-zinc-400 hover:text-white transition-colors">
+                  <Link href="/" className="text-zinc-300 hover:text-white transition-colors">
                     About us
                   </Link>
                 </li>
                 <li>
-                  <Link href="#retail" className="text-zinc-400 hover:text-white transition-colors">
+                  <Link href="#retail" className="text-zinc-300 hover:text-white transition-colors">
                     Retail Shop
                   </Link>
                 </li>
                 <li>
-                  <Link href="#wholesale" className="text-zinc-400 hover:text-white transition-colors">
+                  <Link href="#wholesale" className="text-zinc-300 hover:text-white transition-colors">
                     Wholesale
                   </Link>
                 </li>
                 <li>
-                  <Link href="/login" className="text-zinc-400 hover:text-white transition-colors">
+                  <Link href="/login" className="text-zinc-300 hover:text-white transition-colors">
                     Contact us
                   </Link>
                 </li>
@@ -90,17 +90,17 @@ export function Footer({ className = "" }: FooterProps) {
             </div>
 
             <div>
-              <h3 className="text-sm font-semibold text-white tracking-wider uppercase mb-4">
+              <h3 className="font-semibold text-lg text-white tracking-wider uppercase mb-4">
                 Contact Information
               </h3>
-              <ul className="space-y-3 text-sm">
+              <ul className="space-y-3 ">
                 <li>
-                  <Link href="tel:+923001234567" className="text-zinc-400 hover:text-white transition-colors">
+                  <Link href="tel:+923001234567" className="text-zinc-300 hover:text-white transition-colors">
                     +92 300 1234567
                   </Link>
                 </li>
                 <li>
-                  <Link href="mailto:info@Sarfrazauto.com" className="text-zinc-400 hover:text-white transition-colors">
+                  <Link href="mailto:info@Sarfrazauto.com" className="text-zinc-300 hover:text-white transition-colors">
                     info@Sarfrazauto.com
                   </Link>
                 </li>
