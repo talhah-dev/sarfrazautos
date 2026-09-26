@@ -10,6 +10,7 @@ import {
 import { Equal, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion, useInView, AnimatePresence } from "motion/react";
+import CartBadge from "@/components/cart-badge";
 
 export type NavLinkItem = {
   title: string;
@@ -121,7 +122,8 @@ export function Navbar({ navigationData = defaultNavigation, className }: Navbar
             Sarfraz Autos
           </span>
         </a>
-        <div>
+        <div className="flex items-center gap-2.5 sm:gap-3">
+          <CartBadge />
           <AnimatePresence>
             {menuOpen && (
               <motion.div

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { Check, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -192,7 +193,10 @@ export function WholesaleCatalog({
               const isAdded = !!addedItems[product.id];
               return (
                 <div key={product.id} className="group flex flex-col">
-                  <div className="relative aspect-square w-full rounded-2xl bg-[#f4f4f5] overflow-hidden p-6 flex items-center justify-center transition-all duration-300 group-hover:bg-[#ebebee]">
+                  <Link
+                    href="/wholesale-product-overview"
+                    className="relative aspect-square w-full rounded-2xl bg-[#f4f4f5] overflow-hidden p-6 flex items-center justify-center transition-all duration-300 group-hover:bg-[#ebebee]"
+                  >
                     {product.badge && (
                       <span className="absolute top-3.5 left-3.5 text-xs font-semibold px-2.5 py-0.5 rounded-full z-10 bg-red-100 text-red-600">
                         {product.badge}
@@ -203,11 +207,11 @@ export function WholesaleCatalog({
                       alt={product.name}
                       className="w-full h-full object-contain drop-shadow-sm transition-transform duration-300 group-hover:scale-105"
                     />
-                  </div>
+                  </Link>
 
                   <div className="flex items-center justify-between gap-3 mt-3.5">
-                    <div className="min-w-0 flex-1">
-                      <h3 className="font-medium text-neutral-900 text-sm md:text-base leading-snug line-clamp-2">
+                    <Link href="/wholesale-product-overview" className="min-w-0 flex-1 group/title">
+                      <h3 className="font-medium text-neutral-900 group-hover/title:text-red-600 transition-colors text-sm md:text-base leading-snug line-clamp-2">
                         {product.name}
                       </h3>
                       <div className="flex items-center gap-2 mt-0.5">
@@ -215,7 +219,7 @@ export function WholesaleCatalog({
                           {product.price}
                         </p>
                       </div>
-                    </div>
+                    </Link>
 
                     <button
                       type="button"
