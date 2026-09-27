@@ -72,17 +72,22 @@ export function Footer({ className = "" }: FooterProps) {
                   </Link>
                 </li>
                 <li>
-                  <Link href="#retail" className="text-zinc-300 hover:text-white transition-colors">
+                  <Link href="/retail" className="text-zinc-300 hover:text-white transition-colors">
                     Retail Shop
                   </Link>
                 </li>
                 <li>
-                  <Link href="#wholesale" className="text-zinc-300 hover:text-white transition-colors">
+                  <Link href="/wholesale" className="text-zinc-300 hover:text-white transition-colors">
                     Wholesale
                   </Link>
                 </li>
                 <li>
-                  <Link href="/login" className="text-zinc-300 hover:text-white transition-colors">
+                  <Link href="/wishlist" className="text-zinc-300 hover:text-white transition-colors">
+                    My Wishlist
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/contact" className="text-zinc-300 hover:text-white transition-colors">
                     Contact us
                   </Link>
                 </li>
@@ -95,14 +100,14 @@ export function Footer({ className = "" }: FooterProps) {
               </h3>
               <ul className="space-y-3 ">
                 <li>
-                  <Link href="tel:+923001234567" className="text-zinc-300 hover:text-white transition-colors">
-                    +92 300 1234567
-                  </Link>
+                  <a href="tel:+923331285556" className="text-zinc-300 hover:text-white transition-colors">
+                    +92 333 1285556
+                  </a>
                 </li>
                 <li>
-                  <Link href="mailto:info@Sarfrazauto.com" className="text-zinc-300 hover:text-white transition-colors">
+                  <a href="mailto:info@Sarfrazauto.com" className="text-zinc-300 hover:text-white transition-colors">
                     info@Sarfrazauto.com
-                  </Link>
+                  </a>
                 </li>
               </ul>
             </div>

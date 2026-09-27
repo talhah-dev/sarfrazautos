@@ -17,6 +17,11 @@ const geistMono = Geist_Mono({
 export const metadata = {
   title: "Sarfraz Autos | Crown Motorcycle Parts & Wholesale Distributor",
   description: "Official distributor and wholesale supplier of genuine Crown motorcycle spare parts in Karachi, Pakistan. Bulk orders, retail shop, and reliable delivery.",
+  icons: {
+    icon: "/icon.png",
+    shortcut: "/icon.png",
+    apple: "/icon.png",
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

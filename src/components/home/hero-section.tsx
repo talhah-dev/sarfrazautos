@@ -21,12 +21,12 @@ export function HeroSection() {
         playsInline
       >
         <source
-          src="https://images.shadcnspace.com/assets/video/hero05-banner-video.mp4"
+          src="https://www.pexels.com/download/video/4281236/"
           type="video/mp4"
         />
       </video>
 
-      <div className="absolute inset-0 bg-black/50"></div>
+      <div className="absolute inset-0 bg-black/60"></div>
 
       <div className="relative z-10 mx-auto max-w-7xl px-4 xl:px-16">
         <div className="flex flex-col gap-4 sm:gap-6 py-10 sm:py-16">

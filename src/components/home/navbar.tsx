@@ -11,6 +11,7 @@ import { Equal, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion, useInView, AnimatePresence } from "motion/react";
 import CartBadge from "@/components/cart-badge";
+import Link from "next/link";
 
 export type NavLinkItem = {
   title: string;
@@ -49,12 +50,12 @@ function NavLink({ item }: NavLinkProps) {
           className="animate-spin object-contain"
         />
       </div>
-      <a
+      <Link
         href={href}
         className="text-foreground text-2xl sm:text-4xl sm:leading-10 leading-8 font-semibold"
       >
         {title}
-      </a>
+      </Link>
     </li>
   );
 }
@@ -117,11 +118,11 @@ export function Navbar({ navigationData = defaultNavigation, className }: Navbar
           "relative mx-auto max-w-7xl px-4 xl:px-16 flex item-center justify-between w-full"
         )}
       >
-        <a href="/" className="flex items-center gap-2">
+        <Link href="/" className="flex items-center gap-2">
           <span className="text-xl sm:text-2xl font-medium tracking-tight text-white uppercase">
             Sarfraz Autos
           </span>
-        </a>
+        </Link>
         <div className="flex items-center gap-2.5 sm:gap-3">
           <CartBadge />
           <AnimatePresence>
@@ -161,12 +162,12 @@ export function Navbar({ navigationData = defaultNavigation, className }: Navbar
                   ))}
                 </ul>
                 <div className="flex flex-col">
-                  <a
+                  <Link
                     href="tel:03331285556"
                     className="text-lg font-normal leading-7 text-muted-foreground w-fit hover:text-primary"
                   >
                     0333-1285556
-                  </a>
+                  </Link>
                   <span className="text-sm font-medium text-muted-foreground">
                     Shop#23 Taj Mehal Qasim Auto MKT, Karachi
                   </span>
