@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls, ContactShadows } from "@react-three/drei";
 import { BikeModel } from "./BikeModel";
@@ -20,11 +20,31 @@ function LoaderFallback() {
 }
 
 export default function HeroScene3D() {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [isVisible, setIsVisible] = useState(true);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsVisible(entry.isIntersecting);
+      },
+      { rootMargin: "150px" }
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
   return (
-    <div className="absolute inset-0 w-full h-full pointer-events-auto">
+    <div ref={containerRef} className="absolute inset-0 w-full h-full pointer-events-auto">
       <Suspense fallback={<LoaderFallback />}>
         <Canvas
           shadows
+          frameloop={isVisible ? "always" : "never"}
+          dpr={[1, 1.5]}
           camera={{ position: [4.2, 0.4, 0.9], fov: 30 }}
           gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}
           className="w-full h-full cursor-grab active:cursor-grabbing"
@@ -75,6 +95,7 @@ export default function HeroScene3D() {
             scale={7}
             blur={1.6}
             far={3}
+            frames={1}
           />
         </Canvas>
       </Suspense>
