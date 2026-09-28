@@ -40,11 +40,11 @@ export function HeroStatsCard() {
 
   return (
     <div
-      className="relative overflow-hidden rounded-[28px] border border-white/15 p-5 sm:p-6 w-[275px] sm:w-[305px] text-white backdrop-blur-xl shadow-[0_20px_50px_rgba(0,0,0,0.7)] transition-all duration-300"
       style={{
         background:
           "radial-gradient(circle at 18% 12%, rgba(220, 38, 38, 0.88) 0%, rgba(153, 27, 27, 0.45) 45%, rgba(12, 12, 12, 0.95) 85%)",
       }}
+      className="relative overflow-hidden rounded-[28px] border border-white/15 p-5 sm:p-6 w-[275px] sm:w-[305px] text-white backdrop-blur-xl shadow-[0_20px_50px_rgba(0,0,0,0.7)] transition-all duration-300"
     >
       <div className="flex items-center justify-between gap-2">
         <span className="text-base sm:text-lg font-bold tracking-tight text-white">
@@ -54,7 +54,7 @@ export function HeroStatsCard() {
         <div className="flex items-center gap-1.5 shrink-0">
           <button
             onClick={() => setActiveTab((prev) => (prev + 1) % TABS.length)}
-            className="px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full border border-white/20 bg-white/10 hover:bg-white/20 backdrop-blur-md text-[11px] sm:text-xs font-normal text-white flex items-center gap-1 transition-colors shrink-0"
+            className="px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full border border-white/20 bg-white/10 hover:bg-white/20 backdrop-blur-md text-[11px] sm:text-xs font-normal text-white flex items-center gap-1 transition-colors shrink-0 cursor-pointer"
           >
             <span>{current.badge}</span>
             <ChevronDown className="w-3 h-3 text-white/80 shrink-0" />
@@ -94,7 +94,7 @@ export function HeroStatsCard() {
             <button
               key={tab.category}
               onClick={() => setActiveTab(idx)}
-              className={`h-1 flex-1 rounded-full transition-all duration-300 ${
+              className={`h-1 flex-1 rounded-full transition-all duration-300 cursor-pointer ${
                 isSelected ? "bg-white" : "bg-white/25 hover:bg-white/40"
               }`}
             />
@@ -104,3 +104,5 @@ export function HeroStatsCard() {
     </div>
   );
 }
+
+export default HeroStatsCard;

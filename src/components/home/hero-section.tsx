@@ -29,7 +29,12 @@ export function HeroSection() {
 
       <div className="relative z-20 mx-auto max-w-7xl px-4 xl:px-16 w-full pointer-events-none">
         <div className="flex flex-col gap-4 sm:gap-6 py-10 sm:py-16">
-          <div className="flex items-start gap-2.5 md:gap-4 pointer-events-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 16 }}
+            transition={{ duration: 0.6, delay: 1.95, ease: "easeOut" }}
+            className="flex items-start gap-2.5 md:gap-4 pointer-events-auto"
+          >
             <div className="w-10 h-10 sm:w-12 sm:h-12 shrink-0">
               <motion.img
                 src="/wheel-rim.png"
@@ -45,26 +50,44 @@ export function HeroSection() {
               Supplying <span className="text-red-500 font-semibold">100% genuine</span>{" "}
               Crown motorcycle spare parts &amp; bulk orders across Pakistan.
             </p>
-          </div>
-          <motion.div
-            initial={{ opacity: 0, y: 32 }}
-            animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 32 }}
-            transition={{ duration: 0.3, ease: "easeInOut", delay: 0.2 }}
-            className="flex sm:flex-row flex-col items-start lg:items-baseline gap-4 pointer-events-auto"
-          >
-            <h1 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl xl:text-9xl leading-10 lg:leading-32 font-bold tracking-tight">
-              SARFRAZ AUTOS
-            </h1>
-            <div>
-              <a href="/login" className="block">
-                <div className="bg-red-600 hover:bg-red-700 transition-colors rounded-full p-1 pl-8">
-                  <div className="lg:p-3 p-2 bg-white text-black rounded-full">
-                    <ArrowUpRight size={24} />
-                  </div>
-                </div>
-              </a>
-            </div>
           </motion.div>
+
+          <div className="flex sm:flex-row flex-col items-start lg:items-baseline gap-4 pointer-events-auto">
+            <div className="overflow-hidden pb-1 sm:pb-3">
+              <motion.h1
+                initial={{ y: "125%" }}
+                animate={isInView ? { y: "0%" } : { y: "125%" }}
+                transition={{
+                  duration: 0.95,
+                  delay: 2.05,
+                  ease: [0.16, 1, 0.3, 1],
+                }}
+                className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl xl:text-9xl leading-10 lg:leading-32 font-bold tracking-tight inline-block"
+              >
+                SARFRAZ AUTOS
+              </motion.h1>
+            </div>
+
+            <div className="overflow-hidden">
+              <motion.div
+                initial={{ y: "125%", opacity: 0 }}
+                animate={isInView ? { y: "0%", opacity: 1 } : { y: "125%", opacity: 0 }}
+                transition={{
+                  duration: 0.8,
+                  delay: 2.1,
+                  ease: [0.16, 1, 0.3, 1],
+                }}
+              >
+                <a href="/login" className="block">
+                  <div className="bg-red-600 hover:bg-red-700 transition-colors rounded-full p-1 pl-8">
+                    <div className="lg:p-3 p-2 bg-white text-black rounded-full">
+                      <ArrowUpRight size={24} />
+                    </div>
+                  </div>
+                </a>
+              </motion.div>
+            </div>
+          </div>
         </div>
       </div>
     </section>

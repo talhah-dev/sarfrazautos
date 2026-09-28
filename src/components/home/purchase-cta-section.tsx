@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "../ui/button";
@@ -12,17 +11,18 @@ export default function PurchaseCtaSection() {
         "flex items-center justify-center py-24 md:py-32 overflow-hidden"
       )}
     >
-      <Image
-        src="/purchase-cta-bg.jpg"
-        alt="Motorcycle Spare Parts Warehouse Aisle"
-        fill
-        priority={false}
-        sizes="100vw"
-        className="object-cover object-center"
-      />
+      <video
+        autoPlay
+        loop
+        muted
+        playsInline
+        className="absolute inset-0 w-full h-full object-cover object-center"
+      >
+        <source src="/forklift-warehouse.mp4" type="video/mp4" />
+        <source src="https://videos.pexels.com/video-files/4477603/4477603-hd_1280_720_30fps.mp4" type="video/mp4" />
+      </video>
 
-      <div className="absolute inset-0 bg-black/40" />
-      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/35 to-black/85" />
+      <div className="absolute inset-0 bg-black/70" />
 
       <div className="relative z-10 max-w-3xl flex flex-col items-center justify-center text-center px-4">
         <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold bg-red-600/90 text-white backdrop-blur-md mb-4 border border-red-500/30 uppercase tracking-wider shadow-sm">
