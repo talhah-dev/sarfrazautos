@@ -12,7 +12,7 @@ function LoaderFallback() {
       <div className="flex flex-col items-center gap-3">
         <div className="w-10 h-10 border-2 border-red-600/30 border-t-red-600 rounded-full animate-spin" />
         <span className="text-xs font-mono uppercase tracking-widest text-neutral-400">
-          Loading 3D Superbike...
+          Loading 
         </span>
       </div>
     </div>
