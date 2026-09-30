@@ -52,7 +52,7 @@ export function CartBadge({ initialCount = 3, className }: CartBadgeProps) {
       <Link
         href="/cart"
         aria-label="Shopping Cart"
-        className="bg-white text-black hover:bg-neutral-100 rounded-full sm:h-12 sm:w-12 h-10 w-10 flex items-center justify-center cursor-pointer shadow-xs transition-colors"
+        className="bg-white text-black hover:bg-neutral-100 border border-neutral-200 rounded-full sm:h-12 sm:w-12 h-10 w-10 flex items-center justify-center cursor-pointer shadow-xs transition-colors"
       >
         <ShoppingCart className="size-4 sm:size-5" />
       </Link>

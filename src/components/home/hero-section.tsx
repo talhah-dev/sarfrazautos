@@ -1,94 +1,166 @@
 "use client";
 
-import { useRef } from "react";
-import { ArrowUpRight } from "lucide-react";
-import { motion, useInView } from "motion/react";
-import { HeroScene3D, HeroStatsCard, RightParts } from "./hero";
+import { useRef, useState } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import { ArrowRight, ChevronLeft, ChevronRight, PhoneCall } from "lucide-react";
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Autoplay, EffectFade, Navigation, Pagination } from "swiper/modules";
+import type { Swiper as SwiperType } from "swiper";
+
+import "swiper/css";
+import "swiper/css/effect-fade";
+import "swiper/css/navigation";
+import "swiper/css/pagination";
+
+const SLIDES = [
+  {
+    tag: "PREMIUM RACING & OEM SPEC",
+    line1: "MOTORCYCLE",
+    line2: "SPARE PARTS",
+    subtext: "GENUINE TUNING & ENGINE ASSEMBLIES",
+    primaryText: "SHOP PARTS",
+    primaryHref: "/retail",
+    secondaryText: "CATALOGUE",
+    secondaryHref: "/product-overview",
+    image: "/hero-dark-slide-1.jpg",
+    alt: "Motorcycle Engine, Shocks, Wheel Rim, and Carburetor",
+  },
+  {
+    tag: "PAKISTAN'S #1 COMMUTER BIKE",
+    line1: "HONDA CG",
+    line2: "125 PARTS",
+    subtext: "FACTORY GRADE CYLINDER, TANK & SILENCERS",
+    primaryText: "EXPLORE 125",
+    primaryHref: "/retail",
+    secondaryText: "CALL SPECIALIST",
+    secondaryHref: "tel:+923218273645",
+    image: "/hero-dark-slide-2.jpg",
+    alt: "Pakistani Red Honda CG 125 Motorcycle",
+  },
+  {
+    tag: "DIRECT IMPORTER & DISTRIBUTOR",
+    line1: "WHOLESALE",
+    line2: "MASTER CARTONS",
+    subtext: "BULK TRADE SUPPLY ACROSS PAKISTAN",
+    primaryText: "WHOLESALE PORTAL",
+    primaryHref: "/wholesale",
+    secondaryText: "BULK INQUIRY",
+    secondaryHref: "/contact",
+    image: "/hero-dark-slide-3.jpg",
+    alt: "Wholesale Master Cartons Overflowing with Motorcycle Parts",
+  },
+];
 
 export function HeroSection() {
-  const sectionRef = useRef<HTMLElement>(null);
-  const isInView = useInView(sectionRef, { once: true, amount: 0.1 });
+  const swiperRef = useRef<SwiperType | null>(null);
+  const [activeIndex, setActiveIndex] = useState(0);
 
   return (
-    <section
-      ref={sectionRef}
-      className="relative flex items-end text-white bg-black h-full min-h-screen overflow-hidden"
-    >
-      <HeroScene3D />
+    <section className="relative w-full bg-black overflow-hidden pt-20">
+      <Swiper
+        modules={[Autoplay, EffectFade, Navigation, Pagination]}
+        effect="fade"
+        fadeEffect={{ crossFade: true }}
+        speed={800}
+        autoplay={{
+          delay: 5000,
+          disableOnInteraction: false,
+        }}
+        loop={true}
+        onSwiper={(swiper) => {
+          swiperRef.current = swiper;
+        }}
+        onSlideChange={(swiper) => {
+          setActiveIndex(swiper.realIndex);
+        }}
+        className="w-full"
+      >
+        {SLIDES.map((slide, idx) => (
+          <SwiperSlide key={idx} className="relative w-full">
+            <div className="relative w-full min-h-[580px] sm:min-h-[640px] md:min-h-[700px] lg:min-h-[760px] xl:min-h-[800px] flex items-center">
+              <div className="absolute inset-0 z-0">
+                <Image
+                  src={slide.image}
+                  alt={slide.alt}
+                  fill
+                  priority={idx === 0}
+                  className="object-cover object-right md:object-center"
+                />
+                <div className="absolute inset-0 bg-gradient-to-r from-black via-black/85 to-transparent sm:via-black/60 md:via-black/40 lg:via-transparent z-10" />
+              </div>
 
-      <div className="absolute top-0 inset-x-0 h-36 bg-gradient-to-b from-black/70 to-transparent pointer-events-none z-10" />
-      <div className="absolute bottom-0 inset-x-0 h-72 bg-gradient-to-t from-black via-black/60 to-transparent pointer-events-none z-10" />
-
-      <div className="absolute left-3 sm:left-6 xl:left-12 top-24 sm:top-32 z-20 pointer-events-auto hidden md:block">
-        <HeroStatsCard />
-      </div>
-
-      <div className="absolute right-3 sm:right-6 xl:right-12 top-24 sm:top-32 z-20 pointer-events-auto">
-        <RightParts />
-      </div>
-
-      <div className="relative z-20 mx-auto max-w-7xl px-4 xl:px-16 w-full pointer-events-none">
-        <div className="flex flex-col gap-4 sm:gap-6 py-10 sm:py-16">
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 16 }}
-            transition={{ duration: 0.6, delay: 1.95, ease: "easeOut" }}
-            className="flex items-start gap-2.5 md:gap-4 pointer-events-auto"
-          >
-            <div className="w-10 h-10 sm:w-12 sm:h-12 shrink-0">
-              <motion.img
-                src="/wheel-rim.png"
-                alt="Motorcycle Wheel Rim"
-                width={48}
-                height={48}
-                className="w-full h-full object-contain drop-shadow-[0_0_3px_rgba(220,38,38,0.5)]"
-                animate={{ rotate: 360 }}
-                transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
-              />
-            </div>
-            <p className="sm:text-base text-sm sm:leading-6 leading-5 font-normal text-white sm:max-w-sm">
-              Supplying <span className="text-red-500 font-semibold">100% genuine</span>{" "}
-              Crown motorcycle spare parts &amp; bulk orders across Pakistan.
-            </p>
-          </motion.div>
-
-          <div className="flex sm:flex-row flex-col items-start lg:items-baseline gap-4 pointer-events-auto">
-            <div className="overflow-hidden pb-1 sm:pb-3">
-              <motion.h1
-                initial={{ y: "125%" }}
-                animate={isInView ? { y: "0%" } : { y: "125%" }}
-                transition={{
-                  duration: 0.95,
-                  delay: 2.05,
-                  ease: [0.16, 1, 0.3, 1],
-                }}
-                className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl xl:text-9xl leading-10 lg:leading-32 font-bold tracking-tight inline-block"
-              >
-                SARFRAZ AUTOS
-              </motion.h1>
-            </div>
-
-            <div className="overflow-hidden">
-              <motion.div
-                initial={{ y: "125%", opacity: 0 }}
-                animate={isInView ? { y: "0%", opacity: 1 } : { y: "125%", opacity: 0 }}
-                transition={{
-                  duration: 0.8,
-                  delay: 2.1,
-                  ease: [0.16, 1, 0.3, 1],
-                }}
-              >
-                <a href="/login" className="block">
-                  <div className="bg-red-600 hover:bg-red-700 transition-colors rounded-full p-1 pl-8">
-                    <div className="lg:p-3 p-2 bg-white text-black rounded-full">
-                      <ArrowUpRight size={24} />
-                    </div>
+              <div className="relative z-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full py-12 sm:py-16 md:py-24">
+                <div className="max-w-xl lg:max-w-2xl">
+                  <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-red-600/20 border border-red-500/40 text-red-400 font-bold text-[11px] sm:text-xs tracking-widest uppercase mb-4 sm:mb-5 backdrop-blur-md">
+                    <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+                    {slide.tag}
                   </div>
-                </a>
-              </motion.div>
+
+                  <h1 className="text-5xl sm:text-7xl md:text-8xl lg:text-[92px] xl:text-[104px] font-black uppercase tracking-tighter italic leading-[0.86] text-white drop-shadow-[0_12px_24px_rgba(0,0,0,0.9)] mb-4 sm:mb-6">
+                    {slide.line1} <br />
+                    <span className="text-white sm:text-red-500">{slide.line2}</span>
+                  </h1>
+
+                  <p className="text-xs sm:text-sm md:text-base text-neutral-300 font-semibold tracking-wider uppercase mb-6 sm:mb-8 drop-shadow-md">
+                    {slide.subtext}
+                  </p>
+
+                  <div className="flex items-center gap-3 sm:gap-4 flex-wrap">
+                    <Link
+                      href={slide.primaryHref}
+                      className="inline-flex items-center justify-center gap-2 px-6 sm:px-8 py-3 sm:py-3.5 rounded-full bg-red-600 hover:bg-red-500 text-white font-black uppercase tracking-wider text-xs sm:text-sm transition-all shadow-lg shadow-red-600/30 hover:scale-105 active:scale-95 cursor-pointer"
+                    >
+                      <span>{slide.primaryText}</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </Link>
+
+                    <Link
+                      href={slide.secondaryHref}
+                      className="inline-flex items-center justify-center gap-2 px-6 sm:px-8 py-3 sm:py-3.5 rounded-full bg-black/50 hover:bg-white/10 text-white border border-white/20 font-bold uppercase tracking-wider text-xs sm:text-sm transition-all backdrop-blur-md cursor-pointer hover:border-white/40"
+                    >
+                      {slide.secondaryHref.startsWith("tel:") && (
+                        <PhoneCall className="w-4 h-4 text-red-400" />
+                      )}
+                      <span>{slide.secondaryText}</span>
+                    </Link>
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
+          </SwiperSlide>
+        ))}
+      </Swiper>
+
+      <div className="absolute bottom-6 right-4 sm:right-8 lg:right-16 z-30 flex items-center gap-2.5">
+        <button
+          onClick={() => swiperRef.current?.slidePrev()}
+          aria-label="Previous Slide"
+          className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-black/60 hover:bg-black/90 text-white border border-white/20 shadow-lg flex items-center justify-center transition-all cursor-pointer backdrop-blur-md hover:scale-105 active:scale-95"
+        >
+          <ChevronLeft className="w-5 h-5" />
+        </button>
+
+        <div className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-black/60 border border-white/20 shadow-lg backdrop-blur-md">
+          {SLIDES.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => swiperRef.current?.slideToLoop(i)}
+              aria-label={`Go to slide ${i + 1}`}
+              className={`h-2 rounded-full transition-all duration-300 cursor-pointer ${
+                activeIndex === i ? "w-6 bg-red-600" : "w-2 bg-white/40 hover:bg-white/60"
+              }`}
+            />
+          ))}
         </div>
+
+        <button
+          onClick={() => swiperRef.current?.slideNext()}
+          aria-label="Next Slide"
+          className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-black/60 hover:bg-black/90 text-white border border-white/20 shadow-lg flex items-center justify-center transition-all cursor-pointer backdrop-blur-md hover:scale-105 active:scale-95"
+        >
+          <ChevronRight className="w-5 h-5" />
+        </button>
       </div>
     </section>
   );

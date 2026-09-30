@@ -11,6 +11,8 @@ import { Equal, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion, useInView, AnimatePresence } from "motion/react";
 import CartBadge from "@/components/cart-badge";
+import NavbarSearch from "@/components/home/navbar-search";
+import TopTicker from "@/components/home/top-ticker";
 import Link from "next/link";
 
 export type NavLinkItem = {
@@ -104,25 +106,26 @@ export function Navbar({ navigationData = defaultNavigation, className }: Navbar
     <header
       ref={headerRef}
       className={cn(
-        "sticky top-0 z-50 w-full border-t-4 border-red-600 transition-all duration-500 ease-in-out h-20 flex items-center",
-        "before:content-[''] before:absolute before:top-0 before:left-0 before:w-full before:h-0 before:bg-red-600 before:transition-all before:duration-500 before:ease-in-out",
-        sticky && "before:h-full",
+        "sticky top-0 z-50 w-full transition-all duration-300 ease-in-out",
         className
       )}
     >
-      <motion.nav
-        initial={{ opacity: 0, y: -32 }}
-        animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: -32 }}
-        transition={{ duration: 0.7, ease: "easeInOut" }}
-        className={cn(
-          "relative mx-auto max-w-7xl px-4 xl:px-16 flex item-center justify-between w-full"
-        )}
-      >
+      <TopTicker />
+      <div className="w-full bg-white/95 backdrop-blur-md border-b border-neutral-200/80 h-20 flex items-center shadow-xs">
+        <motion.nav
+          initial={{ opacity: 0, y: -32 }}
+          animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: -32 }}
+          transition={{ duration: 0.7, ease: "easeInOut" }}
+          className={cn(
+            "relative mx-auto max-w-7xl px-4 xl:px-16 flex items-center justify-between w-full"
+          )}
+        >
         <Link href="/" className="flex items-center gap-2">
-          <span className="text-xl sm:text-2xl font-medium tracking-tight text-white uppercase">
+          <span className="text-xl sm:text-2xl font-bold tracking-tight uppercase text-neutral-950 transition-colors">
             Sarfraz Autos
           </span>
         </Link>
+        <NavbarSearch />
         <div className="flex items-center gap-2.5 sm:gap-3">
           <CartBadge />
           <AnimatePresence>
@@ -137,7 +140,7 @@ export function Navbar({ navigationData = defaultNavigation, className }: Navbar
             )}
           </AnimatePresence>
           <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
-            <DropdownMenuTrigger className="bg-white text-black flex items-center justify-center rounded-full sm:h-12 sm:w-12 h-10 w-10 p-2.5 sm:p-4 outline-none cursor-pointer">
+            <DropdownMenuTrigger className="flex items-center justify-center rounded-full sm:h-12 sm:w-12 h-10 w-10 p-2.5 sm:p-4 outline-none cursor-pointer bg-neutral-100 text-neutral-900 border border-neutral-200 hover:bg-neutral-200 transition-colors">
               <Equal size={16} />
             </DropdownMenuTrigger>
             <DropdownMenuContent
@@ -177,6 +180,7 @@ export function Navbar({ navigationData = defaultNavigation, className }: Navbar
           </DropdownMenu>
         </div>
       </motion.nav>
+      </div>
     </header>
   );
 }
