@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 export default function WholesalePage() {
   return (
     <>
-      <Navbar className="bg-neutral-950" />
+      <Navbar />
       <main className="min-h-screen bg-white">
         <WholesaleShop />
       </main>

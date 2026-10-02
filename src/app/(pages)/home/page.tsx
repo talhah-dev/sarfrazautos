@@ -1,6 +1,7 @@
 import Navbar from "@/components/home/navbar";
 import HeroSection from "@/components/home/hero-section";
-import CategoryBanners from "@/components/home/category-banners";
+import CategoriesCircleSection from "@/components/home/categories-circle-section";
+import PromoBanners from "@/components/home/promo-banners";
 import RetailProducts from "@/components/home/retail-products";
 import WholesaleProducts from "@/components/home/wholesale-products";
 import PurchaseCtaSection from "@/components/home/purchase-cta-section";
@@ -13,7 +14,8 @@ export default function HomePage() {
             <Navbar />
             <main className="-mt-20">
                 <HeroSection />
-                <CategoryBanners />
+                <CategoriesCircleSection />
+                <PromoBanners />
                 <RetailProducts />
                 <WholesaleProducts />
                 <PurchaseCtaSection />
@@ -23,3 +25,4 @@ export default function HomePage() {
         </>
     );
 }
+

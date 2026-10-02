@@ -78,7 +78,7 @@ export function HeroSection() {
       >
         {SLIDES.map((slide, idx) => (
           <SwiperSlide key={idx} className="relative w-full">
-            <div className="relative w-full min-h-[580px] sm:min-h-[640px] md:min-h-[700px] lg:min-h-[760px] xl:min-h-[800px] flex items-center">
+            <div className="relative w-full min-h-[500px] sm:min-h-[640px] md:min-h-[700px] lg:min-h-[760px] xl:min-h-[800px] flex items-center">
               <div className="absolute inset-0 z-0">
                 <Image
                   src={slide.image}
@@ -91,25 +91,24 @@ export function HeroSection() {
               </div>
 
               <div className="relative z-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full py-12 sm:py-16 md:py-24">
-                <div className="max-w-xl lg:max-w-2xl">
-                  <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-red-600/20 border border-red-500/40 text-red-400 font-bold text-[11px] sm:text-xs tracking-widest uppercase mb-4 sm:mb-5 backdrop-blur-md">
-                    <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+                <div className="max-w-xl lg:max-w-2xl mx-auto sm:mx-0 text-center sm:text-left flex flex-col items-center sm:items-start">
+                  <div className="inline-flex items-center gap-2 px-3.5 py-1 text-red-400 font-bold text-[11px] sm:text-xs tracking-widest uppercase mb-4 sm:mb-5 backdrop-blur-md">
                     {slide.tag}
                   </div>
 
-                  <h1 className="text-5xl sm:text-7xl md:text-8xl lg:text-[92px] xl:text-[104px] font-black uppercase tracking-tighter italic leading-[0.86] text-white drop-shadow-[0_12px_24px_rgba(0,0,0,0.9)] mb-4 sm:mb-6">
+                  <h1 className="text-5xl sm:text-7xl md:text-8xl lg:text-[92px] xl:text-[104px] font-black uppercase tracking-tighter italic leading-tight md:leading-none text-white drop-shadow-[0_12px_24px_rgba(0,0,0,0.9)] mb-4 sm:mb-6">
                     {slide.line1} <br />
-                    <span className="text-white sm:text-red-500">{slide.line2}</span>
+                    <span className="text-red-500">{slide.line2}</span>
                   </h1>
 
                   <p className="text-xs sm:text-sm md:text-base text-neutral-300 font-semibold tracking-wider uppercase mb-6 sm:mb-8 drop-shadow-md">
                     {slide.subtext}
                   </p>
 
-                  <div className="flex items-center gap-3 sm:gap-4 flex-wrap">
+                  <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 w-full sm:w-auto">
                     <Link
                       href={slide.primaryHref}
-                      className="inline-flex items-center justify-center gap-2 px-6 sm:px-8 py-3 sm:py-3.5 rounded-full bg-red-600 hover:bg-red-500 text-white font-black uppercase tracking-wider text-xs sm:text-sm transition-all shadow-lg shadow-red-600/30 hover:scale-105 active:scale-95 cursor-pointer"
+                      className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 sm:px-8 py-3 sm:py-3.5 rounded-full bg-red-600 hover:bg-red-500 text-white font-black uppercase tracking-wider text-xs sm:text-sm transition-all shadow-lg shadow-red-600/30 hover:scale-105 active:scale-95 cursor-pointer"
                     >
                       <span>{slide.primaryText}</span>
                       <ArrowRight className="w-4 h-4" />
@@ -117,7 +116,7 @@ export function HeroSection() {
 
                     <Link
                       href={slide.secondaryHref}
-                      className="inline-flex items-center justify-center gap-2 px-6 sm:px-8 py-3 sm:py-3.5 rounded-full bg-black/50 hover:bg-white/10 text-white border border-white/20 font-bold uppercase tracking-wider text-xs sm:text-sm transition-all backdrop-blur-md cursor-pointer hover:border-white/40"
+                      className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 sm:px-8 py-3 sm:py-3.5 rounded-full bg-black/50 hover:bg-white/10 text-white border border-white/20 font-bold uppercase tracking-wider text-xs sm:text-sm transition-all backdrop-blur-md cursor-pointer hover:border-white/40"
                     >
                       {slide.secondaryHref.startsWith("tel:") && (
                         <PhoneCall className="w-4 h-4 text-red-400" />
@@ -132,7 +131,7 @@ export function HeroSection() {
         ))}
       </Swiper>
 
-      <div className="absolute bottom-6 right-4 sm:right-8 lg:right-16 z-30 flex items-center gap-2.5">
+      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2.5">
         <button
           onClick={() => swiperRef.current?.slidePrev()}
           aria-label="Previous Slide"
@@ -147,9 +146,8 @@ export function HeroSection() {
               key={i}
               onClick={() => swiperRef.current?.slideToLoop(i)}
               aria-label={`Go to slide ${i + 1}`}
-              className={`h-2 rounded-full transition-all duration-300 cursor-pointer ${
-                activeIndex === i ? "w-6 bg-red-600" : "w-2 bg-white/40 hover:bg-white/60"
-              }`}
+              className={`h-2 rounded-full transition-all duration-300 cursor-pointer ${activeIndex === i ? "w-6 bg-red-600" : "w-2 bg-white/40 hover:bg-white/60"
+                }`}
             />
           ))}
         </div>

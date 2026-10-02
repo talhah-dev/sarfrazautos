@@ -103,15 +103,15 @@ export function Navbar({ navigationData = defaultNavigation, className }: Navbar
   }, []);
 
   return (
-    <header
-      ref={headerRef}
-      className={cn(
-        "sticky top-0 z-50 w-full transition-all duration-300 ease-in-out",
-        className
-      )}
-    >
+    <>
       <TopTicker />
-      <div className="w-full bg-white/95 backdrop-blur-md border-b border-neutral-200/80 h-20 flex items-center shadow-xs">
+      <header
+        ref={headerRef}
+        className={cn(
+          "sticky top-0 z-50 w-full bg-white/95 backdrop-blur-md border-b border-neutral-200/80 transition-all duration-300 ease-in-out h-20 flex items-center shadow-xs",
+          className
+        )}
+      >
         <motion.nav
           initial={{ opacity: 0, y: -32 }}
           animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: -32 }}
@@ -180,8 +180,8 @@ export function Navbar({ navigationData = defaultNavigation, className }: Navbar
           </DropdownMenu>
         </div>
       </motion.nav>
-      </div>
     </header>
+  </>
   );
 }
 

@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Car, ChevronDown, Search, X } from "lucide-react";
+import { ChevronDown, Search, X } from "lucide-react";
+import { RiMotorbikeFill } from "react-icons/ri";
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -44,7 +46,7 @@ export function NavbarSearch() {
             type="button"
             className="flex items-center gap-2 h-full px-3.5 rounded-full bg-red-600 hover:bg-red-700 text-white text-xs lg:text-[13px] font-medium shrink-0 shadow-xs outline-none cursor-pointer transition-colors max-w-[145px] lg:max-w-[170px]"
           >
-            <Car className="w-4 h-4 shrink-0" />
+            <RiMotorbikeFill className="w-4 h-4 shrink-0" />
             <span className="truncate">
               {selectedVehicle || "Add vehicle"}
             </span>
