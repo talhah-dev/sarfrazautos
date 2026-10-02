@@ -148,10 +148,12 @@ const allWholesaleProducts: WholesaleProduct[] = [
 export function WholesaleCatalog({
   searchQuery = "",
   activeCategory = "All",
+  activeBike = "All Brands",
   className = "",
 }: {
   searchQuery?: string;
   activeCategory?: string;
+  activeBike?: string;
   className?: string;
 }) {
   const [addedItems, setAddedItems] = useState<Record<string, boolean>>({});
@@ -165,7 +167,17 @@ export function WholesaleCatalog({
     const matchesCategory =
       activeCategory === "All" || p.category === activeCategory;
 
-    return matchesSearch && matchesCategory;
+    const matchesBike =
+      !activeBike ||
+      activeBike === "All Brands" ||
+      activeBike === "All" ||
+      p.name.toLowerCase().includes(activeBike.toLowerCase()) ||
+      (activeBike === "Others" &&
+        !["Honda", "Suzuki", "Yamaha", "Crown", "Road Prince", "Super Power", "Unique", "United"].some((b) =>
+          p.name.toLowerCase().includes(b.toLowerCase())
+        ));
+
+    return matchesSearch && matchesCategory && matchesBike;
   });
 
   const handleAdd = (id: string) => {

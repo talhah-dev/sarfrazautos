@@ -164,10 +164,12 @@ const allProducts: RetailProduct[] = [
 export function RetailCatalog({
   searchQuery = "",
   activeCategory = "All",
+  activeBike = "All Brands",
   className = "",
 }: {
   searchQuery?: string;
   activeCategory?: string;
+  activeBike?: string;
   className?: string;
 }) {
   const [addedItems, setAddedItems] = useState<Record<string, boolean>>({});
@@ -176,12 +178,23 @@ export function RetailCatalog({
     const matchesSearch =
       !searchQuery ||
       p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      p.category.toLowerCase().includes(searchQuery.toLowerCase());
+      p.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      p.bike.toLowerCase().includes(searchQuery.toLowerCase());
 
     const matchesCategory =
       activeCategory === "All" || p.category === activeCategory;
 
-    return matchesSearch && matchesCategory;
+    const matchesBike =
+      !activeBike ||
+      activeBike === "All Brands" ||
+      activeBike === "All" ||
+      p.bike.toLowerCase().includes(activeBike.toLowerCase()) ||
+      (activeBike === "Others" &&
+        !["Honda", "Suzuki", "Yamaha", "Crown", "Road Prince", "Super Power", "Unique", "United"].some((b) =>
+          p.bike.toLowerCase().includes(b.toLowerCase())
+        ));
+
+    return matchesSearch && matchesCategory && matchesBike;
   });
 
   const handleAdd = (id: string) => {

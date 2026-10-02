@@ -1,7 +1,6 @@
 import { DM_Sans, Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
-import LoadingScreen from "@/components/loading";
 import LenisScroll from "@/components/lenis";
 
 const dmSans = DM_Sans({
@@ -35,10 +34,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="en"
       className={cn("h-full", "antialiased", geistSans.variable, geistMono.variable, "font-sans", dmSans.variable)}
     >
-
       <body className="min-h-full flex flex-col">
         <LenisScroll>
-          <LoadingScreen />
           {children}
         </LenisScroll>
       </body>

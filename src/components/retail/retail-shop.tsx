@@ -7,6 +7,7 @@ import RetailCatalog from "./retail-catalog";
 export function RetailShop() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("All");
+  const [activeBike, setActiveBike] = useState("All Brands");
 
   return (
     <>
@@ -15,10 +16,13 @@ export function RetailShop() {
         onSearchChange={setSearchQuery}
         activeCategory={activeCategory}
         onCategoryChange={setActiveCategory}
+        activeBike={activeBike}
+        onBikeChange={setActiveBike}
       />
       <RetailCatalog
         searchQuery={searchQuery}
         activeCategory={activeCategory}
+        activeBike={activeBike}
       />
     </>
   );

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { ArrowRight, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Button } from "../ui/button";
 
 export interface WholesaleItem {
   id: string;
@@ -73,7 +74,6 @@ const defaultWholesaleProducts: WholesaleItem[] = [
 
 export function WholesaleProducts({
   title = "Wholesale & Bulk Supply",
-  subtitle = "Direct factory master carton packaging & volume dealer discounts",
   products = defaultWholesaleProducts,
   className = "",
 }: {
@@ -87,18 +87,15 @@ export function WholesaleProducts({
       <div className="max-w-7xl mx-auto px-4 md:px-8 lg:px-16">
         <div className="flex items-end justify-between mb-8 md:mb-12">
           <div>
-            <h2 className="text-3xl md:text-5xl font-medium tracking-tight text-foreground">
+            <h2 className="text-4xl md:text-5xl md:text-start text-center font-semibold tracking-tight text-foreground opacity-90">
               {title}
             </h2>
-            <p className="text-neutral-500 text-sm md:text-base mt-3">
-              {subtitle}
-            </p>
           </div>
           <Link
-            href="/login"
-            className="group flex items-center gap-1.5 text-sm font-medium text-neutral-800 hover:text-red-600 transition-colors"
+            href="/wholesale"
+            className="group md:flex hidden items-center gap-1.5 text-sm font-medium text-neutral-800 hover:text-red-600 transition-colors"
           >
-            <span>See all</span>
+            <span>View all</span>
             <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
           </Link>
         </div>
@@ -143,6 +140,12 @@ export function WholesaleProducts({
             </div>
           ))}
         </div>
+        <Link href="/wholesale">
+          <Button className="md:hidden flex items-center justify-center mt-12 mx-auto ">
+            View all
+            <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
+          </Button>
+        </Link>
       </div>
     </section>
   );

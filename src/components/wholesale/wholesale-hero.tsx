@@ -1,80 +1,121 @@
+"use client";
+
 import { Search } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+const BIKES = [
+  { id: "all", name: "All Brands" },
+  { id: "honda", name: "Honda" },
+  { id: "super-power", name: "Super Power" },
+  { id: "unique", name: "Unique" },
+  { id: "road-prince", name: "Road Prince" },
+  { id: "crown", name: "Crown" },
+  { id: "suzuki", name: "Suzuki" },
+  { id: "yamaha", name: "Yamaha" },
+  { id: "united", name: "United" },
+  { id: "hi-speed", name: "Hi-Speed" },
+  { id: "habib", name: "Habib" },
+  { id: "super-star", name: "Super Star" },
+  { id: "others", name: "Others" },
+];
+
+const CATEGORIES = [
+  "All",
+  "Cylinders & Heads",
+  "Engine Blocks",
+  "Clutch Plates",
+  "Crankshafts",
+  "Carburetors",
+  "Others",
+];
 
 export function WholesaleHero({
   searchQuery,
   onSearchChange,
   activeCategory,
   onCategoryChange,
+  activeBike = "All Brands",
+  onBikeChange,
   className = "",
 }: {
   searchQuery: string;
   onSearchChange: (val: string) => void;
   activeCategory: string;
   onCategoryChange: (cat: string) => void;
+  activeBike?: string;
+  onBikeChange?: (bike: string) => void;
   className?: string;
 }) {
-  const categories = [
-    "All",
-    "Cylinders & Heads",
-    "Engine Blocks",
-    "Clutch Plates",
-    "Crankshafts",
-    "Carburetors",
-    "Others",
-  ];
-
   return (
     <section className={cn("w-full bg-white pt-12 md:pt-16 pb-8", className)}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="max-w-3xl">
-          <div className="inline-flex items-center px-3 py-1 rounded-full bg-red-50 text-red-600 text-xs font-semibold mb-4 border border-red-100">
-            <span>Bulk Master Cartons &amp; Dealer Rates</span>
-          </div>
-
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-semibold tracking-tight text-neutral-950 leading-tight">
-            Wholesale spare parts &amp; master cartons.{" "}
-            <span className="text-red-600">Built for Dealers.</span>
+          <h1 className="text-4xl sm:text-4xl md:text-5xl font-semibold tracking-tight capitalize text-neutral-950 md:text-start text-center leading-tight">
+            Wholesale spare parts &amp;{" "}
+            <span className="text-red-600">master cartons.</span>
           </h1>
 
-          <p className="text-neutral-500 text-sm sm:text-base mt-3 leading-relaxed">
-            <span className="md:hidden">
+          <p className="text-neutral-500 text-sm sm:text-base mt-3 leading-relaxed md:block hidden">
+            <span>
               Direct factory master cartons &amp; volume dealer supply across Pakistan. Dispatch from Saddar &amp; SITE Hub.
-            </span>
-            <span className="hidden md:inline">
-              Source direct factory master cartons and volume crates for retail shops, mechanics, and dealerships. Dispatched straight from our Saddar wholesale counters and SITE central logistics hub.
             </span>
           </p>
         </div>
 
-        <div className="mt-8 flex flex-col md:flex-row gap-4 items-stretch md:items-center justify-between">
-          <div className="relative flex-1 max-w-md">
+        <div className="mt-8 flex flex-col lg:flex-row gap-3 sm:gap-4 items-stretch lg:items-center justify-between">
+          <div className="relative flex-1 max-w-lg">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-neutral-400" />
-            <input
+            <Input
               type="text"
               value={searchQuery}
               onChange={(e) => onSearchChange(e.target.value)}
               placeholder="Search wholesale cartons (e.g. cylinder, block, clutch)..."
-              className="w-full h-11 pl-10 pr-4 text-sm rounded-xl border border-neutral-200 bg-white placeholder:text-neutral-400 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/10 transition-all"
+              className="w-full h-9 pl-10 pr-4 transition-all"
             />
           </div>
 
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-2 md:pb-0 scrollbar-none">
-            {categories.map((cat) => (
-              <button
-                key={cat}
-                type="button"
-                onClick={() => onCategoryChange(cat)}
-                className={cn(
-                  "px-3.5 py-2 text-xs font-medium rounded-lg whitespace-nowrap transition-colors cursor-pointer",
-                  activeCategory === cat
-                    ? "bg-red-600 text-white"
-                    : "bg-neutral-100 text-neutral-600 hover:text-neutral-950 hover:bg-neutral-200/80"
-                )}
-              >
-                {cat}
-              </button>
-            ))}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+            <Select value={activeCategory} onValueChange={(val) => onCategoryChange(val as string)}>
+              <SelectTrigger className=" w-full sm:w-[190px]">
+                <SelectValue placeholder="Select Category" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectLabel>Categories</SelectLabel>
+                  {CATEGORIES.map((cat) => (
+                    <SelectItem key={cat} value={cat}>
+                      {cat}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+
+            <Select value={activeBike} onValueChange={(val) => onBikeChange?.(val as string)}>
+              <SelectTrigger className=" w-full sm:w-[190px]">
+                <SelectValue placeholder="Select Brand" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectLabel>Motorcycle Brands</SelectLabel>
+                  {BIKES.map((bike) => (
+                    <SelectItem key={bike.id} value={bike.name}>
+                      {bike.name}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
           </div>
         </div>
       </div>
