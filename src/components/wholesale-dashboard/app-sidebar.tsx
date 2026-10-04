@@ -42,49 +42,34 @@ const data = {
       icon: <LayoutDashboardIcon className="size-4" />,
     },
     {
-      title: "Master Cartons",
-      url: "/wholesale",
-      icon: <PackageIcon className="size-4" />,
-    },
-    {
       title: "Bulk Orders",
       url: "/wholesale-dashboard/bulk-orders",
       icon: <ListOrderedIcon className="size-4" />,
     },
     {
-      title: "Trade Schemes",
-      url: "#",
-      icon: <PercentIcon className="size-4" />,
+      title: "Shop",
+      url: "/wholesale",
+      icon: <PackageIcon className="size-4" />,
     },
-    {
-      title: "Bilty & Logistics",
-      url: "#",
-      icon: <TruckIcon className="size-4" />,
-    },
+    // {
+    //   title: "Bilty & Logistics",
+    //   url: "/wholesale-dashboard/bilty-logistics",
+    //   icon: <TruckIcon className="size-4" />,
+    // },
   ],
   documents: [
     {
       name: "Commercial Invoices",
-      url: "#",
+      url: "/wholesale-dashboard/commercial-invoices",
       icon: <FileTextIcon className="size-4" />,
     },
     {
-      name: "Khata & Ledger",
-      url: "#",
-      icon: <BookOpenIcon className="size-4" />,
-    },
-    {
       name: "Payment History",
-      url: "#",
+      url: "/wholesale-dashboard/payment-history",
       icon: <ReceiptTextIcon className="size-4" />,
     },
   ],
   navSecondary: [
-    {
-      title: "Settings",
-      url: "#",
-      icon: <Settings2Icon className="size-4" />,
-    },
     {
       title: "Dealer Support",
       url: "/contact",

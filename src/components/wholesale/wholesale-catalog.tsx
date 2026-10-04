@@ -2,14 +2,16 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Check, Plus } from "lucide-react";
+import { Check, Eye, Plus, Star } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export interface WholesaleProduct {
   id: string;
   name: string;
   price: string;
+  originalPrice: string;
   category: string;
+  rating?: number;
   badge?: string;
   image: string;
 }
@@ -17,129 +19,161 @@ export interface WholesaleProduct {
 const allWholesaleProducts: WholesaleProduct[] = [
   {
     id: "ws-1",
-    name: "CD70 Complete Cylinder Head (Carton of 12)",
-    price: "Rs. 84,000 / ctn",
+    name: "CD70 Complete Cylinder Head",
+    price: "Rs. 84,000",
+    originalPrice: "Rs. 105,000",
     category: "Cylinders & Heads",
+    rating: 4.9,
     badge: "-20%",
     image: "/wholesale-bulk.png",
   },
   {
     id: "ws-2",
-    name: "4-Stroke Engine Block Master Crate (6 sets)",
-    price: "Rs. 92,000 / crate",
+    name: "4-Stroke Engine Block",
+    price: "Rs. 92,000",
+    originalPrice: "Rs. 108,000",
     category: "Engine Blocks",
+    rating: 4.8,
     badge: "-15%",
     image: "/wholesale-bulk.png",
   },
   {
     id: "ws-3",
-    name: "125cc Piston Kits Bulk Box (25 pcs)",
-    price: "Rs. 87,500 / box",
+    name: "125cc Piston Kit",
+    price: "Rs. 87,500",
+    originalPrice: "Rs. 116,000",
     category: "Cylinders & Heads",
+    rating: 4.9,
     badge: "-25%",
     image: "/wholesale-bulk.png",
   },
   {
     id: "ws-4",
-    name: "Crown Heavy Clutch Plates Bulk Pack (50 sets)",
-    price: "Rs. 135,000 / ctn",
+    name: "Crown Heavy Duty Clutch Plates",
+    price: "Rs. 135,000",
+    originalPrice: "Rs. 150,000",
     category: "Clutch Plates",
+    rating: 4.7,
     badge: "-10%",
     image: "/wholesale-bulk.png",
   },
   {
     id: "ws-5",
-    name: "Performance Crankshaft Wholesale Pack (10 pcs)",
-    price: "Rs. 85,000 / box",
+    name: "Performance Crankshaft Assembly",
+    price: "Rs. 85,000",
+    originalPrice: "Rs. 100,000",
     category: "Crankshafts",
+    rating: 4.8,
     badge: "-15%",
     image: "/wholesale-bulk.png",
   },
   {
     id: "ws-6",
-    name: "Oil Pump Assemblies Master Box (30 pcs)",
-    price: "Rs. 64,500 / box",
+    name: "Deluxe High-Flow Oil Pump",
+    price: "Rs. 64,500",
+    originalPrice: "Rs. 80,000",
     category: "Others",
+    rating: 4.6,
     badge: "-20%",
     image: "/wholesale-bulk.png",
   },
   {
     id: "ws-7",
-    name: "Camshaft & Rocker Arm Sets (20 kits)",
-    price: "Rs. 92,000 / ctn",
+    name: "Camshaft & Rocker Arm Set",
+    price: "Rs. 92,000",
+    originalPrice: "Rs. 112,000",
     category: "Cylinders & Heads",
+    rating: 4.8,
     badge: "-18%",
     image: "/wholesale-bulk.png",
   },
   {
     id: "ws-8",
-    name: "Complete Overhaul Gasket Master Carton (100 pk)",
-    price: "Rs. 145,000 / ctn",
+    name: "Complete Overhaul Gasket Set",
+    price: "Rs. 145,000",
+    originalPrice: "Rs. 205,000",
     category: "Others",
+    rating: 4.7,
     badge: "-30%",
     image: "/wholesale-bulk.png",
   },
   {
     id: "ws-9",
-    name: "Japanese Standard Carburetors Bulk Crate (20 pcs)",
-    price: "Rs. 88,000 / ctn",
+    name: "Japanese Standard Carburetor",
+    price: "Rs. 88,000",
+    originalPrice: "Rs. 103,500",
     category: "Carburetors",
+    rating: 4.9,
     badge: "-15%",
     image: "/wholesale-bulk.png",
   },
   {
     id: "ws-10",
-    name: "CG125 Cylinder Block Barrel (Master Carton of 8)",
-    price: "Rs. 98,000 / ctn",
+    name: "CG125 Cylinder Block Barrel",
+    price: "Rs. 98,000",
+    originalPrice: "Rs. 111,000",
     category: "Engine Blocks",
+    rating: 4.8,
     badge: "-12%",
     image: "/wholesale-bulk.png",
   },
   {
     id: "ws-11",
-    name: "Complete Clutch Housing Master Box (15 pcs)",
-    price: "Rs. 94,500 / box",
+    name: "Complete Clutch Housing & Plate",
+    price: "Rs. 94,500",
+    originalPrice: "Rs. 115,000",
     category: "Clutch Plates",
+    rating: 4.7,
     badge: "-18%",
     image: "/wholesale-bulk.png",
   },
   {
     id: "ws-12",
-    name: "CD70 Heavy Duty Connecting Rods (50 pcs)",
-    price: "Rs. 58,000 / box",
+    name: "CD70 Heavy Duty Connecting Rod",
+    price: "Rs. 58,000",
+    originalPrice: "Rs. 72,500",
     category: "Crankshafts",
+    rating: 4.9,
     badge: "-20%",
     image: "/wholesale-bulk.png",
   },
   {
     id: "ws-13",
-    name: "High-Compression Cylinder Kits 150cc (10 sets)",
-    price: "Rs. 110,000 / ctn",
+    name: "High-Compression Cylinder Kit 150cc",
+    price: "Rs. 110,000",
+    originalPrice: "Rs. 129,000",
     category: "Cylinders & Heads",
+    rating: 4.8,
     badge: "-15%",
     image: "/wholesale-bulk.png",
   },
   {
     id: "ws-14",
-    name: "OEM Specification Stator Coils Bulk Pack (25 pcs)",
-    price: "Rs. 96,000 / ctn",
+    name: "OEM Specification Stator Coil",
+    price: "Rs. 96,000",
+    originalPrice: "Rs. 123,000",
     category: "Others",
+    rating: 4.6,
     badge: "-22%",
     image: "/wholesale-bulk.png",
   },
   {
     id: "ws-15",
-    name: "Front & Rear Brake Shoes Master Crate (100 pairs)",
-    price: "Rs. 125,000 / crate",
+    name: "Front & Rear Brake Shoe Set",
+    price: "Rs. 125,000",
+    originalPrice: "Rs. 166,000",
     category: "Others",
+    rating: 4.8,
     badge: "-25%",
     image: "/wholesale-bulk.png",
   },
   {
     id: "ws-16",
-    name: "Deluxe Carburetor Repair Kits Bulk Box (100 sets)",
-    price: "Rs. 42,000 / box",
+    name: "Deluxe Carburetor Repair Kit",
+    price: "Rs. 42,000",
+    originalPrice: "Rs. 46,500",
     category: "Carburetors",
+    rating: 4.7,
     badge: "-10%",
     image: "/wholesale-bulk.png",
   },
@@ -217,39 +251,63 @@ export function WholesaleCatalog({
                     <img
                       src={product.image}
                       alt={product.name}
-                      className="w-full h-full object-contain drop-shadow-sm transition-transform duration-300 group-hover:scale-105"
+                      className="w-full h-full object-contain drop-shadow-sm transition-all duration-300 group-hover:scale-105 group-hover:brightness-75"
                     />
+
+                    <div className="absolute inset-0 bg-black/15 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10 flex items-center justify-center pointer-events-none">
+                      <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white text-neutral-900 text-xs font-semibold shadow-md transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
+                        <Eye className="size-3.5 text-neutral-700" />
+                        <span>Preview</span>
+                      </span>
+                    </div>
                   </Link>
 
-                  <div className="flex items-center justify-between gap-3 mt-3.5">
-                    <Link href="/wholesale-product-overview" className="min-w-0 flex-1 group/title">
-                      <h3 className="font-medium text-neutral-900 group-hover/title:text-red-600 transition-colors text-sm md:text-base leading-snug line-clamp-2">
-                        {product.name}
-                      </h3>
-                      <div className="flex items-center gap-2 mt-0.5">
-                        <p className="font-semibold text-neutral-900 text-sm md:text-base">
-                          {product.price}
-                        </p>
+                  <div className="mt-3.5 flex flex-col gap-1 flex-1">
+                    <div className="flex items-center justify-between gap-2 text-xs">
+                      <span className="text-neutral-500 font-medium truncate">
+                        {product.category}
+                      </span>
+                      <div className="flex items-center gap-1 text-neutral-700 font-semibold shrink-0">
+                        <Star className="size-3.5 fill-amber-400 text-amber-400" />
+                        <span>{product.rating || 4.5}</span>
                       </div>
-                    </Link>
+                    </div>
 
-                    <button
-                      type="button"
-                      onClick={() => handleAdd(product.id)}
-                      aria-label={`Order wholesale bulk ${product.name}`}
-                      className={cn(
-                        "shrink-0 size-9 rounded-full flex items-center justify-center transition-all shadow-sm cursor-pointer",
-                        isAdded
-                          ? "bg-green-600 text-white scale-105"
-                          : "bg-red-600 hover:bg-red-700 active:scale-95 text-white"
-                      )}
-                    >
-                      {isAdded ? (
-                        <Check className="size-4 stroke-[2.5]" />
-                      ) : (
-                        <Plus className="size-4 stroke-[2.5]" />
-                      )}
-                    </button>
+                    <div className="flex items-center justify-between gap-3 mt-0.5">
+                      <Link href="/wholesale-product-overview" className="min-w-0 flex-1 group/title">
+                        <h3 className="font-medium text-neutral-900 group-hover/title:text-red-600 transition-colors text-sm md:text-base leading-snug line-clamp-2">
+                          {product.name}
+                        </h3>
+                        <div className="flex items-center gap-2 mt-1">
+                          <p className="font-semibold text-neutral-900 text-sm md:text-base">
+                            {product.price}
+                          </p>
+                          {product.originalPrice && (
+                            <span className="text-xs md:text-sm text-red-600 line-through font-normal">
+                              {product.originalPrice}
+                            </span>
+                          )}
+                        </div>
+                      </Link>
+
+                      <button
+                        type="button"
+                        onClick={() => handleAdd(product.id)}
+                        aria-label={`Order wholesale bulk ${product.name}`}
+                        className={cn(
+                          "shrink-0 size-9 rounded-full flex items-center justify-center transition-all shadow-sm cursor-pointer mt-0.5",
+                          isAdded
+                            ? "bg-green-600 text-white scale-105"
+                            : "bg-red-600 hover:bg-red-700 active:scale-95 text-white"
+                        )}
+                      >
+                        {isAdded ? (
+                          <Check className="size-4 stroke-[2.5]" />
+                        ) : (
+                          <Plus className="size-4 stroke-[2.5]" />
+                        )}
+                      </button>
+                    </div>
                   </div>
                 </div>
               );

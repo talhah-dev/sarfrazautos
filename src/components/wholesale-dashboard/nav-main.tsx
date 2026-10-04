@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import {
   SidebarGroup,
@@ -20,6 +21,8 @@ export function NavMain({
     icon?: React.ReactNode
   }[]
 }) {
+  const pathname = usePathname()
+
   return (
     <SidebarGroup>
       <SidebarGroupContent className="flex flex-col gap-2">
@@ -45,14 +48,22 @@ export function NavMain({
           </SidebarMenuItem>
         </SidebarMenu>
         <SidebarMenu>
-          {items.map((item) => (
-            <SidebarMenuItem key={item.title}>
-              <SidebarMenuButton tooltip={item.title} render={<Link href={item.url} />}>
-                {item.icon}
-                <span>{item.title}</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          ))}
+          {items.map((item) => {
+            const isActive = pathname === item.url
+            return (
+              <SidebarMenuItem key={item.title}>
+                <SidebarMenuButton
+                  isActive={isActive}
+                  tooltip={item.title}
+                  render={<Link href={item.url} />}
+                  className={isActive ? "!bg-neutral-200 text-neutral-900 font-medium" : ""}
+                >
+                  {item.icon}
+                  <span>{item.title}</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            )
+          })}
         </SidebarMenu>
       </SidebarGroupContent>
     </SidebarGroup>

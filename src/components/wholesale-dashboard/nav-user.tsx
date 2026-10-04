@@ -20,6 +20,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar"
+import Link from "next/link"
 import { EllipsisVerticalIcon, CircleUserRoundIcon, CreditCardIcon, LogOutIcon } from "lucide-react"
 
 export function NavUser({
@@ -81,14 +82,18 @@ export function NavUser({
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem>
-                <CircleUserRoundIcon className="size-4 mr-2" />
-                Dealer Account
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <CreditCardIcon className="size-4 mr-2" />
-                Commercial Billing
-              </DropdownMenuItem>
+              <Link href="/wholesale-dashboard/dealer-account">
+                <DropdownMenuItem className="cursor-pointer">
+                  <CircleUserRoundIcon className="size-4 mr-2" />
+                  Dealer Account
+                </DropdownMenuItem>
+              </Link>
+              <Link href="/wholesale-dashboard/commercial-invoices">
+                <DropdownMenuItem className="cursor-pointer">
+                  <CreditCardIcon className="size-4 mr-2" />
+                  Commercial Billing
+                </DropdownMenuItem>
+              </Link>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem>

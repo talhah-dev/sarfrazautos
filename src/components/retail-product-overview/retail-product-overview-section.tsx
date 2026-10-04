@@ -134,10 +134,6 @@ export function RetailProductOverviewSection({ className = "" }: { className?: s
                     <span className="text-xs font-semibold text-neutral-900 ml-1">4.8</span>
                   </div>
 
-                  <a href="#reviews" className="text-xs text-neutral-600 underline font-medium hover:text-neutral-900">
-                    210 reviews
-                  </a>
-
                   <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-600 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
                     <span className="size-1.5 rounded-full bg-emerald-600 animate-pulse" />
                     In Stock
@@ -194,10 +190,10 @@ export function RetailProductOverviewSection({ className = "" }: { className?: s
                   type="button"
                   onClick={handleAddToCart}
                   className={cn(
-                    "flex-1 h-12 font-medium text-sm transition-all flex items-center justify-center gap-2 cursor-pointer shadow-sm",
+                    "flex-1 h-10 font-medium text-sm transition-all flex items-center justify-center gap-2 cursor-pointer shadow-sm",
                     isAdded
                       ? "bg-green-600 hover:bg-green-700 text-white"
-                      : "bg-neutral-950 hover:bg-neutral-800 text-white"
+                      : " text-white"
                   )}
                 >
                   {isAdded ? (
@@ -218,13 +214,13 @@ export function RetailProductOverviewSection({ className = "" }: { className?: s
                   onClick={() => setIsWishlisted(!isWishlisted)}
                   aria-label="Add to wishlist"
                   className={cn(
-                    "size-12 rounded-lg border flex items-center justify-center transition-colors cursor-pointer shrink-0 shadow-xs",
+                    "size-10 rounded-lg border flex items-center justify-center transition-colors cursor-pointer shrink-0 shadow-xs",
                     isWishlisted
                       ? "border-red-200 bg-red-50 text-red-600"
                       : "border-neutral-200 bg-white text-neutral-700 hover:border-neutral-300"
                   )}
                 >
-                  <LuHeart className={cn("size-5", isWishlisted && "fill-red-600")} />
+                  <LuHeart className={cn("size-4", isWishlisted && "fill-red-600")} />
                 </button>
               </div>
 
