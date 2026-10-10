@@ -17,13 +17,10 @@ import {
 import {
   LayoutDashboardIcon,
   PackageIcon,
-  ListOrderedIcon,
-  PercentIcon,
-  TruckIcon,
+  ClipboardListIcon,
   FileTextIcon,
-  BookOpenIcon,
   ReceiptTextIcon,
-  Settings2Icon,
+  HistoryIcon,
   CircleHelpIcon,
   Home,
 } from "lucide-react"
@@ -44,7 +41,7 @@ const data = {
     {
       title: "Bulk Orders",
       url: "/wholesale-dashboard/bulk-orders",
-      icon: <ListOrderedIcon className="size-4" />,
+      icon: <ClipboardListIcon className="size-4" />,
     },
     {
       title: "Shop",
@@ -67,6 +64,11 @@ const data = {
       name: "Payment History",
       url: "/wholesale-dashboard/payment-history",
       icon: <ReceiptTextIcon className="size-4" />,
+    },
+    {
+      name: "Order History",
+      url: "/wholesale-dashboard/order-history",
+      icon: <HistoryIcon className="size-4" />,
     },
   ],
   navSecondary: [

@@ -1,9 +1,10 @@
 "use client"
 
 import { useState } from "react"
-import { Search } from "lucide-react"
+import { PackageCheck, Clock, XCircle } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
+import { Card, CardAction, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   Table,
   TableBody,
@@ -50,6 +51,53 @@ export function AdminOrderHistorySection() {
           <h2 className="text-2xl font-bold tracking-tight text-neutral-900">Order History</h2>
           <p className="text-sm text-neutral-500 mt-1">Complete history of retail and wholesale orders.</p>
         </div>
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 @xl/main:grid-cols-3">
+        <Card className="@container/card">
+          <CardHeader>
+            <PackageCheck className="size-8 text-neutral-700 stroke-[1.5]" />
+            <CardDescription className="pt-7">Delivered Orders</CardDescription>
+            <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
+              {orders.filter((o) => o.status === "Delivered").length}
+            </CardTitle>
+            <CardAction>
+              <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 text-xs">
+                Successfully Completed
+              </Badge>
+            </CardAction>
+          </CardHeader>
+        </Card>
+
+        <Card className="@container/card">
+          <CardHeader>
+            <Clock className="size-8 text-neutral-700 stroke-[1.5]" />
+            <CardDescription className="pt-7">Pending Orders</CardDescription>
+            <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
+              {orders.filter((o) => o.status === "Pending" || o.status === "Processing").length}
+            </CardTitle>
+            <CardAction>
+              <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 text-xs">
+                Needs Attention
+              </Badge>
+            </CardAction>
+          </CardHeader>
+        </Card>
+
+        <Card className="@container/card">
+          <CardHeader>
+            <XCircle className="size-8 text-neutral-700 stroke-[1.5]" />
+            <CardDescription className="pt-7">Cancelled Orders</CardDescription>
+            <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
+              {orders.filter((o) => o.status === "Cancelled").length}
+            </CardTitle>
+            <CardAction>
+              <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200 text-xs">
+                Not Fulfilled
+              </Badge>
+            </CardAction>
+          </CardHeader>
+        </Card>
       </div>
 
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
