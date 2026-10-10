@@ -101,7 +101,7 @@ export function AdminUploadProductSection() {
               <CardContent className="p-4 pt-0 flex flex-col gap-3">
                 <div className="space-y-1.5">
                   <Label className="text-xs font-medium text-neutral-700">Listing Type</Label>
-                  <Select onValueChange={setProductType} required>
+                  <Select onValueChange={(val: any) => setProductType(val || "")} required>
                     <SelectTrigger className="h-9 text-xs">
                       <SelectValue placeholder="Select type..." />
                     </SelectTrigger>
@@ -114,7 +114,7 @@ export function AdminUploadProductSection() {
 
                 <div className="space-y-1.5">
                   <Label className="text-xs font-medium text-neutral-700">Category</Label>
-                  <Select onValueChange={setCategory} required>
+                  <Select onValueChange={(val: any) => setCategory(val || "")} required>
                     <SelectTrigger className="h-9 text-xs">
                       <SelectValue placeholder="Select category..." />
                     </SelectTrigger>
