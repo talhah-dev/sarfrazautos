@@ -2,10 +2,11 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { Search, Download, ExternalLink } from "lucide-react"
+import { Search, Eye, Download, ExternalLink } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { CommercialInvoiceReceiptDialog } from "@/components/commercial-invoices/commercial-invoice-receipt-dialog"
 import {
   Table,
   TableBody,
@@ -70,6 +71,7 @@ const initialOrders: BulkOrder[] = [
 export function BulkOrdersTable() {
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState<string>("All")
+  const [selectedOrder, setSelectedOrder] = useState<BulkOrder | null>(null)
 
   const filteredOrders = initialOrders.filter((order) => {
     const matchesSearch =
@@ -174,12 +176,13 @@ export function BulkOrdersTable() {
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-1.5">
                       <Button
-                        variant="ghost"
+                        variant="outline"
                         size="sm"
-                        className="h-8 px-2 text-xs text-neutral-600 hover:text-neutral-900 cursor-pointer"
-                        title="Download Commercial Invoice"
+                        className="h-8 px-2.5 text-xs text-neutral-700 hover:text-neutral-900 border-neutral-200 cursor-pointer gap-1.5"
+                        onClick={() => setSelectedOrder(order)}
+                        title="View Commercial Tax Invoice"
                       >
-                        <Download className="w-3.5 h-3.5 mr-1" />
+                        <Eye className="w-3.5 h-3.5" />
                         Invoice
                       </Button>
                       <Link href="/wholesale">
@@ -199,6 +202,27 @@ export function BulkOrdersTable() {
           </TableBody>
         </Table>
       </div>
+
+      <CommercialInvoiceReceiptDialog
+        invoice={
+          selectedOrder
+            ? {
+                id: selectedOrder.id,
+                invoiceNumber: `INV-2026-${selectedOrder.id.replace("BO-", "")}`,
+                orderNumber: selectedOrder.id,
+                issueDate: selectedOrder.date,
+                dueDate: "15 Days Credit",
+                itemsSummary: `${selectedOrder.cartonCount} Master Cartons - ${selectedOrder.items}`,
+                amount: selectedOrder.totalAmount,
+                status: selectedOrder.status === "Delivered" ? "Paid" : "Pending",
+              }
+            : null
+        }
+        open={!!selectedOrder}
+        onOpenChange={(open: boolean) => {
+          if (!open) setSelectedOrder(null)
+        }}
+      />
     </div>
   )
 }

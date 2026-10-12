@@ -2,10 +2,11 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { ChevronRight, Download, Search, FileText } from "lucide-react"
+import { ChevronRight, Eye, Search, FileText } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { CommercialInvoiceReceiptDialog } from "./commercial-invoice-receipt-dialog"
 import {
   Table,
   TableBody,
@@ -82,6 +83,7 @@ const invoicesData: CommercialInvoice[] = [
 export function CommercialInvoicesSection() {
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState("All")
+  const [selectedInvoice, setSelectedInvoice] = useState<CommercialInvoice | null>(null)
 
   const filteredInvoices = invoicesData.filter((inv) => {
     const matchesSearch =
@@ -206,13 +208,13 @@ export function CommercialInvoicesSection() {
                   </TableCell>
                   <TableCell className="text-right">
                     <Button
-                      variant="ghost"
+                      variant="outline"
                       size="sm"
-                      className="h-7 px-2 text-xs text-neutral-700 hover:text-neutral-900 cursor-pointer"
-                      onClick={() => alert(`Downloading Invoice PDF: ${inv.invoiceNumber}`)}
+                      className="h-7 px-2.5 text-xs text-neutral-700 hover:text-neutral-900 border-neutral-200 cursor-pointer gap-1.5"
+                      onClick={() => setSelectedInvoice(inv)}
                     >
-                      <Download className="size-3.5 mr-1" />
-                      <span>PDF</span>
+                      <Eye className="size-3.5" />
+                      <span>View</span>
                     </Button>
                   </TableCell>
                 </TableRow>
@@ -221,6 +223,14 @@ export function CommercialInvoicesSection() {
           </Table>
         </div>
       </div>
+
+      <CommercialInvoiceReceiptDialog
+        invoice={selectedInvoice}
+        open={!!selectedInvoice}
+        onOpenChange={(open: boolean) => {
+          if (!open) setSelectedInvoice(null)
+        }}
+      />
     </div>
   )
 }

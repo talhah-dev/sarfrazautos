@@ -2,10 +2,11 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { ChevronRight, Download, Search, CheckCircle2, Clock } from "lucide-react"
+import { ChevronRight, Eye, Download, Search, CheckCircle2, Clock } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { PaymentSlipDialog } from "./payment-slip-dialog"
 import { Card, CardAction, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   Table,
@@ -83,6 +84,7 @@ const paymentsData: PaymentRecord[] = [
 export function PaymentHistorySection() {
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState("All")
+  const [selectedPayment, setSelectedPayment] = useState<PaymentRecord | null>(null)
 
   const filteredPayments = paymentsData.filter((payment) => {
     const matchesSearch =
@@ -252,13 +254,13 @@ export function PaymentHistorySection() {
                   </TableCell>
                   <TableCell className="text-right">
                     <Button
-                      variant="ghost"
+                      variant="outline"
                       size="sm"
-                      className="h-7 px-2 text-xs text-neutral-700 hover:text-neutral-900 cursor-pointer"
-                      onClick={() => alert(`Downloading Receipt for ${payment.txnId}`)}
+                      className="h-7 px-2.5 text-xs text-neutral-700 hover:text-neutral-900 border-neutral-200 cursor-pointer gap-1.5"
+                      onClick={() => setSelectedPayment(payment)}
                     >
-                      <Download className="size-3.5 mr-1" />
-                      <span>Slip</span>
+                      <Eye className="size-3.5" />
+                      <span>View Slip</span>
                     </Button>
                   </TableCell>
                 </TableRow>
@@ -267,6 +269,14 @@ export function PaymentHistorySection() {
           </Table>
         </div>
       </div>
+
+      <PaymentSlipDialog
+        payment={selectedPayment}
+        open={!!selectedPayment}
+        onOpenChange={(open: boolean) => {
+          if (!open) setSelectedPayment(null)
+        }}
+      />
     </div>
   )
 }
