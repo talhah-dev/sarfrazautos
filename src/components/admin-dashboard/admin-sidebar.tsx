@@ -21,6 +21,7 @@ import {
   UploadIcon,
   HistoryIcon,
   CreditCardIcon,
+  UserCheckIcon,
   ShieldIcon,
   CircleHelpIcon,
   LogOutIcon,
@@ -52,6 +53,11 @@ const navMain = [
     title: "Payment Management",
     url: "/admin/payments",
     icon: <CreditCardIcon className="size-4" />,
+  },
+  {
+    title: "Dealer Requests",
+    url: "/admin/dealer-requests",
+    icon: <UserCheckIcon className="size-4" />,
   },
 ]
 

@@ -48,11 +48,6 @@ const data = {
       url: "/wholesale",
       icon: <PackageIcon className="size-4" />,
     },
-    // {
-    //   title: "Bilty & Logistics",
-    //   url: "/wholesale-dashboard/bilty-logistics",
-    //   icon: <TruckIcon className="size-4" />,
-    // },
   ],
   documents: [
     {
