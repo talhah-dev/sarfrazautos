@@ -22,6 +22,7 @@ import {
   HistoryIcon,
   CreditCardIcon,
   UserCheckIcon,
+  InboxIcon,
   ShieldIcon,
   CircleHelpIcon,
   LogOutIcon,
@@ -59,6 +60,11 @@ const navMain = [
     url: "/admin/dealer-requests",
     icon: <UserCheckIcon className="size-4" />,
   },
+  {
+    title: "Contact Messages",
+    url: "/admin/messages",
+    icon: <InboxIcon className="size-4" />,
+  },
 ]
 
 const navSecondary = [
@@ -95,7 +101,7 @@ export function AdminSidebar({ ...props }: React.ComponentProps<typeof Sidebar>)
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupContent>
-            <SidebarMenu>
+            <SidebarMenu className="gap-2">
               {navMain.map((item) => {
                 const isActive = pathname === item.url
                 return (
@@ -103,10 +109,14 @@ export function AdminSidebar({ ...props }: React.ComponentProps<typeof Sidebar>)
                     <SidebarMenuButton
                       isActive={isActive}
                       render={<Link href={item.url} />}
-                      className={isActive ? "bg-neutral-300 text-neutral-900 font-medium" : ""}
+                      className={`h-9.5 text-sm px-3 rounded-lg transition-colors ${
+                        isActive
+                          ? "!bg-neutral-300 !text-neutral-950 font-semibold"
+                          : "text-neutral-700 hover:bg-neutral-100"
+                      }`}
                     >
                       {item.icon}
-                      <span>{item.title}</span>
+                      <span className="text-sm font-normal">{item.title}</span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 )
@@ -117,7 +127,7 @@ export function AdminSidebar({ ...props }: React.ComponentProps<typeof Sidebar>)
 
         <SidebarGroup className="mt-auto">
           <SidebarGroupContent>
-            <SidebarMenu>
+            <SidebarMenu className="gap-2">
               {navSecondary.map((item) => {
                 const isActive = pathname === item.url
                 return (
@@ -125,10 +135,14 @@ export function AdminSidebar({ ...props }: React.ComponentProps<typeof Sidebar>)
                     <SidebarMenuButton
                       isActive={isActive}
                       render={<Link href={item.url} />}
-                      className={isActive ? "bg-neutral-300 text-neutral-900 font-medium" : ""}
+                      className={`h-9.5 text-sm px-3 rounded-lg transition-colors ${
+                        isActive
+                          ? "!bg-neutral-300 !text-neutral-950 font-semibold"
+                          : "text-neutral-700 hover:bg-neutral-100"
+                      }`}
                     >
                       {item.icon}
-                      <span>{item.title}</span>
+                      <span className="text-sm font-normal">{item.title}</span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 )
