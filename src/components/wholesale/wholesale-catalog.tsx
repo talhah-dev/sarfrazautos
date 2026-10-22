@@ -24,6 +24,7 @@ const allWholesaleProducts: WholesaleProduct[] = [
     price: "Rs. 84,000",
     originalPrice: "Rs. 105,000",
     category: "Cylinders & Heads",
+    brand: "Honda",
     rating: 4.9,
     badge: "-20%",
     image: "/wholesale-bulk.png",
@@ -34,6 +35,7 @@ const allWholesaleProducts: WholesaleProduct[] = [
     price: "Rs. 92,000",
     originalPrice: "Rs. 108,000",
     category: "Engine Blocks",
+    brand: "Honda",
     rating: 4.8,
     badge: "-15%",
     image: "/wholesale-bulk.png",
@@ -44,6 +46,7 @@ const allWholesaleProducts: WholesaleProduct[] = [
     price: "Rs. 87,500",
     originalPrice: "Rs. 116,000",
     category: "Cylinders & Heads",
+    brand: "Honda",
     rating: 4.9,
     badge: "-25%",
     image: "/wholesale-bulk.png",
@@ -54,6 +57,7 @@ const allWholesaleProducts: WholesaleProduct[] = [
     price: "Rs. 135,000",
     originalPrice: "Rs. 150,000",
     category: "Clutch Plates",
+    brand: "Crown",
     rating: 4.7,
     badge: "-10%",
     image: "/wholesale-bulk.png",
@@ -64,6 +68,7 @@ const allWholesaleProducts: WholesaleProduct[] = [
     price: "Rs. 85,000",
     originalPrice: "Rs. 100,000",
     category: "Crankshafts",
+    brand: "Honda",
     rating: 4.8,
     badge: "-15%",
     image: "/wholesale-bulk.png",
@@ -74,6 +79,7 @@ const allWholesaleProducts: WholesaleProduct[] = [
     price: "Rs. 64,500",
     originalPrice: "Rs. 80,000",
     category: "Others",
+    brand: "Honda",
     rating: 4.6,
     badge: "-20%",
     image: "/wholesale-bulk.png",
@@ -84,6 +90,7 @@ const allWholesaleProducts: WholesaleProduct[] = [
     price: "Rs. 92,000",
     originalPrice: "Rs. 112,000",
     category: "Cylinders & Heads",
+    brand: "Honda",
     rating: 4.8,
     badge: "-18%",
     image: "/wholesale-bulk.png",
@@ -94,6 +101,7 @@ const allWholesaleProducts: WholesaleProduct[] = [
     price: "Rs. 145,000",
     originalPrice: "Rs. 205,000",
     category: "Others",
+    brand: "Honda",
     rating: 4.7,
     badge: "-30%",
     image: "/wholesale-bulk.png",
@@ -104,6 +112,7 @@ const allWholesaleProducts: WholesaleProduct[] = [
     price: "Rs. 88,000",
     originalPrice: "Rs. 103,500",
     category: "Carburetors",
+    brand: "Honda",
     rating: 4.9,
     badge: "-15%",
     image: "/wholesale-bulk.png",
@@ -114,6 +123,7 @@ const allWholesaleProducts: WholesaleProduct[] = [
     price: "Rs. 98,000",
     originalPrice: "Rs. 111,000",
     category: "Engine Blocks",
+    brand: "Honda",
     rating: 4.8,
     badge: "-12%",
     image: "/wholesale-bulk.png",
@@ -124,6 +134,7 @@ const allWholesaleProducts: WholesaleProduct[] = [
     price: "Rs. 94,500",
     originalPrice: "Rs. 115,000",
     category: "Clutch Plates",
+    brand: "Crown",
     rating: 4.7,
     badge: "-18%",
     image: "/wholesale-bulk.png",
@@ -134,6 +145,7 @@ const allWholesaleProducts: WholesaleProduct[] = [
     price: "Rs. 58,000",
     originalPrice: "Rs. 72,500",
     category: "Crankshafts",
+    brand: "Honda",
     rating: 4.9,
     badge: "-20%",
     image: "/wholesale-bulk.png",
@@ -144,6 +156,7 @@ const allWholesaleProducts: WholesaleProduct[] = [
     price: "Rs. 110,000",
     originalPrice: "Rs. 129,000",
     category: "Cylinders & Heads",
+    brand: "Suzuki",
     rating: 4.8,
     badge: "-15%",
     image: "/wholesale-bulk.png",
@@ -154,6 +167,7 @@ const allWholesaleProducts: WholesaleProduct[] = [
     price: "Rs. 96,000",
     originalPrice: "Rs. 123,000",
     category: "Others",
+    brand: "Yamaha",
     rating: 4.6,
     badge: "-22%",
     image: "/wholesale-bulk.png",
@@ -164,6 +178,7 @@ const allWholesaleProducts: WholesaleProduct[] = [
     price: "Rs. 125,000",
     originalPrice: "Rs. 166,000",
     category: "Others",
+    brand: "Crown",
     rating: 4.8,
     badge: "-25%",
     image: "/wholesale-bulk.png",
@@ -174,8 +189,42 @@ const allWholesaleProducts: WholesaleProduct[] = [
     price: "Rs. 42,000",
     originalPrice: "Rs. 46,500",
     category: "Carburetors",
+    brand: "Honda",
     rating: 4.7,
     badge: "-10%",
+    image: "/wholesale-bulk.png",
+  },
+  {
+    id: "ws-17",
+    name: "US70 Bulk Fuel Tank Lot (Carton)",
+    price: "Rs. 56,000",
+    originalPrice: "Rs. 65,000",
+    category: "Others",
+    brand: "United",
+    rating: 4.8,
+    badge: "-14%",
+    image: "/wholesale-bulk.png",
+  },
+  {
+    id: "ws-18",
+    name: "SS70 Full Wiring Loom Cartons",
+    price: "Rs. 48,000",
+    originalPrice: "Rs. 58,000",
+    category: "Others",
+    brand: "Super Star",
+    rating: 4.7,
+    badge: "-17%",
+    image: "/wholesale-bulk.png",
+  },
+  {
+    id: "ws-19",
+    name: "UD70 Cylinder Head Master Pack",
+    price: "Rs. 89,000",
+    originalPrice: "Rs. 102,000",
+    category: "Cylinders & Heads",
+    brand: "Unique",
+    rating: 4.8,
+    badge: "-12%",
     image: "/wholesale-bulk.png",
   },
 ];
@@ -197,7 +246,8 @@ export function WholesaleCatalog({
     const matchesSearch =
       !searchQuery ||
       p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      p.category.toLowerCase().includes(searchQuery.toLowerCase());
+      p.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (p.brand && p.brand.toLowerCase().includes(searchQuery.toLowerCase()));
 
     const matchesCategory =
       activeCategory === "All" || p.category === activeCategory;
@@ -207,9 +257,10 @@ export function WholesaleCatalog({
       activeBike === "All Brands" ||
       activeBike === "All" ||
       p.name.toLowerCase().includes(activeBike.toLowerCase()) ||
+      (p.brand && p.brand.toLowerCase().includes(activeBike.toLowerCase())) ||
       (activeBike === "Others" &&
-        !["Honda", "Suzuki", "Yamaha", "Crown", "Road Prince", "Super Power", "Unique", "United"].some((b) =>
-          p.name.toLowerCase().includes(b.toLowerCase())
+        !["Honda", "Suzuki", "Yamaha", "Crown", "Road Prince", "Super Power", "Unique", "United", "Super Star"].some((b) =>
+          p.name.toLowerCase().includes(b.toLowerCase()) || (p.brand && p.brand.toLowerCase().includes(b.toLowerCase()))
         ));
 
     return matchesSearch && matchesCategory && matchesBike;
