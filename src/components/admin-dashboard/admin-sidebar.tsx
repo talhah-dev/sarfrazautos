@@ -36,6 +36,7 @@ import {
   LogOutIcon,
   RotateCcwIcon,
   FileSpreadsheetIcon,
+  SparklesIcon,
 } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -178,31 +179,33 @@ export function AdminSidebar({
                               className={cn(
                                 "rounded-lg text-xs px-2.5 py-1.5 h-8 transition-colors w-full",
                                 pathname === "/admin/products/upload"
-                                  ? "bg-neutral-900 font-medium text-white hover:bg-neutral-900 hover:text-white"
+                                   ? "bg-neutral-900 font-medium text-white hover:bg-neutral-900 hover:text-white"
                                   : "text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900"
                               )}
                             >
                               <span>Add Product</span>
                             </SidebarMenuSubButton>
                           </SidebarMenuSubItem>
-                          <SidebarMenuSubItem>
-                            <SidebarMenuSubButton
-                              isActive={pathname === "/admin/products/edit"}
-                              render={<Link href="/admin/products/edit" />}
-                              className={cn(
-                                "rounded-lg text-xs px-2.5 py-1.5 h-8 transition-colors w-full",
-                                pathname === "/admin/products/edit"
-                                  ? "bg-neutral-900 font-medium text-white hover:bg-neutral-900 hover:text-white"
-                                  : "text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900"
-                              )}
-                            >
-                              <span>Edit Product</span>
-                            </SidebarMenuSubButton>
-                          </SidebarMenuSubItem>
                         </SidebarMenuSub>
                       </CollapsibleContent>
                     </SidebarMenuItem>
                   </Collapsible>
+
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      isActive={pathname === "/admin/schemes"}
+                      render={<Link href="/admin/schemes" />}
+                      className={cn(
+                        "rounded-xl text-sm px-3 py-2 h-9 transition-colors",
+                        pathname === "/admin/schemes"
+                          ? "bg-neutral-900 text-white font-medium hover:bg-neutral-800 hover:text-white"
+                          : "text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900"
+                      )}
+                    >
+                      <SparklesIcon className="size-4 shrink-0" />
+                      <span>Trade Schemes</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
                 </SidebarMenu>
               </SidebarGroupContent>
             </SidebarGroup>

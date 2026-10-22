@@ -1,11 +1,20 @@
 "use client";
 
 import { useEffect } from "react";
+import { usePathname } from "next/navigation";
 import Lenis from "lenis";
 import "lenis/dist/lenis.css";
 
 export default function LenisScroll({ children }: { children?: React.ReactNode }) {
+  const pathname = usePathname();
+
   useEffect(() => {
+    const isHomePage = pathname === "/" || pathname === "/home";
+    if (!isHomePage) {
+      document.documentElement.classList.remove("lenis", "lenis-smooth", "lenis-scrolling", "lenis-stopped");
+      return;
+    }
+
     const lenis = new Lenis({
       autoRaf: true,
       duration: 0.9,
@@ -17,8 +26,9 @@ export default function LenisScroll({ children }: { children?: React.ReactNode }
 
     return () => {
       lenis.destroy();
+      document.documentElement.classList.remove("lenis", "lenis-smooth", "lenis-scrolling", "lenis-stopped");
     };
-  }, []);
+  }, [pathname]);
 
   return <>{children}</>;
 }

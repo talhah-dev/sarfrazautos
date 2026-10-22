@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { ChevronRight, Upload, X, ImageIcon } from "lucide-react"
+import { ChevronRight, Upload, X, ImageIcon, Search, ChevronDown, Check } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
@@ -16,11 +16,49 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 
+const bikeBrands = [
+  "Honda",
+  "Yamaha",
+  "Suzuki",
+  "United",
+  "Super Power",
+  "Unique",
+  "Super Star",
+  "Road Prince",
+  "Hi-Speed",
+  "Crown",
+  "Ravi",
+  "Metro",
+  "Habib",
+  "Benelli",
+  "Other",
+]
+
+const compatibleBikeOptions = [
+  "70cc",
+  "100cc",
+  "110cc",
+  "125cc",
+  "150cc",
+  "200cc",
+  "220cc",
+  "250cc",
+  "All Models",
+]
+
 export function AdminUploadProductSection() {
   const [productType, setProductType] = useState("")
   const [category, setCategory] = useState("")
+  const [brandName, setBrandName] = useState("")
+  const [brandSearch, setBrandSearch] = useState("")
+  const [isBrandDropdownOpen, setIsBrandDropdownOpen] = useState(false)
+  const [compatibleBike, setCompatibleBike] = useState("")
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [isSaved, setIsSaved] = useState(false)
+
+  const filteredBrands = bikeBrands.filter((b) =>
+    b.toLowerCase().includes(brandSearch.toLowerCase())
+  )
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -93,43 +131,6 @@ export function AdminUploadProductSection() {
                 </div>
               </CardContent>
             </Card>
-
-            <Card className="border-neutral-200 shadow-xs">
-              <CardHeader className="p-4 pb-3">
-                <CardTitle className="text-sm font-semibold text-neutral-900">Product Type</CardTitle>
-              </CardHeader>
-              <CardContent className="p-4 pt-0 flex flex-col gap-3">
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-medium text-neutral-700">Listing Type</Label>
-                  <Select onValueChange={(val: any) => setProductType(val || "")} required>
-                    <SelectTrigger className="h-9 text-xs">
-                      <SelectValue placeholder="Select type..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="retail">Retail (Single Unit)</SelectItem>
-                      <SelectItem value="wholesale">Wholesale (Bulk)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-medium text-neutral-700">Category</Label>
-                  <Select onValueChange={(val: any) => setCategory(val || "")} required>
-                    <SelectTrigger className="h-9 text-xs">
-                      <SelectValue placeholder="Select category..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="cylinders">Cylinders & Heads</SelectItem>
-                      <SelectItem value="engine">Engine Blocks</SelectItem>
-                      <SelectItem value="crankshafts">Crankshafts</SelectItem>
-                      <SelectItem value="clutch">Clutch Plates</SelectItem>
-                      <SelectItem value="carburetors">Carburetors</SelectItem>
-                      <SelectItem value="others">Others</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </CardContent>
-            </Card>
           </div>
 
           <div className="lg:col-span-2">
@@ -147,8 +148,104 @@ export function AdminUploadProductSection() {
                   </div>
 
                   <div className="space-y-1.5">
-                    <Label htmlFor="brandName" className="text-xs font-medium text-neutral-700">Brand Name *</Label>
-                    <Input id="brandName" placeholder="e.g. Crown, Honda, Sarfraz Genuine" className="h-9 text-xs" required />
+                    <Label className="text-xs font-medium text-neutral-700">Listing Type *</Label>
+                    <Select onValueChange={(val: any) => setProductType(val || "")} required>
+                      <SelectTrigger className="w-full h-9 text-xs">
+                        <SelectValue placeholder="Select type..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="retail">Retail (Single Unit)</SelectItem>
+                        <SelectItem value="wholesale">Wholesale (Bulk)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-medium text-neutral-700">Category *</Label>
+                    <Select onValueChange={(val: any) => setCategory(val || "")} required>
+                      <SelectTrigger className="w-full h-9 text-xs">
+                        <SelectValue placeholder="Select category..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="cylinders">Cylinders & Heads</SelectItem>
+                        <SelectItem value="engine">Engine Blocks</SelectItem>
+                        <SelectItem value="crankshafts">Crankshafts</SelectItem>
+                        <SelectItem value="clutch">Clutch Plates</SelectItem>
+                        <SelectItem value="carburetors">Carburetors</SelectItem>
+                        <SelectItem value="others">Others</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-1.5 relative">
+                    <Label className="text-xs font-medium text-neutral-700">Brand Name *</Label>
+                    <button
+                      type="button"
+                      onClick={() => setIsBrandDropdownOpen(!isBrandDropdownOpen)}
+                      className="w-full flex items-center justify-between h-9 px-3 rounded-lg border border-input bg-white text-left text-xs transition-colors hover:border-neutral-400 focus:outline-none focus:ring-2 focus:ring-red-500/20 cursor-pointer"
+                    >
+                      <span className={brandName ? "text-neutral-900 font-medium" : "text-neutral-500"}>
+                        {brandName || "Select or search brand..."}
+                      </span>
+                      <ChevronDown className="size-3.5 text-neutral-400 shrink-0" />
+                    </button>
+
+                    {isBrandDropdownOpen && (
+                      <div className="absolute top-full left-0 right-0 mt-1 z-50 rounded-xl border border-neutral-200 bg-white shadow-lg overflow-hidden animate-in fade-in-0 zoom-in-95">
+                        <div className="p-2 border-b border-neutral-100 bg-neutral-50/70">
+                          <div className="relative">
+                            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3 text-neutral-400" />
+                            <Input
+                              placeholder="Search brand (Honda, Super Power, Unique...)"
+                              value={brandSearch}
+                              onChange={(e) => setBrandSearch(e.target.value)}
+                              className="pl-7 h-8 text-xs bg-white"
+                              autoFocus
+                            />
+                          </div>
+                        </div>
+                        <div className="max-h-48 overflow-y-auto p-1 divide-y divide-neutral-50">
+                          {filteredBrands.length === 0 ? (
+                            <div className="p-3 text-center">
+                              <p className="text-xs text-neutral-400">No matching brand found</p>
+                              {brandSearch && (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setBrandName(brandSearch)
+                                    setIsBrandDropdownOpen(false)
+                                    setBrandSearch("")
+                                  }}
+                                  className="mt-1 text-xs text-red-600 font-semibold hover:underline cursor-pointer"
+                                >
+                                  Use &quot;{brandSearch}&quot;
+                                </button>
+                              )}
+                            </div>
+                          ) : (
+                            filteredBrands.map((b) => (
+                              <button
+                                key={b}
+                                type="button"
+                                onClick={() => {
+                                  setBrandName(b)
+                                  setIsBrandDropdownOpen(false)
+                                  setBrandSearch("")
+                                }}
+                                className={`w-full flex items-center justify-between px-3 py-2 text-left text-xs rounded-lg transition-colors cursor-pointer ${
+                                  brandName === b
+                                    ? "bg-red-50 text-red-700 font-medium"
+                                    : "hover:bg-neutral-50 text-neutral-800"
+                                }`}
+                              >
+                                <span>{b}</span>
+                                {brandName === b && <Check className="size-3.5 text-red-600" />}
+                              </button>
+                            ))
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   <div className="space-y-1.5">
@@ -169,7 +266,7 @@ export function AdminUploadProductSection() {
                   <div className="space-y-1.5">
                     <Label htmlFor="stock" className="text-xs font-medium text-neutral-700">Stock Status *</Label>
                     <Select required>
-                      <SelectTrigger className="h-9 text-xs">
+                      <SelectTrigger className="w-full h-9 text-xs">
                         <SelectValue placeholder="Select status..." />
                       </SelectTrigger>
                       <SelectContent>
@@ -182,7 +279,18 @@ export function AdminUploadProductSection() {
 
                   <div className="space-y-1.5">
                     <Label htmlFor="compatibleBikes" className="text-xs font-medium text-neutral-700">Compatible Bikes</Label>
-                    <Input id="compatibleBikes" placeholder="e.g. Honda CD70, CG125" className="h-9 text-xs" />
+                    <Select value={compatibleBike} onValueChange={(val: any) => setCompatibleBike(val || "")}>
+                      <SelectTrigger className="w-full h-9 text-xs">
+                        <SelectValue placeholder="Select bike model / engine size..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {compatibleBikeOptions.map((opt) => (
+                          <SelectItem key={opt} value={opt}>
+                            {opt}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
 
                   <div className="space-y-1.5 sm:col-span-2">
