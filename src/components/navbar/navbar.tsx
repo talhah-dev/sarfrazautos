@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
+import { createPortal } from "react-dom";
 import { usePathname } from "next/navigation";
 import {
   DropdownMenu,
@@ -96,7 +97,10 @@ export function Navbar({ navigationData = defaultNavigation, className }: Navbar
     setSticky(window.scrollY >= 80);
   };
 
+  const [mounted, setMounted] = useState(false);
+
   useEffect(() => {
+    setMounted(true);
     window.addEventListener("scroll", handleScroll);
     return () => {
       window.removeEventListener("scroll", handleScroll);
@@ -105,8 +109,24 @@ export function Navbar({ navigationData = defaultNavigation, className }: Navbar
 
   return (
     <>
+      {mounted &&
+        createPortal(
+          <AnimatePresence>
+            {menuOpen && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                onClick={() => setMenuOpen(false)}
+                className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm cursor-pointer"
+              />
+            )}
+          </AnimatePresence>,
+          document.body
+        )}
       <TopTicker />
-      <div className="sticky top-0 z-50 w-full bg-white transition-all shadow-xs">
+      <div className="sticky top-0 z-30 w-full bg-white transition-all shadow-xs">
         <header
           ref={headerRef}
           className={cn(
@@ -130,17 +150,6 @@ export function Navbar({ navigationData = defaultNavigation, className }: Navbar
             <NavbarSearch />
             <div className="flex items-center gap-2.5 sm:gap-3">
               <CartBadge />
-              <AnimatePresence>
-                {menuOpen && (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    onClick={() => setMenuOpen(false)}
-                    className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm"
-                  />
-                )}
-              </AnimatePresence>
               <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
                 <DropdownMenuTrigger className="flex items-center justify-center rounded-full sm:h-12 sm:w-12 h-10 w-10 p-2.5 sm:p-4 outline-none cursor-pointer bg-neutral-100 text-neutral-900 border border-neutral-200 hover:bg-neutral-200 transition-colors">
                   <Equal size={16} />

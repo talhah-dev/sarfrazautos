@@ -11,6 +11,7 @@ export interface WholesaleProduct {
   price: string;
   originalPrice: string;
   category: string;
+  brand?: string;
   rating?: number;
   badge?: string;
   image: string;
@@ -288,6 +289,14 @@ export function WholesaleCatalog({
                             </span>
                           )}
                         </div>
+                        {product.brand && (
+                          <div className="flex items-center gap-1.5 mt-1.5 text-xs">
+                            <span className="text-neutral-400 font-medium">Brand:</span>
+                            <span className="font-semibold text-neutral-800">
+                              {product.brand}
+                            </span>
+                          </div>
+                        )}
                       </Link>
 
                       <button

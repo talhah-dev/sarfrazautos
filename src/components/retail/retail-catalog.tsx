@@ -12,6 +12,7 @@ export interface RetailProduct {
   originalPrice: string;
   category: string;
   bike: string;
+  brand: string;
   rating?: number;
   badge?: string;
   image: string;
@@ -25,6 +26,7 @@ const allProducts: RetailProduct[] = [
     originalPrice: "Rs. 11,200",
     category: "Engine & Parts",
     bike: "Honda CD70",
+    brand: "Honda",
     rating: 4.8,
     badge: "-25%",
     image: "/bike-engine.png",
@@ -36,6 +38,7 @@ const allProducts: RetailProduct[] = [
     originalPrice: "Rs. 19,800",
     category: "Engine & Parts",
     bike: "Honda CG125",
+    brand: "Honda",
     rating: 4.9,
     badge: "-15%",
     image: "/bike-engine.png",
@@ -47,6 +50,7 @@ const allProducts: RetailProduct[] = [
     originalPrice: "Rs. 4,700",
     category: "Engine & Parts",
     bike: "Honda CG125",
+    brand: "Honda",
     rating: 4.7,
     badge: "-10%",
     image: "/bike-engine.png",
@@ -58,6 +62,7 @@ const allProducts: RetailProduct[] = [
     originalPrice: "Rs. 3,950",
     category: "Clutch & Gears",
     bike: "Honda CG125",
+    brand: "Crown",
     rating: 4.6,
     badge: "-20%",
     image: "/bike-engine.png",
@@ -69,6 +74,7 @@ const allProducts: RetailProduct[] = [
     originalPrice: "Rs. 11,300",
     category: "Engine & Parts",
     bike: "Honda CD70",
+    brand: "Honda",
     rating: 4.8,
     badge: "-15%",
     image: "/bike-engine.png",
@@ -80,6 +86,7 @@ const allProducts: RetailProduct[] = [
     originalPrice: "Rs. 2,900",
     category: "Others",
     bike: "Honda CD70",
+    brand: "Honda",
     rating: 4.5,
     image: "/bike-engine.png",
   },
@@ -90,6 +97,7 @@ const allProducts: RetailProduct[] = [
     originalPrice: "Rs. 6,200",
     category: "Engine & Parts",
     bike: "Honda Pridor",
+    brand: "Honda",
     rating: 4.7,
     badge: "-18%",
     image: "/bike-engine.png",
@@ -101,6 +109,7 @@ const allProducts: RetailProduct[] = [
     originalPrice: "Rs. 2,650",
     category: "Others",
     bike: "Honda CD70",
+    brand: "Honda",
     rating: 4.6,
     badge: "-30%",
     image: "/bike-engine.png",
@@ -112,6 +121,7 @@ const allProducts: RetailProduct[] = [
     originalPrice: "Rs. 5,600",
     category: "Carburetor & Air",
     bike: "Honda CD70",
+    brand: "Honda",
     rating: 4.9,
     badge: "-12%",
     image: "/bike-engine.png",
@@ -123,6 +133,7 @@ const allProducts: RetailProduct[] = [
     originalPrice: "Rs. 8,000",
     category: "Clutch & Gears",
     bike: "Honda CG125",
+    brand: "Honda",
     rating: 4.7,
     badge: "-15%",
     image: "/bike-engine.png",
@@ -134,6 +145,7 @@ const allProducts: RetailProduct[] = [
     originalPrice: "Rs. 2,050",
     category: "Brakes",
     bike: "Honda CD70",
+    brand: "Crown",
     rating: 4.8,
     badge: "-20%",
     image: "/bike-engine.png",
@@ -145,6 +157,7 @@ const allProducts: RetailProduct[] = [
     originalPrice: "Rs. 3,350",
     category: "Electrical",
     bike: "Suzuki GS150",
+    brand: "Suzuki",
     rating: 4.5,
     badge: "-15%",
     image: "/bike-engine.png",
@@ -156,6 +169,7 @@ const allProducts: RetailProduct[] = [
     originalPrice: "Rs. 5,100",
     category: "Electrical",
     bike: "Honda CG125",
+    brand: "Honda",
     rating: 4.7,
     badge: "-10%",
     image: "/bike-engine.png",
@@ -167,6 +181,7 @@ const allProducts: RetailProduct[] = [
     originalPrice: "Rs. 8,600",
     category: "Clutch & Gears",
     bike: "Yamaha YBR125",
+    brand: "Yamaha",
     rating: 4.8,
     badge: "-14%",
     image: "/bike-engine.png",
@@ -178,6 +193,7 @@ const allProducts: RetailProduct[] = [
     originalPrice: "Rs. 7,200",
     category: "Brakes",
     bike: "Suzuki GS150",
+    brand: "Suzuki",
     rating: 4.6,
     badge: "-18%",
     image: "/bike-engine.png",
@@ -189,8 +205,45 @@ const allProducts: RetailProduct[] = [
     originalPrice: "Rs. 2,900",
     category: "Engine & Parts",
     bike: "Honda CD70",
+    brand: "Honda",
     rating: 4.9,
     badge: "-22%",
+    image: "/bike-engine.png",
+  },
+  {
+    id: "rp-17",
+    name: "US70 Genuine Fuel Tank Assembly",
+    price: "Rs. 4,800",
+    originalPrice: "Rs. 5,500",
+    category: "Others",
+    bike: "United US70",
+    brand: "United",
+    rating: 4.7,
+    badge: "-12%",
+    image: "/bike-engine.png",
+  },
+  {
+    id: "rp-18",
+    name: "SS70 Complete Wiring Harness Assembly",
+    price: "Rs. 2,150",
+    originalPrice: "Rs. 2,600",
+    category: "Electrical",
+    bike: "Super Star SS70",
+    brand: "Super Star",
+    rating: 4.6,
+    badge: "-17%",
+    image: "/bike-engine.png",
+  },
+  {
+    id: "rp-19",
+    name: "UD70 Cylinder Block & Piston Kit",
+    price: "Rs. 7,900",
+    originalPrice: "Rs. 9,200",
+    category: "Engine & Parts",
+    bike: "Unique UD70",
+    brand: "Unique",
+    rating: 4.8,
+    badge: "-14%",
     image: "/bike-engine.png",
   },
 ];
@@ -213,7 +266,8 @@ export function RetailCatalog({
       !searchQuery ||
       p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       p.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      p.bike.toLowerCase().includes(searchQuery.toLowerCase());
+      p.bike.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      p.brand.toLowerCase().includes(searchQuery.toLowerCase());
 
     const matchesCategory =
       activeCategory === "All" || p.category === activeCategory;
@@ -223,9 +277,10 @@ export function RetailCatalog({
       activeBike === "All Brands" ||
       activeBike === "All" ||
       p.bike.toLowerCase().includes(activeBike.toLowerCase()) ||
+      p.brand.toLowerCase().includes(activeBike.toLowerCase()) ||
       (activeBike === "Others" &&
-        !["Honda", "Suzuki", "Yamaha", "Crown", "Road Prince", "Super Power", "Unique", "United"].some((b) =>
-          p.bike.toLowerCase().includes(b.toLowerCase())
+        !["Honda", "Suzuki", "Yamaha", "Crown", "Road Prince", "Super Power", "Unique", "United", "Super Star"].some((b) =>
+          p.bike.toLowerCase().includes(b.toLowerCase()) || p.brand.toLowerCase().includes(b.toLowerCase())
         ));
 
     return matchesSearch && matchesCategory && matchesBike;
@@ -304,6 +359,12 @@ export function RetailCatalog({
                               {product.originalPrice}
                             </span>
                           )}
+                        </div>
+                        <div className="flex items-center gap-1.5 mt-1.5 text-xs">
+                          <span className="text-neutral-400 font-medium">Brand:</span>
+                          <span className="font-semibold text-neutral-800">
+                            {product.brand}
+                          </span>
                         </div>
                       </Link>
 

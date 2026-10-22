@@ -24,7 +24,7 @@ const TICKER_ITEMS = [
 
 export function TopTicker() {
   return (
-    <div className="relative w-full bg-red-600 text-white overflow-hidden py-2 text-xs font-semibold tracking-wide border-b border-red-700/50 select-none z-50">
+    <div className="relative w-full bg-red-600 text-white overflow-hidden py-2 text-xs font-semibold tracking-wide border-b border-red-700/50 select-none z-20">
       <div className="flex w-max">
         <motion.div
           animate={{ x: ["0%", "-50%"] }}
