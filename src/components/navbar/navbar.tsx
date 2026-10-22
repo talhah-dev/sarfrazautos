@@ -142,8 +142,13 @@ export function Navbar({ navigationData = defaultNavigation, className }: Navbar
               "relative mx-auto max-w-7xl px-4 xl:px-16 flex items-center justify-between w-full"
             )}
           >
-            <Link href="/" className="flex items-center gap-2">
-              <span className="text-xl sm:text-2xl font-bold tracking-tight uppercase text-neutral-950 transition-colors">
+            <Link href="/" className="flex items-center gap-2.5 group">
+              <img
+                src="/logo.png"
+                alt="Sarfraz Autos Logo"
+                className="h-10 sm:h-12 w-auto object-contain shrink-0 group-hover:scale-105 transition-transform"
+              />
+              <span className="text-xl sm:text-2xl font-bold tracking-tight uppercase text-neutral-950 group-hover:text-red-600 transition-colors">
                 Sarfraz Autos
               </span>
             </Link>
