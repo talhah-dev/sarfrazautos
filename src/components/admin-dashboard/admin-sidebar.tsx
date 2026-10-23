@@ -228,7 +228,7 @@ export function AdminSidebar({
                       )}
                     >
                       <HistoryIcon className="size-4 shrink-0" />
-                      <span>Order History</span>
+                      <span>Order</span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                   <SidebarMenuItem>

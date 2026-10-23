@@ -11,6 +11,7 @@ import {
   Boxes,
   Truck,
   RotateCcwIcon,
+  Plus,
 } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
@@ -30,6 +31,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { AdminCreateReturnDialog } from "@/components/admin-dashboard/admin-create-return-dialog"
 
 const initialReturns = [
   {
@@ -95,6 +97,11 @@ export function AdminReturnsSection() {
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState("All")
   const [selectedReturn, setSelectedReturn] = useState<any>(null)
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
+
+  const handleReturnCreated = (newReturn: any) => {
+    setReturnsList((prev) => [newReturn, ...prev])
+  }
 
   const pendingCount = returnsList.filter((r) => r.status === "Pending Receipt" || r.status === "Received").length
   const restockedCount = returnsList.filter((r) => r.status === "Restocked" || r.status === "Refunded").length
@@ -155,6 +162,14 @@ export function AdminReturnsSection() {
             Track customer and wholesale dealer returns, warehouse intake, and inventory restocking.
           </p>
         </div>
+        <Button
+          type="button"
+          onClick={() => setIsCreateDialogOpen(true)}
+          className="h-9 px-4 text-xs bg-red-600 hover:bg-red-700 text-white font-medium gap-1.5 cursor-pointer rounded-xl shrink-0"
+        >
+          <Plus className="size-3.5" />
+          <span>Add Walk-in Return</span>
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -385,6 +400,12 @@ export function AdminReturnsSection() {
           )}
         </DialogContent>
       </Dialog>
+
+      <AdminCreateReturnDialog
+        open={isCreateDialogOpen}
+        onOpenChange={setIsCreateDialogOpen}
+        onReturnCreated={handleReturnCreated}
+      />
     </div>
   )
 }

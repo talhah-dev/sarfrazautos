@@ -15,7 +15,7 @@ export default function AdminOrdersPage() {
     >
       <AdminSidebar variant="inset" />
       <SidebarInset>
-        <AdminSiteHeader title="Order History" />
+        <AdminSiteHeader title="Orders" />
         <div className="flex flex-1 flex-col">
           <div className="@container/main flex flex-1 flex-col gap-2">
             <AdminOrderHistorySection />
