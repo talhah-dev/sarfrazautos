@@ -31,6 +31,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { AdminPagination } from "@/components/admin-dashboard/admin-pagination"
 
 const initialAgingData = [
   {
@@ -110,6 +111,7 @@ export function AdminAgingReportSection() {
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedReminder, setSelectedReminder] = useState<any>(null)
   const [copied, setCopied] = useState(false)
+  const [currentPage, setCurrentPage] = useState(1)
 
   const totalOutstanding = agingData.reduce((acc, curr) => acc + curr.totalDue, 0)
   const totalDays0_30 = agingData.reduce((acc, curr) => acc + curr.days0_30, 0)
@@ -300,6 +302,11 @@ export function AdminAgingReportSection() {
               </TableBody>
             </Table>
           </div>
+          <AdminPagination
+            currentPage={currentPage}
+            totalPages={5}
+            onPageChange={setCurrentPage}
+          />
         </CardContent>
       </Card>
 

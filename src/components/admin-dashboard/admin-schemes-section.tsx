@@ -28,6 +28,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { AdminPagination } from "@/components/admin-dashboard/admin-pagination"
 import {
   Dialog,
   DialogContent,
@@ -130,6 +131,7 @@ export function AdminSchemesSection() {
   const [products, setProducts] = useState(catalogueProducts)
   const [searchQuery, setSearchQuery] = useState("")
   const [filterType, setFilterType] = useState("All")
+  const [currentPage, setCurrentPage] = useState(1)
 
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [selectedProductId, setSelectedProductId] = useState(products[0]?.id || "")
@@ -475,6 +477,11 @@ export function AdminSchemesSection() {
               </TableBody>
             </Table>
           </div>
+          <AdminPagination
+            currentPage={currentPage}
+            totalPages={5}
+            onPageChange={setCurrentPage}
+          />
         </CardContent>
       </Card>
 

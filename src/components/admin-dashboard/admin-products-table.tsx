@@ -14,6 +14,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { AdminPagination } from "@/components/admin-dashboard/admin-pagination"
 
 export interface AdminProduct {
   id: string
@@ -40,6 +41,7 @@ export function AdminProductsTable() {
   const [searchQuery, setSearchQuery] = useState("")
   const [typeFilter, setTypeFilter] = useState("All")
   const [products, setProducts] = useState(adminProducts)
+  const [currentPage, setCurrentPage] = useState(1)
 
   const filtered = products.filter((p) => {
     const matchesSearch =
@@ -153,6 +155,12 @@ export function AdminProductsTable() {
           </TableBody>
         </Table>
       </div>
+
+      <AdminPagination
+        currentPage={currentPage}
+        totalPages={5}
+        onPageChange={setCurrentPage}
+      />
     </div>
   )
 }

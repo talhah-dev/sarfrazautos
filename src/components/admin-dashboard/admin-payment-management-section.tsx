@@ -19,6 +19,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { AdminPagination } from "@/components/admin-dashboard/admin-pagination"
 
 type PaymentStatus = "Pending" | "Approved" | "Rejected"
 
@@ -46,6 +47,7 @@ export function AdminPaymentManagementSection() {
   const [filter, setFilter] = useState("All")
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null)
+  const [currentPage, setCurrentPage] = useState(1)
 
   const filtered = payments.filter((p) => {
     const matchSearch =
@@ -165,6 +167,12 @@ export function AdminPaymentManagementSection() {
           </TableBody>
         </Table>
       </div>
+
+      <AdminPagination
+        currentPage={currentPage}
+        totalPages={5}
+        onPageChange={setCurrentPage}
+      />
 
       <Dialog open={!!selectedPayment} onOpenChange={() => setSelectedPayment(null)}>
         <DialogContent className="max-w-sm">

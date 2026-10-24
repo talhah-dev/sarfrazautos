@@ -26,6 +26,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { AdminPagination } from "@/components/admin-dashboard/admin-pagination"
 import {
   Dialog,
   DialogContent,
@@ -106,6 +107,7 @@ export function AdminDealerRequestsSection() {
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState("All")
   const [selectedDealer, setSelectedDealer] = useState<any>(null)
+  const [currentPage, setCurrentPage] = useState(1)
 
   const pendingCount = requests.filter((r) => r.status === "Pending").length
   const approvedCount = requests.filter((r) => r.status === "Approved").length
@@ -350,6 +352,12 @@ export function AdminDealerRequestsSection() {
             </TableBody>
           </Table>
         </div>
+
+        <AdminPagination
+          currentPage={currentPage}
+          totalPages={5}
+          onPageChange={setCurrentPage}
+        />
       </div>
 
       <Dialog open={!!selectedDealer} onOpenChange={(open: boolean) => !open && setSelectedDealer(null)}>

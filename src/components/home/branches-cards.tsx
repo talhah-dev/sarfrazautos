@@ -74,7 +74,7 @@ export function BranchesCards({
             {title}
           </h2>
           <p className="text-neutral-500 text-sm md:text-base mt-3">
-            Walk into our retail counters or visit our central wholesale warehouses. Hover on desktop or tap on mobile to reveal the location map.
+            Visit our distribution hubs or central wholesale warehouses. Hover on desktop or tap on mobile to reveal the location map.
           </p>
         </div>
 

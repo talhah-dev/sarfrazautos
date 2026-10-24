@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { PackageCheck, Clock, XCircle, Truck, RefreshCw, RotateCcw, Ban, Plus } from "lucide-react"
+import { PackageCheck, Clock, XCircle, Truck, RefreshCw, RotateCcw, Ban } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -14,7 +14,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { AdminCreateOrderDialog } from "@/components/admin-dashboard/admin-create-order-dialog"
+import { AdminPagination } from "@/components/admin-dashboard/admin-pagination"
 
 const initialOrders = [
   { id: "ORD-2026-001", dealer: "Ali Brothers Traders", product: "CD70 Cylinder Head x2", type: "Wholesale", amount: "Rs. 168,000", status: "Delivered", date: "04 Oct 2026" },
@@ -31,11 +31,7 @@ export function AdminOrderHistorySection() {
   const [orderList, setOrderList] = useState(initialOrders)
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState("All")
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
-
-  const handleOrderCreated = (newOrder: any) => {
-    setOrderList((prev) => [newOrder, ...prev])
-  }
+  const [currentPage, setCurrentPage] = useState(1)
 
   const handleUpdateStatus = (orderId: string, newStatus: string) => {
     setOrderList((prev) =>
@@ -95,14 +91,6 @@ export function AdminOrderHistorySection() {
           <h2 className="text-2xl font-bold tracking-tight text-neutral-900">Orders</h2>
           <p className="text-sm text-neutral-500 mt-1">Manage and track all retail and wholesale orders in real time.</p>
         </div>
-        <Button
-          type="button"
-          onClick={() => setIsCreateDialogOpen(true)}
-          className="h-9 px-4 text-xs bg-red-600 hover:bg-red-700 text-white font-medium gap-1.5 cursor-pointer rounded-xl shrink-0"
-        >
-          <Plus className="size-3.5" />
-          <span>Add Walk-in Order</span>
-        </Button>
       </div>
 
       <div className="grid grid-cols-1 gap-4 @xl/main:grid-cols-3">
@@ -289,10 +277,10 @@ export function AdminOrderHistorySection() {
         </Table>
       </div>
 
-      <AdminCreateOrderDialog
-        open={isCreateDialogOpen}
-        onOpenChange={setIsCreateDialogOpen}
-        onOrderCreated={handleOrderCreated}
+      <AdminPagination
+        currentPage={currentPage}
+        totalPages={5}
+        onPageChange={setCurrentPage}
       />
     </div>
   )

@@ -37,6 +37,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { AdminPagination } from "@/components/admin-dashboard/admin-pagination"
 
 const initialRequests = [
   {
@@ -109,6 +110,7 @@ const initialRequests = [
 export function AdminDealerRequestsTable() {
   const [requests, setRequests] = useState(initialRequests)
   const [selectedDealer, setSelectedDealer] = useState<any>(null)
+  const [currentPage, setCurrentPage] = useState(1)
 
   const updateStatus = (id: string, newStatus: "Approved" | "Rejected") => {
     setRequests((prev) =>
@@ -243,6 +245,11 @@ export function AdminDealerRequestsTable() {
               </TableBody>
             </Table>
           </div>
+          <AdminPagination
+            currentPage={currentPage}
+            totalPages={5}
+            onPageChange={setCurrentPage}
+          />
         </CardContent>
       </Card>
 

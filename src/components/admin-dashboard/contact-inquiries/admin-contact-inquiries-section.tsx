@@ -23,6 +23,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { AdminPagination } from "@/components/admin-dashboard/admin-pagination"
 import { ContactInquiryDetailDialog } from "./contact-inquiry-detail-dialog"
 
 const initialInquiries = [
@@ -83,6 +84,7 @@ export function AdminContactInquiriesSection() {
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState("All")
   const [selectedInquiry, setSelectedInquiry] = useState<any>(null)
+  const [currentPage, setCurrentPage] = useState(1)
 
   const newCount = inquiries.filter((m) => m.status === "New").length
   const repliedCount = inquiries.filter((m) => m.status === "Replied").length
@@ -274,6 +276,12 @@ export function AdminContactInquiriesSection() {
             </TableBody>
           </Table>
         </div>
+
+        <AdminPagination
+          currentPage={currentPage}
+          totalPages={5}
+          onPageChange={setCurrentPage}
+        />
       </div>
 
       <ContactInquiryDetailDialog
