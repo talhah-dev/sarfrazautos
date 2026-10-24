@@ -221,8 +221,8 @@ export function AdminAgingReportSection() {
         </Card>
       </div>
 
-      <Card className="rounded-2xl border bg-white shadow-2xs">
-        <CardHeader className="flex sm:flex-row flex-col sm:items-center justify-between gap-4 px-6 pt-6 pb-4">
+      <Card className="rounded-2xl border bg-white pb-0">
+        <CardHeader className="flex sm:flex-row flex-col sm:items-center justify-between gap-4 px-6">
           <div className="relative w-full sm:w-72">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-neutral-400" />
             <Input
@@ -236,7 +236,7 @@ export function AdminAgingReportSection() {
             Showing {filteredData.length} Dealers with Ledger Balances
           </span>
         </CardHeader>
-        <CardContent className="px-6 pb-6 pt-0">
+        <CardContent className="px-6 pt-0">
           <div className="overflow-x-auto rounded-xl border border-neutral-200/80">
             <Table>
               <TableHeader className="bg-neutral-50/70">

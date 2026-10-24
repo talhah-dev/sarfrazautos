@@ -148,8 +148,8 @@ export function AdminDealerRequestsTable() {
 
   return (
     <>
-      <Card className="w-full rounded-2xl border bg-white shadow-2xs">
-        <CardHeader className="flex sm:flex-row flex-col justify-between sm:items-center items-start gap-4 px-6 pt-6 pb-4">
+      <Card className="w-full rounded-2xl border bg-white pb-0">
+        <CardHeader className="flex sm:flex-row flex-col justify-between sm:items-center items-start gap-4 px-6 pb-4">
           <div>
             <CardTitle className="text-lg font-semibold text-neutral-900 tracking-tight">
               Recent Dealer Requests
@@ -167,7 +167,7 @@ export function AdminDealerRequestsTable() {
           </Link>
         </CardHeader>
 
-        <CardContent className="px-6 pb-6 pt-2">
+        <CardContent className="px-6 ">
           <div className="overflow-x-auto rounded-xl border border-neutral-200/80">
             <Table>
               <TableHeader className="bg-neutral-50/70">
