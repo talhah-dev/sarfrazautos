@@ -73,7 +73,7 @@ const defaultNavigation: NavLinkItem[] = [
   { title: "Home", href: "/" },
   { title: "Retail Shop", href: "/retail" },
   { title: "Wholesale", href: "/wholesale" },
-  { title: "My Account", href: "/wholesale-dashboard" },
+  { title: "My Account", href: "/customer-portal" },
   { title: "Contact Us", href: "/contact" },
 ];
 
