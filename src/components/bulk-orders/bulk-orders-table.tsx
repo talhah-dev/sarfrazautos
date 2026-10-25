@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { Search, Eye, Download, ExternalLink } from "lucide-react"
 import { Input } from "@/components/ui/input"
@@ -69,11 +69,33 @@ const initialOrders: BulkOrder[] = [
 ]
 
 export function BulkOrdersTable() {
+  const [orders, setOrders] = useState<BulkOrder[]>(initialOrders)
+  const [isLoading, setIsLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState<string>("All")
   const [selectedOrder, setSelectedOrder] = useState<BulkOrder | null>(null)
 
-  const filteredOrders = initialOrders.filter((order) => {
+  useEffect(() => {
+    let isMounted = true
+    async function loadBulkOrders() {
+      try {
+        const res = await fetch("/api/customer/bulk-orders")
+        const data = await res.json()
+        if (data?.success && Array.isArray(data?.bulkOrders) && isMounted) {
+          setOrders(data.bulkOrders)
+        }
+      } catch (err) {
+      } finally {
+        if (isMounted) setIsLoading(false)
+      }
+    }
+    loadBulkOrders()
+    return () => {
+      isMounted = false
+    }
+  }, [])
+
+  const filteredOrders = orders.filter((order) => {
     const matchesSearch =
       order.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
       order.items.toLowerCase().includes(searchQuery.toLowerCase())

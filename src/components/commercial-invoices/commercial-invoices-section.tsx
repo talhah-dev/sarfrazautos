@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { ChevronRight, Eye, Search, FileText } from "lucide-react"
 import { Input } from "@/components/ui/input"
@@ -81,11 +81,33 @@ const invoicesData: CommercialInvoice[] = [
 ]
 
 export function CommercialInvoicesSection() {
+  const [invoices, setInvoices] = useState<CommercialInvoice[]>(invoicesData)
+  const [isLoading, setIsLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState("All")
   const [selectedInvoice, setSelectedInvoice] = useState<CommercialInvoice | null>(null)
 
-  const filteredInvoices = invoicesData.filter((inv) => {
+  useEffect(() => {
+    let isMounted = true
+    async function loadInvoices() {
+      try {
+        const res = await fetch("/api/customer/invoices")
+        const data = await res.json()
+        if (data?.success && Array.isArray(data?.invoices) && isMounted) {
+          setInvoices(data.invoices)
+        }
+      } catch (err) {
+      } finally {
+        if (isMounted) setIsLoading(false)
+      }
+    }
+    loadInvoices()
+    return () => {
+      isMounted = false
+    }
+  }, [])
+
+  const filteredInvoices = invoices.filter((inv) => {
     const matchesSearch =
       inv.invoiceNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
       inv.orderNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||

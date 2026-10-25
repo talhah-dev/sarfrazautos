@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import {
   Tag,
   Search,
@@ -15,6 +15,7 @@ import {
   Plus,
   ChevronDown,
   Check,
+  Loader2,
 } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
@@ -128,19 +129,41 @@ const catalogueProducts = [
 ]
 
 export function AdminSchemesSection() {
-  const [products, setProducts] = useState(catalogueProducts)
+  const [products, setProducts] = useState<any[]>(catalogueProducts)
+  const [isLoading, setIsLoading] = useState(true)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   const [filterType, setFilterType] = useState("All")
   const [currentPage, setCurrentPage] = useState(1)
 
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const [selectedProductId, setSelectedProductId] = useState(products[0]?.id || "")
+  const [selectedProductId, setSelectedProductId] = useState("")
   const [schemeTitle, setSchemeTitle] = useState("")
   const [buyQty, setBuyQty] = useState("10")
   const [freeQty, setFreeQty] = useState("1")
 
   const [productSearch, setProductSearch] = useState("")
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+
+  const fetchSchemes = async () => {
+    try {
+      const res = await fetch("/api/schemes")
+      const data = await res.json()
+      if (data?.success && Array.isArray(data.products)) {
+        setProducts(data.products)
+        if (!selectedProductId && data.products.length > 0) {
+          setSelectedProductId(data.products[0].id)
+        }
+      }
+    } catch (e) {
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchSchemes()
+  }, [])
 
   const activeSchemesCount = products.filter((p) => p.hasScheme && p.schemeStatus === "Active").length
   const pausedSchemesCount = products.filter((p) => p.hasScheme && p.schemeStatus === "Paused").length
@@ -158,6 +181,13 @@ export function AdminSchemesSection() {
     if (filterType === "No Scheme") return matchesSearch && !p.hasScheme
     return matchesSearch
   })
+
+  const pageSize = 20
+  const totalPages = Math.max(1, Math.ceil(filteredProducts.length / pageSize))
+  const paginatedProducts = filteredProducts.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  )
 
   const dropdownFilteredProducts = products.filter((p) => {
     const q = productSearch.toLowerCase()
@@ -180,6 +210,7 @@ export function AdminSchemesSection() {
   }
 
   const selectProductForScheme = (prod: any) => {
+    if (!prod) return
     setSelectedProductId(prod.id)
     if (prod.hasScheme) {
       setBuyQty(prod.buyQty.toString())
@@ -194,10 +225,12 @@ export function AdminSchemesSection() {
     setProductSearch("")
   }
 
-  const handleSaveScheme = (e: React.FormEvent) => {
+  const handleSaveScheme = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!selectedProduct) return
     const buy = Math.max(1, parseInt(buyQty) || 1)
     const free = Math.max(1, parseInt(freeQty) || 1)
+    setIsSubmitting(true)
 
     setProducts((prev) =>
       prev.map((p) =>
@@ -213,22 +246,59 @@ export function AdminSchemesSection() {
       )
     )
 
-    setIsModalOpen(false)
+    try {
+      const res = await fetch("/api/schemes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          productId: selectedProduct.productId || selectedProduct.id,
+          productName: selectedProduct.name,
+          category: selectedProduct.category,
+          brand: selectedProduct.brand,
+          cartonPrice: selectedProduct.cartonPrice,
+          buyQty: buy,
+          freeQty: free,
+          status: "Active",
+        }),
+      })
+      const data = await res.json()
+      if (data?.success) {
+        await fetchSchemes()
+        setIsModalOpen(false)
+      }
+    } catch (e) {
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
-  const togglePauseScheme = (id: string) => {
+  const togglePauseScheme = async (id: string) => {
+    const prod = products.find((p) => p.id === id)
+    if (!prod) return
+    const nextStatus = prod.schemeStatus === "Active" ? "Paused" : "Active"
+
     setProducts((prev) =>
       prev.map((p) => {
         if (p.id === id) {
-          const nextStatus = p.schemeStatus === "Active" ? "Paused" : "Active"
           return { ...p, schemeStatus: nextStatus }
         }
         return p
       })
     )
+
+    try {
+      await fetch(`/api/schemes/${prod.schemeId || prod.productId || id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: nextStatus }),
+      })
+    } catch (e) {
+      await fetchSchemes()
+    }
   }
 
-  const handleRemoveScheme = (id: string) => {
+  const handleRemoveScheme = async (id: string) => {
+    const prod = products.find((p) => p.id === id)
     setProducts((prev) =>
       prev.map((p) =>
         p.id === id
@@ -238,6 +308,15 @@ export function AdminSchemesSection() {
     )
     if (selectedProductId === id) {
       setIsModalOpen(false)
+    }
+
+    try {
+      await fetch(`/api/schemes?id=${prod?.schemeId || ""}&productId=${prod?.productId || id}`, {
+        method: "DELETE",
+      })
+      await fetchSchemes()
+    } catch (e) {
+      await fetchSchemes()
     }
   }
 
@@ -337,7 +416,10 @@ export function AdminSchemesSection() {
             <Input
               placeholder="Search product name, category..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => {
+                setSearchQuery(e.target.value)
+                setCurrentPage(1)
+              }}
               className="pl-9 h-9 text-xs"
             />
           </div>
@@ -347,7 +429,10 @@ export function AdminSchemesSection() {
                 key={st}
                 size="sm"
                 variant={filterType === st ? "default" : "outline"}
-                onClick={() => setFilterType(st)}
+                onClick={() => {
+                  setFilterType(st)
+                  setCurrentPage(1)
+                }}
                 className="h-8 text-xs cursor-pointer rounded-xl"
               >
                 {st}
@@ -370,12 +455,28 @@ export function AdminSchemesSection() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredProducts.map((p) => {
-                  const hasScheme = p.hasScheme
-                  const netPrice = hasScheme ? calculateNetPrice(p.cartonPrice, p.buyQty, p.freeQty) : p.cartonPrice
+                {isLoading ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center py-8 text-neutral-500">
+                      <div className="flex items-center justify-center gap-2">
+                        <Loader2 className="size-4 animate-spin text-red-600" />
+                        <span>Loading schemes & products...</span>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ) : paginatedProducts.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center py-8 text-neutral-500">
+                      No products or schemes found.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  paginatedProducts.map((p) => {
+                    const hasScheme = p.hasScheme
+                    const netPrice = hasScheme ? calculateNetPrice(p.cartonPrice, p.buyQty, p.freeQty) : p.cartonPrice
 
-                  return (
-                    <TableRow key={p.id} className="text-xs hover:bg-neutral-50/50">
+                    return (
+                      <TableRow key={p.id} className="text-xs hover:bg-neutral-50/50">
                       <TableCell>
                         <div className="font-semibold text-neutral-900">{p.name}</div>
                         <div className="text-[11px] text-neutral-400 font-mono">{p.id}</div>
@@ -473,13 +574,13 @@ export function AdminSchemesSection() {
                       </TableCell>
                     </TableRow>
                   )
-                })}
+                }))}
               </TableBody>
             </Table>
           </div>
           <AdminPagination
             currentPage={currentPage}
-            totalPages={5}
+            totalPages={totalPages}
             onPageChange={setCurrentPage}
           />
         </CardContent>
@@ -685,9 +786,17 @@ export function AdminSchemesSection() {
                 <Button
                   type="submit"
                   size="sm"
+                  disabled={isSubmitting}
                   className="h-8 text-xs bg-red-600 hover:bg-red-700 text-white cursor-pointer"
                 >
-                  Save & Launch Scheme
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="size-3 animate-spin mr-1.5" />
+                      Saving Scheme...
+                    </>
+                  ) : (
+                    "Save & Launch Scheme"
+                  )}
                 </Button>
               </div>
             </div>

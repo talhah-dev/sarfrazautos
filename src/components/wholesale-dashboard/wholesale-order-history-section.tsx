@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -11,8 +11,18 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { Loader2 } from "lucide-react"
 
-const orders = [
+export interface OrderItem {
+  id: string
+  product: string
+  qty: number
+  amount: string
+  status: string
+  date: string
+}
+
+const fallbackOrders: OrderItem[] = [
   { id: "ORD-2026-001", product: "CD70 Complete Cylinder Head", qty: 2, amount: "Rs. 168,000", status: "Delivered", date: "04 Oct 2026" },
   { id: "ORD-2026-004", product: "4-Stroke Engine Block", qty: 3, amount: "Rs. 276,000", status: "Processing", date: "01 Oct 2026" },
   { id: "ORD-2026-007", product: "Performance Crankshaft Assembly", qty: 4, amount: "Rs. 340,000", status: "Delivered", date: "27 Sep 2026" },
@@ -24,8 +34,30 @@ const orders = [
 ]
 
 export function WholesaleOrderHistorySection() {
+  const [orders, setOrders] = useState<OrderItem[]>(fallbackOrders)
+  const [isLoading, setIsLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState("All")
+
+  useEffect(() => {
+    let isMounted = true
+    async function loadOrders() {
+      try {
+        const res = await fetch("/api/customer/dashboard")
+        const data = await res.json()
+        if (data?.success && Array.isArray(data?.orders) && isMounted) {
+          setOrders(data.orders)
+        }
+      } catch (err) {
+      } finally {
+        if (isMounted) setIsLoading(false)
+      }
+    }
+    loadOrders()
+    return () => {
+      isMounted = false
+    }
+  }, [])
 
   const filtered = orders.filter((o) => {
     const matchSearch =
@@ -86,16 +118,33 @@ export function WholesaleOrderHistorySection() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filtered.map((order) => (
-              <TableRow key={order.id} className="text-xs hover:bg-neutral-50/70">
-                <TableCell className="font-mono text-neutral-600">{order.id}</TableCell>
-                <TableCell className="font-medium text-neutral-900 max-w-[220px] truncate">{order.product}</TableCell>
-                <TableCell className="text-neutral-600">{order.qty} pcs</TableCell>
-                <TableCell className="font-semibold text-neutral-900 whitespace-nowrap">{order.amount}</TableCell>
-                <TableCell>{statusBadge(order.status)}</TableCell>
-                <TableCell className="text-neutral-600 whitespace-nowrap">{order.date}</TableCell>
+            {isLoading ? (
+              <TableRow>
+                <TableCell colSpan={6} className="text-center py-8 text-neutral-500">
+                  <div className="flex items-center justify-center gap-2">
+                    <Loader2 className="size-4 animate-spin" />
+                    <span>Loading order records...</span>
+                  </div>
+                </TableCell>
               </TableRow>
-            ))}
+            ) : filtered.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={6} className="text-center py-8 text-neutral-500">
+                  No orders found.
+                </TableCell>
+              </TableRow>
+            ) : (
+              filtered.map((order) => (
+                <TableRow key={order.id} className="text-xs hover:bg-neutral-50/70">
+                  <TableCell className="font-mono text-neutral-600">{order.id}</TableCell>
+                  <TableCell className="font-medium text-neutral-900 max-w-[220px] truncate">{order.product}</TableCell>
+                  <TableCell className="text-neutral-600">{order.qty} pcs</TableCell>
+                  <TableCell className="font-semibold text-neutral-900 whitespace-nowrap">{order.amount}</TableCell>
+                  <TableCell>{statusBadge(order.status)}</TableCell>
+                  <TableCell className="text-neutral-600 whitespace-nowrap">{order.date}</TableCell>
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
       </div>

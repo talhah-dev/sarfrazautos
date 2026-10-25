@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { ChevronRight, Eye, Download, Search, CheckCircle2, Clock } from "lucide-react"
 import { Input } from "@/components/ui/input"
@@ -82,11 +82,39 @@ const paymentsData: PaymentRecord[] = [
 ]
 
 export function PaymentHistorySection() {
+  const [payments, setPayments] = useState<PaymentRecord[]>(paymentsData)
+  const [stats, setStats] = useState({
+    totalCleared: "Rs. 2,348,000",
+    inProcessing: "Rs. 300,000",
+    totalTransactions: 6,
+  })
+  const [isLoading, setIsLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState("All")
   const [selectedPayment, setSelectedPayment] = useState<PaymentRecord | null>(null)
 
-  const filteredPayments = paymentsData.filter((payment) => {
+  useEffect(() => {
+    let isMounted = true
+    async function loadPayments() {
+      try {
+        const res = await fetch("/api/customer/payments")
+        const data = await res.json()
+        if (data?.success && isMounted) {
+          if (Array.isArray(data.payments)) setPayments(data.payments)
+          if (data.stats) setStats(data.stats)
+        }
+      } catch (err) {
+      } finally {
+        if (isMounted) setIsLoading(false)
+      }
+    }
+    loadPayments()
+    return () => {
+      isMounted = false
+    }
+  }, [])
+
+  const filteredPayments = payments.filter((payment) => {
     const matchesSearch =
       payment.txnId.toLowerCase().includes(searchQuery.toLowerCase()) ||
       payment.method.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -160,11 +188,11 @@ export function PaymentHistorySection() {
             <CheckCircle2 className="size-8 text-emerald-600 stroke-[1.5]" />
             <CardDescription className="pt-7">Total Payments Cleared</CardDescription>
             <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl text-neutral-900">
-              Rs. 2,348,000
+              {stats.totalCleared}
             </CardTitle>
             <CardAction>
               <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 text-xs">
-                5 Transactions
+                {stats.totalTransactions} Transactions
               </Badge>
             </CardAction>
           </CardHeader>
