@@ -3,7 +3,10 @@ import type { NextRequest } from "next/server"
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
-  const isLoginPage = pathname === "/admin/login"
+  const isAdminLoginPage = pathname === "/admin/login"
+  const isCustomerLoginPage = pathname === "/login"
+  const isCustomerPortal = pathname === "/customer-portal" || pathname.startsWith("/customer-portal/")
+  const isAdminRoute = pathname === "/admin" || pathname.startsWith("/admin/")
 
   const sessionToken =
     request.cookies.get("better-auth.session_token") ||
@@ -11,19 +14,32 @@ export function proxy(request: NextRequest) {
 
   const isAuthenticated = Boolean(sessionToken?.value)
 
-  if (!isAuthenticated && !isLoginPage) {
-    const loginUrl = new URL("/admin/login", request.url)
+  if (isAdminRoute) {
+    if (!isAuthenticated && !isAdminLoginPage) {
+      const loginUrl = new URL("/admin/login", request.url)
+      return NextResponse.redirect(loginUrl)
+    }
+
+    if (isAuthenticated && isAdminLoginPage) {
+      const dashboardUrl = new URL("/admin/dashboard", request.url)
+      return NextResponse.redirect(dashboardUrl)
+    }
+
+    if (isAuthenticated && pathname === "/admin") {
+      const dashboardUrl = new URL("/admin/dashboard", request.url)
+      return NextResponse.redirect(dashboardUrl)
+    }
+  }
+
+  if (isCustomerPortal && !isAuthenticated) {
+    const loginUrl = new URL(`/login?redirect=${encodeURIComponent(pathname)}`, request.url)
     return NextResponse.redirect(loginUrl)
   }
 
-  if (isAuthenticated && isLoginPage) {
-    const dashboardUrl = new URL("/admin/dashboard", request.url)
-    return NextResponse.redirect(dashboardUrl)
-  }
-
-  if (isAuthenticated && pathname === "/admin") {
-    const dashboardUrl = new URL("/admin/dashboard", request.url)
-    return NextResponse.redirect(dashboardUrl)
+  if (isCustomerLoginPage && isAuthenticated) {
+    const redirectParam = request.nextUrl.searchParams.get("redirect") || "/customer-portal"
+    const targetUrl = new URL(redirectParam, request.url)
+    return NextResponse.redirect(targetUrl)
   }
 
   const response = NextResponse.next()
@@ -33,7 +49,13 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/admin", "/admin/:path*"],
+  matcher: [
+    "/admin",
+    "/admin/:path*",
+    "/customer-portal",
+    "/customer-portal/:path*",
+    "/login",
+  ],
 }
 
 export default proxy

@@ -20,9 +20,13 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import Link from "next/link"
+import { authClient } from "@/lib/auth-client"
+import { AlertCircle, Loader2 } from "lucide-react"
 
-export function WholesaleSignupForm({ className = "", ...props }) {
+export function WholesaleSignupForm({ className = "", ...props }: { className?: string } & React.ComponentProps<"form">) {
   const [submitted, setSubmitted] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState("")
   const [formData, setFormData] = useState({
     name: "",
     shopName: "",
@@ -38,6 +42,9 @@ export function WholesaleSignupForm({ className = "", ...props }) {
       ...formData,
       [e.target.name]: e.target.value,
     })
+    if (error) {
+      setError("")
+    }
   }
 
   const handleCityChange = (value: string | null) => {
@@ -47,9 +54,36 @@ export function WholesaleSignupForm({ className = "", ...props }) {
     })
   }
 
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    setSubmitted(true)
+    setError("")
+
+    if (formData.password.length < 6) {
+      setError("Password must be at least 6 characters.")
+      return
+    }
+
+    setIsLoading(true)
+
+    try {
+      const res = await authClient.signUp.email({
+        email: formData.email.trim().toLowerCase(),
+        password: formData.password,
+        name: formData.name.trim() || formData.shopName.trim() || "Customer",
+      })
+
+      if (res?.error) {
+        setError(res.error.message || "Could not complete registration. Please try again.")
+        setIsLoading(false)
+        return
+      }
+
+      setSubmitted(true)
+      setIsLoading(false)
+    } catch (err: any) {
+      setError(err?.message || "An unexpected error occurred during account registration.")
+      setIsLoading(false)
+    }
   }
 
   if (submitted) {
@@ -71,19 +105,24 @@ export function WholesaleSignupForm({ className = "", ...props }) {
               />
             </svg>
           </div>
-          <h2 className="text-2xl font-bold">Request Submitted</h2>
+          <h2 className="text-2xl font-bold">Account Created Successfully</h2>
           <p className="text-sm text-muted-foreground max-w-sm">
-            Thank you, {formData.name || "Customer"}. Your wholesale registration for{" "}
+            Welcome, {formData.name || "Customer"}! Your account for{" "}
             <span className="font-semibold text-foreground">
               {formData.shopName || "your shop"}
             </span>{" "}
-            is pending admin approval. You will receive an update once approved.
+            has been registered. You can now access your Customer Portal.
           </p>
         </div>
-        <div className="flex flex-col gap-2">
-          <Link href="/login">
-            <Button variant="outline" className="w-full">
-              Back to Login
+        <div className="flex flex-col gap-2.5">
+          <Link href="/customer-portal">
+            <Button className="w-full cursor-pointer">
+              Go to Customer Portal
+            </Button>
+          </Link>
+          <Link href="/checkout">
+            <Button variant="outline" className="w-full cursor-pointer">
+              Return to Checkout
             </Button>
           </Link>
         </div>
@@ -95,15 +134,23 @@ export function WholesaleSignupForm({ className = "", ...props }) {
     <form
       onSubmit={handleSubmit}
       className={cn("flex flex-col gap-5", className)}
+      noValidate
       {...props}
     >
       <FieldGroup>
         <div className="flex flex-col items-center gap-1 text-center">
-          <h1 className="text-2xl font-bold">Wholesale Registration</h1>
+          <h1 className="text-2xl font-bold">Wholesale & Customer Registration</h1>
           <p className="text-sm text-balance text-muted-foreground">
-            Register your shop to access wholesale prices and schemes
+            Create your account to access wholesale prices and track all your orders
           </p>
         </div>
+
+        {error && (
+          <div className="flex items-center gap-2 p-3 text-xs rounded-lg border border-red-200 bg-red-50 text-red-700">
+            <AlertCircle className="size-4 shrink-0 text-red-600" />
+            <p className="leading-snug">{error}</p>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Field>
@@ -120,7 +167,7 @@ export function WholesaleSignupForm({ className = "", ...props }) {
           </Field>
 
           <Field>
-            <FieldLabel htmlFor="shopName">Shop Name</FieldLabel>
+            <FieldLabel htmlFor="shopName">Shop / Business Name</FieldLabel>
             <Input
               id="shopName"
               name="shopName"
@@ -237,7 +284,7 @@ export function WholesaleSignupForm({ className = "", ...props }) {
         </div>
 
         <Field>
-          <FieldLabel htmlFor="address">Shop Address</FieldLabel>
+          <FieldLabel htmlFor="address">Shop / Delivery Address</FieldLabel>
           <Input
             id="address"
             name="address"
@@ -250,13 +297,20 @@ export function WholesaleSignupForm({ className = "", ...props }) {
         </Field>
 
         <Field>
-          <Button type="submit" className="w-full">
-            Submit Registration Request
+          <Button type="submit" className="w-full cursor-pointer" disabled={isLoading}>
+            {isLoading ? (
+              <>
+                <Loader2 className="size-4 animate-spin mr-2" />
+                Creating Account...
+              </>
+            ) : (
+              "Create Account"
+            )}
           </Button>
         </Field>
 
         <FieldDescription className="text-center">
-          Already have an approved wholesale account?{" "}
+          Already have an account?{" "}
           <Link href="/login" className="underline underline-offset-4 font-medium">
             Log in
           </Link>

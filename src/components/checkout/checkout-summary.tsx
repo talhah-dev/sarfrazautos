@@ -184,7 +184,7 @@ export function CheckoutSummary({ className = "" }: { className?: string }) {
               type="button"
               onClick={() => {
                 setIsAuthDialogOpen(false);
-                router.push("/login");
+                router.push("/login?redirect=/checkout");
               }}
               className="w-full h-11 bg-red-600 hover:bg-red-700 text-white font-medium text-xs sm:text-sm flex items-center justify-center gap-2 cursor-pointer rounded-xl"
             >
