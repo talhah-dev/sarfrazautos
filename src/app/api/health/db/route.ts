@@ -1,13 +1,21 @@
 import { NextResponse } from "next/server"
-import { sql } from "@/lib/db"
+import { db, sql } from "@/lib/db"
+import { products } from "@/db/schema"
 
 export async function GET() {
   try {
-    const result = await sql`SELECT NOW() as current_time, version() as version`
+    const rawResult = await sql`SELECT NOW() as current_time, version() as version`
+    const productCount = await db.select().from(products)
+
     return NextResponse.json({
       status: "connected",
       database: "Neon PostgreSQL",
-      data: result[0],
+      orm: "Drizzle ORM",
+      neonHttp: rawResult[0],
+      drizzleQuery: {
+        table: "products",
+        totalRecords: productCount.length,
+      },
     })
   } catch (error: any) {
     return NextResponse.json(

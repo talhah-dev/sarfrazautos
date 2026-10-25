@@ -1,0 +1,27 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1792895386558,
+      "tag": "0000_hard_metal_master",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1792895841362,
+      "tag": "0001_late_chameleon",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1792895995501,
+      "tag": "0002_harsh_glorian",
+      "breakpoints": true
+    }
+  ]
+}

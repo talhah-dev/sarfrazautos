@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { ChevronRight, Upload, X, ImageIcon, Search, ChevronDown, Check } from "lucide-react"
+import { ChevronRight, Search, ChevronDown, Check } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
@@ -15,6 +15,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { AdminProductImageUploader, type UploadedProductImage } from "@/components/admin-dashboard/admin-product-image-uploader"
+import { AdminProductColorSelector } from "@/components/admin-dashboard/admin-product-color-selector"
 
 const bikeBrands = [
   "Honda",
@@ -53,21 +55,14 @@ export function AdminUploadProductSection() {
   const [brandSearch, setBrandSearch] = useState("")
   const [isBrandDropdownOpen, setIsBrandDropdownOpen] = useState(false)
   const [compatibleBike, setCompatibleBike] = useState("")
-  const [imagePreview, setImagePreview] = useState<string | null>(null)
+  const [selectedColors, setSelectedColors] = useState<string[]>([])
+  const [productImages, setProductImages] = useState<UploadedProductImage[]>([])
+  const [mainImageIndex, setMainImageIndex] = useState(0)
   const [isSaved, setIsSaved] = useState(false)
 
   const filteredBrands = bikeBrands.filter((b) =>
     b.toLowerCase().includes(brandSearch.toLowerCase())
   )
-
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) {
-      const reader = new FileReader()
-      reader.onloadend = () => setImagePreview(reader.result as string)
-      reader.readAsDataURL(file)
-    }
-  }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -95,42 +90,14 @@ export function AdminUploadProductSection() {
       <form onSubmit={handleSubmit}>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-1 flex flex-col gap-5">
-            <Card className="border-neutral-200 shadow-xs">
-              <CardHeader className="p-4 pb-3">
-                <CardTitle className="text-sm font-semibold text-neutral-900">Product Image</CardTitle>
-                <CardDescription className="text-xs text-neutral-500">Upload a clear product photo. Recommended: 800x800px.</CardDescription>
-              </CardHeader>
-              <CardContent className="p-4 pt-0">
-                <div className="border-2 border-dashed border-neutral-200 rounded-xl aspect-square flex flex-col items-center justify-center gap-3 cursor-pointer hover:border-neutral-400 transition-colors relative overflow-hidden">
-                  {imagePreview ? (
-                    <>
-                      <img src={imagePreview} alt="Preview" className="absolute inset-0 w-full h-full object-cover rounded-xl" />
-                      <button
-                        type="button"
-                        onClick={() => setImagePreview(null)}
-                        className="absolute top-2 right-2 size-6 rounded-full bg-white/90 shadow flex items-center justify-center z-10 cursor-pointer"
-                      >
-                        <X className="size-3.5 text-neutral-700" />
-                      </button>
-                    </>
-                  ) : (
-                    <>
-                      <ImageIcon className="size-10 text-neutral-300" />
-                      <div className="text-center">
-                        <p className="text-xs font-medium text-neutral-700">Click to upload image</p>
-                        <p className="text-[11px] text-neutral-400 mt-0.5">PNG, JPG up to 5MB</p>
-                      </div>
-                    </>
-                  )}
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageChange}
-                    className="absolute inset-0 opacity-0 cursor-pointer"
-                  />
-                </div>
-              </CardContent>
-            </Card>
+            <AdminProductImageUploader
+              images={productImages}
+              mainIndex={mainImageIndex}
+              onChange={(imgs, mIdx) => {
+                setProductImages(imgs)
+                setMainImageIndex(mIdx)
+              }}
+            />
           </div>
 
           <div className="lg:col-span-2">
@@ -248,10 +215,10 @@ export function AdminUploadProductSection() {
                     )}
                   </div>
 
-                  <div className="space-y-1.5">
-                    <Label htmlFor="sku" className="text-xs font-medium text-neutral-700">SKU / Part Number</Label>
-                    <Input id="sku" placeholder="e.g. CYL-CD70-001" className="h-9 text-xs" />
-                  </div>
+                  <AdminProductColorSelector
+                    selectedColors={selectedColors}
+                    onChange={setSelectedColors}
+                  />
 
                   <div className="space-y-1.5">
                     <Label htmlFor="price" className="text-xs font-medium text-neutral-700">Selling Price (Rs.) *</Label>
