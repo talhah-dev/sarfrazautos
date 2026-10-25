@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Check, Eye, PackageOpen, Plus, Star } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -16,6 +17,7 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import { getProducts } from "@/lib/api/products";
+import { useCartStore } from "@/lib/store/cart-store";
 
 export interface WholesaleProduct {
   id: string | number;
@@ -48,7 +50,9 @@ export function WholesaleCatalog({
   onClearFilters?: () => void;
   className?: string;
 }) {
+  const router = useRouter();
   const [addedItems, setAddedItems] = useState<Record<string, boolean>>({});
+  const addItem = useCartStore((state) => state.addItem);
 
   const categoryQuery = !activeCategory || activeCategory === "All" ? "" : activeCategory;
   const brandQuery =
@@ -83,8 +87,31 @@ export function WholesaleCatalog({
     e.preventDefault();
     e.stopPropagation();
     const idStr = String(product.id);
+    const mainImg =
+      product.images?.[product.mainImageIndex || 0] ||
+      product.images?.[0] ||
+      product.image ||
+      "/wholesale-bulk.png";
+
+    addItem({
+      productId: product.id,
+      type: "wholesale",
+      title: product.name,
+      category: product.category,
+      price: Number(product.price) || 0,
+      image: mainImg,
+      specs: product.compatibleBike || "Master Carton Packaging",
+      packaging: "Sealed Export Master Carton",
+      inStock: product.stockStatus !== "out_of_stock",
+    });
+
     setAddedItems((prev) => ({ ...prev, [idStr]: true }));
-    toast.success(`Added ${product.name} to carton list!`);
+    toast.success(`Added ${product.name} to carton list!`, {
+      action: {
+        label: "View Cart",
+        onClick: () => router.push("/cart?tab=wholesale"),
+      },
+    });
     setTimeout(() => {
       setAddedItems((prev) => ({ ...prev, [idStr]: false }));
     }, 1800);

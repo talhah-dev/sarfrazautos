@@ -1,13 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { Boxes, ShoppingBag } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useCart } from "@/lib/store/cart-store";
 import RetailCart from "./retail-cart";
 import WholesaleCart from "./wholesale-cart";
 
-export function CartSection({ className = "" }: { className?: string }) {
-  const [activeTab, setActiveTab] = useState<"retail" | "wholesale">("retail");
+function CartContent({ className = "" }: { className?: string }) {
+  const searchParams = useSearchParams();
+  const initialTab = searchParams.get("tab") === "wholesale" ? "wholesale" : "retail";
+  const [activeTab, setActiveTab] = useState<"retail" | "wholesale">(initialTab);
+  const { retailCount, wholesaleCount } = useCart();
 
   return (
     <section className={cn("w-full bg-white text-neutral-900 py-10 md:py-16", className)}>
@@ -43,7 +48,7 @@ export function CartSection({ className = "" }: { className?: string }) {
                     : "bg-neutral-200/70 text-neutral-600"
                 )}
               >
-                3
+                {retailCount}
               </span>
             </button>
 
@@ -67,7 +72,7 @@ export function CartSection({ className = "" }: { className?: string }) {
                     : "bg-neutral-200/70 text-neutral-600"
                 )}
               >
-                2
+                {wholesaleCount}
               </span>
             </button>
           </div>
@@ -76,6 +81,23 @@ export function CartSection({ className = "" }: { className?: string }) {
         {activeTab === "retail" ? <RetailCart /> : <WholesaleCart />}
       </div>
     </section>
+  );
+}
+
+export function CartSection({ className = "" }: { className?: string }) {
+  return (
+    <Suspense
+      fallback={
+        <section className={cn("w-full bg-white text-neutral-900 py-10 md:py-16", className)}>
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 animate-pulse">
+            <div className="h-8 w-48 bg-neutral-100 rounded-lg mb-8" />
+            <div className="h-64 w-full bg-neutral-50 rounded-2xl border border-neutral-100" />
+          </div>
+        </section>
+      }
+    >
+      <CartContent className={className} />
+    </Suspense>
   );
 }
 

@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "motion/react";
 import { ShoppingCart } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { useCart } from "@/lib/store/cart-store";
 
 type CountBadgeProps = {
   count: number;
@@ -40,12 +40,11 @@ export function CountBadge({ count, max = 99, className }: CountBadgeProps) {
 }
 
 export interface CartBadgeProps {
-  initialCount?: number;
   className?: string;
 }
 
-export function CartBadge({ initialCount = 3, className }: CartBadgeProps) {
-  const [count] = useState(initialCount);
+export function CartBadge({ className }: CartBadgeProps) {
+  const { totalCount } = useCart();
 
   return (
     <div className={cn("relative inline-flex items-center", className)}>
@@ -56,7 +55,7 @@ export function CartBadge({ initialCount = 3, className }: CartBadgeProps) {
       >
         <ShoppingCart className="size-4 sm:size-5" />
       </Link>
-      <CountBadge count={count} />
+      <CountBadge count={totalCount} />
     </div>
   );
 }

@@ -126,7 +126,7 @@ export function Navbar({ navigationData = defaultNavigation, className }: Navbar
           document.body
         )}
       <TopTicker />
-      <div className="sticky top-0 z-30 w-full bg-white transition-all shadow-xs">
+      <div className="sticky top-0 z-50 w-full bg-white transition-all shadow-xs">
         <header
           ref={headerRef}
           className={cn(

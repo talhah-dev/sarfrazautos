@@ -2,7 +2,7 @@
 
 import { useState, Suspense } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   LuCheck,
   LuHeart,
@@ -20,6 +20,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { getColorHex } from "@/lib/product-colors";
 import { getProductById, getProducts } from "@/lib/api/products";
+import { useCartStore } from "@/lib/store/cart-store";
 import RelatedProducts from "./related-products";
 
 function ProductOverviewContent({
@@ -31,6 +32,7 @@ function ProductOverviewContent({
   slug?: string;
   defaultType?: "retail" | "wholesale";
 }) {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const productIdentifier = slug || searchParams.get("slug") || searchParams.get("id");
 
@@ -38,6 +40,7 @@ function ProductOverviewContent({
   const [selectedColorIndex, setSelectedColorIndex] = useState(0);
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [isAdded, setIsAdded] = useState(false);
+  const addItem = useCartStore((state) => state.addItem);
 
   const { data: product, isLoading, isError } = useQuery({
     queryKey: ["product-detail", productIdentifier, defaultType],
@@ -53,11 +56,35 @@ function ProductOverviewContent({
   const isWholesale = (product?.type || defaultType).toLowerCase() === "wholesale";
 
   const handleAddToCart = () => {
+    if (!product) return;
+    const currentColor = product.colors?.[selectedColorIndex] || "";
+    const mainImg =
+      product.images?.[product.mainImageIndex || 0] || product.images?.[0] || "/bike-engine.png";
+
+    addItem({
+      productId: product.id,
+      type: isWholesale ? "wholesale" : "retail",
+      title: product.name,
+      category: product.category,
+      price: Number(product.price) || 0,
+      image: mainImg,
+      color: currentColor,
+      specs: currentColor || product.compatibleBike || "Standard Fit",
+      packaging: isWholesale ? "Sealed Export Master Carton" : undefined,
+      inStock: product.stockStatus !== "out_of_stock",
+    });
+
     setIsAdded(true);
     toast.success(
       isWholesale
-        ? `Added ${product?.name || "Product"} to wholesale carton order!`
-        : `Added ${product?.name || "Product"} to cart!`
+        ? `Added ${product.name} to wholesale carton order!`
+        : `Added ${product.name} to cart!`,
+      {
+        action: {
+          label: "View Cart",
+          onClick: () => router.push(isWholesale ? "/cart?tab=wholesale" : "/cart"),
+        },
+      }
     );
     setTimeout(() => setIsAdded(false), 2000);
   };

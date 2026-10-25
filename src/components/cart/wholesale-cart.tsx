@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import {
   Boxes,
@@ -17,62 +16,24 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-
-const initialWholesaleCartons = [
-  {
-    id: "ws-cart-1",
-    category: "Cylinder Heads Bulk",
-    title: "CD70 Complete Cylinder Head (Master Carton of 12)",
-    specs: "12 Assemblies • 28.5 kg Gross Weight",
-    packaging: "5-Ply Sealed Export Corrugated",
-    price: 84000,
-    quantity: 2,
-    image: "/wholesale-bulk.png",
-  },
-  {
-    id: "ws-cart-2",
-    category: "Piston & Ring Kits Bulk",
-    title: "125cc Piston Kits Bulk Master Box (25 pcs)",
-    specs: "25 Complete Sets • 18.2 kg Gross Weight",
-    packaging: "Factory Strapped Master Carton",
-    price: 87500,
-    quantity: 1,
-    image: "/wholesale-bulk.png",
-  },
-];
+import { useCart } from "@/lib/store/cart-store";
 
 export function WholesaleCart({ className = "" }: { className?: string }) {
-  const [items, setItems] = useState(initialWholesaleCartons);
-
-  const updateQuantity = (id: string, delta: number) => {
-    setItems((prev) =>
-      prev.map((item) => {
-        if (item.id === id) {
-          const newQty = Math.max(1, item.quantity + delta);
-          return { ...item, quantity: newQty };
-        }
-        return item;
-      })
-    );
-  };
-
-  const removeItem = (id: string) => {
-    setItems((prev) => prev.filter((item) => item.id !== id));
-  };
-
-  const subtotal = items.reduce((acc, item) => acc + item.price * item.quantity, 0);
-  const totalCartons = items.reduce((acc, item) => acc + item.quantity, 0);
-  const totalWeight = items.reduce(
-    (acc, item) => acc + (item.id === "ws-cart-1" ? 28.5 : 18.2) * item.quantity,
-    0
-  );
+  const {
+    wholesaleItems,
+    wholesaleCount,
+    wholesaleSubtotal,
+    wholesaleTotalWeight,
+    updateQuantity,
+    removeItem,
+  } = useCart();
 
   return (
     <div className={cn("w-full", className)}>
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-neutral-200">
         <div>
           <h2 className="text-xl sm:text-2xl font-semibold tracking-tight text-neutral-950">
-            Wholesale Master Cartons ({totalCartons} cartons)
+            Wholesale Master Cartons ({wholesaleCount} cartons)
           </h2>
           <p className="flex items-center gap-1.5 text-xs sm:text-sm font-medium text-emerald-600 mt-2">
             <Check className="size-4 stroke-[2.5]" />
@@ -91,7 +52,7 @@ export function WholesaleCart({ className = "" }: { className?: string }) {
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 pt-8 items-start w-full min-w-0">
         <div className="w-full min-w-0 lg:col-span-7 xl:col-span-8 space-y-4">
-          {items.length === 0 ? (
+          {wholesaleItems.length === 0 ? (
             <div className="py-16 text-center border border-dashed border-neutral-200 rounded-2xl p-8">
               <p className="text-neutral-500 text-sm">Your wholesale carton order is empty.</p>
               <Link
@@ -102,7 +63,7 @@ export function WholesaleCart({ className = "" }: { className?: string }) {
               </Link>
             </div>
           ) : (
-            items.map((item) => (
+            wholesaleItems.map((item) => (
               <div
                 key={item.id}
                 className="relative flex items-start gap-3.5 sm:gap-6 p-3.5 sm:p-5 rounded-2xl border border-neutral-200/80 bg-[#fafafa] hover:border-neutral-300 transition-colors w-full min-w-0 overflow-hidden"
@@ -126,7 +87,9 @@ export function WholesaleCart({ className = "" }: { className?: string }) {
                           {item.title}
                         </h3>
                         <p className="text-xs text-neutral-600 mt-0.5">{item.specs}</p>
-                        <p className="text-[11px] text-neutral-400 mt-0.5">{item.packaging}</p>
+                        {item.packaging && (
+                          <p className="text-[11px] text-neutral-400 mt-0.5">{item.packaging}</p>
+                        )}
                       </div>
 
                       <button
@@ -203,12 +166,12 @@ export function WholesaleCart({ className = "" }: { className?: string }) {
             <div className="space-y-3 text-sm">
               <div className="flex items-center justify-between text-neutral-600">
                 <span>Total Master Cartons</span>
-                <span className="font-semibold text-neutral-950">{totalCartons} Cartons</span>
+                <span className="font-semibold text-neutral-950">{wholesaleCount} Cartons</span>
               </div>
 
               <div className="flex items-center justify-between text-neutral-600">
                 <span>Approx. Gross Weight</span>
-                <span className="font-semibold text-neutral-950">~{totalWeight.toFixed(1)} kg</span>
+                <span className="font-semibold text-neutral-950">~{wholesaleTotalWeight.toFixed(1)} kg</span>
               </div>
 
               <div className="flex items-center justify-between text-neutral-600">
@@ -232,7 +195,7 @@ export function WholesaleCart({ className = "" }: { className?: string }) {
               <div className="flex items-baseline justify-between">
                 <span className="text-base font-semibold text-neutral-950">Total Est. Bill</span>
                 <span className="text-2xl font-bold tracking-tight text-neutral-950">
-                  Rs. {subtotal.toLocaleString()}
+                  Rs. {wholesaleSubtotal.toLocaleString()}
                 </span>
               </div>
               <p className="text-[11px] text-neutral-500">
@@ -244,6 +207,7 @@ export function WholesaleCart({ className = "" }: { className?: string }) {
               <Link href="/checkout" className="block w-full">
                 <Button
                   type="button"
+                  disabled={wholesaleItems.length === 0}
                   className="w-full h-12 cursor-pointer flex items-center justify-center gap-2"
                 >
                   <ShieldCheck className="size-4" />

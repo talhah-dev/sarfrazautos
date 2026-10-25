@@ -2,11 +2,13 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Check, Plus } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { getProducts } from "@/lib/api/products";
+import { useCartStore } from "@/lib/store/cart-store";
 
 export function RelatedRetailProducts({
   currentProductId,
@@ -17,7 +19,9 @@ export function RelatedRetailProducts({
   category?: string;
   className?: string;
 }) {
+  const router = useRouter();
   const [addedItems, setAddedItems] = useState<Record<string, boolean>>({});
+  const addItem = useCartStore((state) => state.addItem);
 
   const { data, isLoading } = useQuery({
     queryKey: ["related-products", currentProductId, category],
@@ -40,12 +44,33 @@ export function RelatedRetailProducts({
 
   const products = data || [];
 
-  const handleAdd = (id: string | number, name: string, e: React.MouseEvent) => {
+  const handleAdd = (product: any, e: React.MouseEvent) => {
     e.preventDefault();
-    setAddedItems((prev) => ({ ...prev, [String(id)]: true }));
-    toast.success(`Added ${name} to cart`);
+    const mainImg =
+      product.images?.[product.mainImageIndex || 0] ||
+      product.images?.[0] ||
+      "/bike-engine.png";
+
+    addItem({
+      productId: product.id,
+      type: "retail",
+      title: product.name,
+      category: product.category,
+      price: Number(product.price) || 0,
+      image: mainImg,
+      specs: product.compatibleBike || "Standard Fit",
+      inStock: product.stockStatus !== "out_of_stock",
+    });
+
+    setAddedItems((prev) => ({ ...prev, [String(product.id)]: true }));
+    toast.success(`Added ${product.name} to cart`, {
+      action: {
+        label: "View Cart",
+        onClick: () => router.push("/cart"),
+      },
+    });
     setTimeout(() => {
-      setAddedItems((prev) => ({ ...prev, [String(id)]: false }));
+      setAddedItems((prev) => ({ ...prev, [String(product.id)]: false }));
     }, 1800);
   };
 
@@ -118,7 +143,7 @@ export function RelatedRetailProducts({
 
                     <button
                       type="button"
-                      onClick={(e) => handleAdd(product.id, product.name, e)}
+                      onClick={(e) => handleAdd(product, e)}
                       aria-label={`Add ${product.name} to cart`}
                       className={cn(
                         "shrink-0 size-9 rounded-full flex items-center justify-center transition-all shadow-sm cursor-pointer",

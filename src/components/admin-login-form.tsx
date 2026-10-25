@@ -1,6 +1,8 @@
 "use client"
 
 import { ChangeEvent, FormEvent, useState } from "react"
+import { useRouter } from "next/navigation"
+import { z } from "zod"
 import { cn } from "cn"
 import { Button } from "@/components/ui/button"
 import {
@@ -9,27 +11,97 @@ import {
   FieldLabel,
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
-import { ShieldCheckIcon } from "lucide-react"
+import { ShieldCheckIcon, AlertCircle, Loader2 } from "lucide-react"
+import { authClient } from "@/lib/auth-client"
+
+const adminLoginSchema = z.object({
+  email: z
+    .string()
+    .trim()
+    .min(1, "Email address is required")
+    .email("Please enter a valid email address")
+    .refine(
+      (val) => val.toLowerCase() === "admin@sarfrazautos.com",
+      "Access denied. Only admin@sarfrazautos.com can access this portal."
+    ),
+  password: z
+    .string()
+    .min(1, "Password is required")
+    .min(6, "Password must be at least 6 characters"),
+})
+
+type FormErrors = {
+  email?: string
+  password?: string
+}
 
 export function AdminLoginForm({ className = "", ...props }) {
+  const router = useRouter()
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   })
+  const [fieldErrors, setFieldErrors] = useState<FormErrors>({})
+  const [generalError, setGeneralError] = useState("")
+  const [isLoading, setIsLoading] = useState(false)
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    })
+    const { name, value } = e.target
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }))
+    if (fieldErrors[name as keyof FormErrors]) {
+      setFieldErrors((prev) => ({
+        ...prev,
+        [name]: undefined,
+      }))
+    }
+    if (generalError) {
+      setGeneralError("")
+    }
   }
 
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+    setFieldErrors({})
+    setGeneralError("")
+
+    const result = adminLoginSchema.safeParse(formData)
+
+    if (!result.success) {
+      const flattened = result.error.flatten().fieldErrors
+      setFieldErrors({
+        email: flattened.email?.[0],
+        password: flattened.password?.[0],
+      })
+      return
+    }
+
+    setIsLoading(true)
+
+    try {
+      const res = await authClient.signIn.email({
+        email: result.data.email.toLowerCase(),
+        password: result.data.password,
+      })
+
+      if (res?.error) {
+        setGeneralError(res.error.message || "Invalid credentials. Please verify your password.")
+        setIsLoading(false)
+        return
+      }
+
+      router.push("/admin/dashboard")
+      router.refresh()
+    } catch (err: any) {
+      setGeneralError(err?.message || "An unexpected error occurred during authentication.")
+      setIsLoading(false)
+    }
   }
 
   return (
-    <form onSubmit={handleSubmit} className={cn("flex flex-col gap-6", className)} {...props}>
+    <form onSubmit={handleSubmit} className={cn("flex flex-col gap-6", className)} noValidate {...props}>
       <FieldGroup>
         <div className="flex flex-col items-center gap-1 text-center">
           <div className="flex size-10 items-center justify-center rounded-full bg-primary/10 text-primary mb-1">
@@ -41,17 +113,30 @@ export function AdminLoginForm({ className = "", ...props }) {
           </p>
         </div>
 
+        {generalError && (
+          <div className="flex items-center gap-2 p-3 text-xs rounded-lg border border-red-200 bg-red-50 text-red-700 animate-in fade-in-0">
+            <AlertCircle className="size-4 shrink-0 text-red-600" />
+            <p className="leading-snug">{generalError}</p>
+          </div>
+        )}
+
         <Field>
           <FieldLabel htmlFor="email">Email</FieldLabel>
           <Input
             id="email"
             name="email"
             type="email"
-            placeholder="admin@example.com"
+            placeholder="admin@sarfrazautos.com"
             value={formData.email}
             onChange={handleChange}
-            required
+            autoComplete="email"
+            className={fieldErrors.email ? "border-red-500 focus-visible:ring-red-500/20" : ""}
           />
+          {fieldErrors.email && (
+            <p className="text-xs text-red-600 mt-1 animate-in fade-in-0">
+              {fieldErrors.email}
+            </p>
+          )}
         </Field>
 
         <Field>
@@ -63,13 +148,26 @@ export function AdminLoginForm({ className = "", ...props }) {
             placeholder="••••••••"
             value={formData.password}
             onChange={handleChange}
-            required
+            autoComplete="current-password"
+            className={fieldErrors.password ? "border-red-500 focus-visible:ring-red-500/20" : ""}
           />
+          {fieldErrors.password && (
+            <p className="text-xs text-red-600 mt-1 animate-in fade-in-0">
+              {fieldErrors.password}
+            </p>
+          )}
         </Field>
 
         <Field>
-          <Button type="submit" className="w-full">
-            Login as Admin
+          <Button type="submit" className="w-full cursor-pointer" disabled={isLoading}>
+            {isLoading ? (
+              <>
+                <Loader2 className="size-4 animate-spin mr-2" />
+                Signing in...
+              </>
+            ) : (
+              "Login as Admin"
+            )}
           </Button>
         </Field>
       </FieldGroup>

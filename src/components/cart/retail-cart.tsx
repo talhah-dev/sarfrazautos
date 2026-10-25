@@ -17,86 +17,35 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-
-const initialRetailItems = [
-  {
-    id: "cart-1",
-    category: "Cylinder Heads & Engine",
-    title: "Complete 70cc Cylinder Head Assembly",
-    specs: "Matte Black",
-    inStock: true,
-    arrivalText: "Arrives Tomorrow (Karachi) / 5-7 Days",
-    price: 8450,
-    quantity: 1,
-    image: "/bike-engine.png",
-  },
-  {
-    id: "cart-2",
-    category: "Transmission & Clutch",
-    title: "Crown Heavy Duty Clutch Plate Set (70cc)",
-    specs: "5-Friction Plates",
-    inStock: true,
-    arrivalText: "Arrives Tomorrow (Karachi) / 5-7 Days",
-    price: 3150,
-    quantity: 1,
-    image: "/wholesale-bulk.png",
-  },
-  {
-    id: "cart-3",
-    category: "Wheel & Suspension",
-    title: "Heavy Duty Alloy Wheel Rim Hub Assembly",
-    specs: "Chrome Finish",
-    inStock: true,
-    arrivalText: "Arrives Tomorrow (Karachi) / 5-7 Days",
-    price: 4950,
-    quantity: 1,
-    image: "/wheel-rim.png",
-  },
-];
+import { useCart } from "@/lib/store/cart-store";
 
 export function RetailCart({ className = "" }: { className?: string }) {
-  const [items, setItems] = useState(initialRetailItems);
+  const { retailItems, retailCount, updateQuantity, removeItem } = useCart();
   const [couponCode, setCouponCode] = useState("SARFRAZ10");
   const [couponApplied, setCouponApplied] = useState(true);
 
-  const updateQuantity = (id: string, delta: number) => {
-    setItems((prev) =>
-      prev.map((item) => {
-        if (item.id === id) {
-          const newQty = Math.max(1, item.quantity + delta);
-          return { ...item, quantity: newQty };
-        }
-        return item;
-      })
-    );
-  };
-
-  const removeItem = (id: string) => {
-    setItems((prev) => prev.filter((item) => item.id !== id));
-  };
-
   const handleApplyCoupon = (e: React.FormEvent) => {
     e.preventDefault();
-    if (couponCode.trim()) {
+    if (couponCode.trim().toUpperCase() === "SARFRAZ10") {
       setCouponApplied(true);
     }
   };
 
-  const subtotal = items.reduce((acc, item) => acc + item.price * item.quantity, 0);
-  const discount = couponApplied && subtotal > 0 ? 1000 : 0;
-  const total = Math.max(0, subtotal - discount);
-  const totalCount = items.reduce((acc, item) => acc + item.quantity, 0);
+  const subtotal = retailItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
+  const discount = couponApplied && subtotal > 0 ? Math.min(1000, subtotal) : 0;
+  const shipping = subtotal >= 5000 || subtotal === 0 ? 0 : 250;
+  const total = Math.max(0, subtotal - discount + shipping);
 
   return (
     <div className={cn("w-full", className)}>
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-neutral-200">
         <div>
           <h2 className="text-xl sm:text-2xl font-semibold tracking-tight text-neutral-950">
-            Retail Shopping Bag ({totalCount} items)
+            Retail Shopping Bag ({retailCount} items)
           </h2>
           <p className="flex items-center gap-1.5 text-xs sm:text-sm font-medium text-emerald-600 mt-2">
             <Check className="size-4 stroke-[2.5]" />
-            You&apos;ve unlocked free Karachi delivery &amp; standard dispatch
+            Free Karachi delivery &amp; nationwide express dispatch
           </p>
         </div>
 
@@ -111,7 +60,7 @@ export function RetailCart({ className = "" }: { className?: string }) {
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 pt-8 items-start w-full min-w-0">
         <div className="w-full min-w-0 lg:col-span-7 xl:col-span-8 space-y-4">
-          {items.length === 0 ? (
+          {retailItems.length === 0 ? (
             <div className="py-16 text-center border border-dashed border-neutral-200 rounded-2xl p-8">
               <p className="text-neutral-500 text-sm">Your retail shopping cart is empty.</p>
               <Link
@@ -122,7 +71,7 @@ export function RetailCart({ className = "" }: { className?: string }) {
               </Link>
             </div>
           ) : (
-            items.map((item) => (
+            retailItems.map((item) => (
               <div
                 key={item.id}
                 className="relative flex items-start gap-3.5 sm:gap-6 p-3.5 sm:p-5 rounded-2xl border border-neutral-200/80 bg-[#fafafa] hover:border-neutral-300 transition-colors w-full min-w-0 overflow-hidden"
@@ -236,10 +185,10 @@ export function RetailCart({ className = "" }: { className?: string }) {
                   Apply
                 </Button>
               </div>
-              {couponApplied && (
+              {couponApplied && discount > 0 && (
                 <p className="text-[11px] text-emerald-600 font-medium flex items-center gap-1">
                   <Check className="size-3" />
-                  Code applied at checkout (-Rs. 1,000)
+                  Code applied (-Rs. {discount.toLocaleString()})
                 </p>
               )}
             </div>
@@ -257,7 +206,9 @@ export function RetailCart({ className = "" }: { className?: string }) {
                   Shipping
                   <Info className="size-3.5 text-neutral-400" />
                 </span>
-                <span className="font-semibold text-emerald-600">Free</span>
+                <span className="font-semibold text-emerald-600">
+                  {shipping === 0 ? "Free" : `Rs. ${shipping}`}
+                </span>
               </div>
 
               {couponApplied && discount > 0 && (
@@ -285,6 +236,7 @@ export function RetailCart({ className = "" }: { className?: string }) {
             <Link href="/checkout" className="block w-full">
               <Button
                 type="button"
+                disabled={retailItems.length === 0}
                 className="w-full h-12 cursor-pointer flex items-center justify-center gap-2"
               >
                 <ShieldCheck className="size-4" />

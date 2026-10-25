@@ -2,11 +2,13 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Check, Plus } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { getProducts } from "@/lib/api/products";
+import { useCartStore } from "@/lib/store/cart-store";
 
 export function RelatedProducts({
   currentProductId,
@@ -19,8 +21,10 @@ export function RelatedProducts({
   type?: "retail" | "wholesale";
   className?: string;
 }) {
+  const router = useRouter();
   const [addedItems, setAddedItems] = useState<Record<string, boolean>>({});
   const isWholesale = type === "wholesale";
+  const addItem = useCartStore((state) => state.addItem);
 
   const { data, isLoading } = useQuery({
     queryKey: ["related-products", currentProductId, category, type],
@@ -47,16 +51,39 @@ export function RelatedProducts({
 
   const products = data || [];
 
-  const handleAdd = (id: string | number, name: string, e: React.MouseEvent) => {
+  const handleAdd = (product: any, e: React.MouseEvent) => {
     e.preventDefault();
-    setAddedItems((prev) => ({ ...prev, [String(id)]: true }));
+    const mainImg =
+      product.images?.[product.mainImageIndex || 0] ||
+      product.images?.[0] ||
+      "/bike-engine.png";
+
+    addItem({
+      productId: product.id,
+      type: isWholesale ? "wholesale" : "retail",
+      title: product.name,
+      category: product.category,
+      price: Number(product.price) || 0,
+      image: mainImg,
+      specs: product.compatibleBike || (isWholesale ? "Master Carton" : "Standard Fit"),
+      packaging: isWholesale ? "Sealed Export Master Carton" : undefined,
+      inStock: product.stockStatus !== "out_of_stock",
+    });
+
+    setAddedItems((prev) => ({ ...prev, [String(product.id)]: true }));
     toast.success(
       isWholesale
-        ? `Added ${name} to wholesale inquiry!`
-        : `Added ${name} to cart!`
+        ? `Added ${product.name} to wholesale carton order!`
+        : `Added ${product.name} to cart!`,
+      {
+        action: {
+          label: "View Cart",
+          onClick: () => router.push(isWholesale ? "/cart?tab=wholesale" : "/cart"),
+        },
+      }
     );
     setTimeout(() => {
-      setAddedItems((prev) => ({ ...prev, [String(id)]: false }));
+      setAddedItems((prev) => ({ ...prev, [String(product.id)]: false }));
     }, 1800);
   };
 
@@ -138,7 +165,7 @@ export function RelatedProducts({
 
                     <button
                       type="button"
-                      onClick={(e) => handleAdd(product.id, product.name, e)}
+                      onClick={(e) => handleAdd(product, e)}
                       aria-label="Add product"
                       className={cn(
                         "size-9 rounded-full flex items-center justify-center transition-all cursor-pointer shrink-0 shadow-xs",

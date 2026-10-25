@@ -1,39 +1,48 @@
 "use client";
 
-import { useState } from "react";
-import { Store, Truck } from "lucide-react";
+import { Store, Truck, RotateCcw, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
+import { useCheckoutInfo } from "@/lib/store/checkout-store";
 
 export function CheckoutForm({ className = "" }: { className?: string }) {
-  const [deliveryMethod, setDeliveryMethod] = useState<"delivery" | "pickup">("delivery");
-  const [formData, setFormData] = useState({
-    fullName: "",
-    email: "",
-    phone: "",
-    address: "",
-    city: "",
-    apartment: "",
-  });
+  const { info, setInfo, resetInfo } = useCheckoutInfo();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setInfo({ [name]: value });
   };
+
+  const hasSavedData = Boolean(
+    info.fullName || info.email || info.phone || info.address || info.city
+  );
 
   return (
     <div className={cn("space-y-8", className)}>
       <div className="space-y-3">
-        <Label className="text-sm font-semibold text-foreground">
-          Pick Delivery Method
-        </Label>
+        <div className="flex items-center justify-between">
+          <Label className="text-sm font-semibold text-foreground">
+            Pick Delivery Method
+          </Label>
+          {hasSavedData && (
+            <button
+              type="button"
+              onClick={resetInfo}
+              className="inline-flex items-center gap-1 text-[11px] font-medium text-neutral-500 hover:text-red-600 transition-colors cursor-pointer"
+            >
+              <RotateCcw className="size-3" />
+              Clear saved details
+            </button>
+          )}
+        </div>
+
         <div className="grid grid-cols-2 gap-3 sm:gap-4">
           <Button
             type="button"
-            variant={deliveryMethod === "delivery" ? "default" : "outline"}
-            onClick={() => setDeliveryMethod("delivery")}
+            variant={info.deliveryMethod === "delivery" ? "default" : "outline"}
+            onClick={() => setInfo({ deliveryMethod: "delivery" })}
             className="h-14 rounded-xl flex items-center justify-center gap-2.5 text-sm font-medium cursor-pointer"
           >
             <Truck className="size-4 shrink-0" />
@@ -42,8 +51,8 @@ export function CheckoutForm({ className = "" }: { className?: string }) {
 
           <Button
             type="button"
-            variant={deliveryMethod === "pickup" ? "default" : "outline"}
-            onClick={() => setDeliveryMethod("pickup")}
+            variant={info.deliveryMethod === "pickup" ? "default" : "outline"}
+            onClick={() => setInfo({ deliveryMethod: "pickup" })}
             className="h-14 rounded-xl flex items-center justify-center gap-2.5 text-sm font-medium cursor-pointer"
           >
             <Store className="size-4 shrink-0" />
@@ -53,9 +62,19 @@ export function CheckoutForm({ className = "" }: { className?: string }) {
       </div>
 
       <div className="space-y-4">
-        <h2 className="text-sm font-semibold text-foreground">
-          {deliveryMethod === "delivery" ? "Shipping Information" : "Pickup Contact Information"}
-        </h2>
+        <div className="flex items-center justify-between">
+          <h2 className="text-sm font-semibold text-foreground">
+            {info.deliveryMethod === "delivery"
+              ? "Shipping Information"
+              : "Pickup Contact Information"}
+          </h2>
+          {hasSavedData && (
+            <span className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+              <Check className="size-3" />
+              Restored from storage
+            </span>
+          )}
+        </div>
 
         <div className="space-y-2 mt-5">
           <Label htmlFor="fullName">Full Name</Label>
@@ -65,7 +84,7 @@ export function CheckoutForm({ className = "" }: { className?: string }) {
             type="text"
             required
             placeholder="Enter your name"
-            value={formData.fullName}
+            value={info.fullName}
             onChange={handleChange}
             className="h-11 mt-1 mb-2"
           />
@@ -79,7 +98,7 @@ export function CheckoutForm({ className = "" }: { className?: string }) {
             type="email"
             required
             placeholder="Enter your email"
-            value={formData.email}
+            value={info.email}
             onChange={handleChange}
             className="h-11 mt-1 mb-2"
           />
@@ -97,14 +116,14 @@ export function CheckoutForm({ className = "" }: { className?: string }) {
               type="tel"
               required
               placeholder="333 1285556"
-              value={formData.phone}
+              value={info.phone}
               onChange={handleChange}
               className="flex-1 h-11 px-3.5 text-sm bg-transparent outline-none placeholder:text-muted-foreground"
             />
           </div>
         </div>
 
-        {deliveryMethod === "delivery" && (
+        {info.deliveryMethod === "delivery" && (
           <>
             <div className="space-y-2">
               <Label htmlFor="address">Address</Label>
@@ -113,8 +132,8 @@ export function CheckoutForm({ className = "" }: { className?: string }) {
                 name="address"
                 type="text"
                 required
-                placeholder="Street address"
-                value={formData.address}
+                placeholder="Street address / house number"
+                value={info.address}
                 onChange={handleChange}
                 className="h-11 mt-1 mb-2"
               />
@@ -128,7 +147,7 @@ export function CheckoutForm({ className = "" }: { className?: string }) {
                 type="text"
                 required
                 placeholder="City (e.g. Karachi, Lahore, Rawalpindi)"
-                value={formData.city}
+                value={info.city}
                 onChange={handleChange}
                 className="h-11 mt-1 mb-2"
               />
@@ -136,7 +155,7 @@ export function CheckoutForm({ className = "" }: { className?: string }) {
 
             <div className="space-y-2">
               <Label htmlFor="apartment">
-                Apartment, Suite, Flat etc.{" "}
+                Apartment, Suite, Floor{" "}
                 <span className="text-muted-foreground font-normal">(Optional)</span>
               </Label>
               <Input
@@ -144,7 +163,7 @@ export function CheckoutForm({ className = "" }: { className?: string }) {
                 name="apartment"
                 type="text"
                 placeholder="Optional"
-                value={formData.apartment}
+                value={info.apartment}
                 onChange={handleChange}
                 className="h-11 mt-1 mb-2"
               />
@@ -152,7 +171,7 @@ export function CheckoutForm({ className = "" }: { className?: string }) {
           </>
         )}
 
-        {deliveryMethod === "pickup" && (
+        {info.deliveryMethod === "pickup" && (
           <div className="p-4 rounded-xl border border-border bg-muted/30 space-y-2 text-xs">
             <span className="font-semibold text-foreground block">Pickup Location</span>
             <p className="text-muted-foreground">

@@ -2,11 +2,13 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Check, Plus } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { getProducts } from "@/lib/api/products";
+import { useCartStore } from "@/lib/store/cart-store";
 
 export function RelatedWholesaleCartons({
   currentProductId,
@@ -17,7 +19,9 @@ export function RelatedWholesaleCartons({
   category?: string;
   className?: string;
 }) {
+  const router = useRouter();
   const [addedItems, setAddedItems] = useState<Record<string, boolean>>({});
+  const addItem = useCartStore((state) => state.addItem);
 
   const { data, isLoading } = useQuery({
     queryKey: ["related-wholesale-cartons", currentProductId, category],
@@ -44,12 +48,34 @@ export function RelatedWholesaleCartons({
 
   const products = data || [];
 
-  const handleAdd = (id: string | number, name: string, e: React.MouseEvent) => {
+  const handleAdd = (product: any, e: React.MouseEvent) => {
     e.preventDefault();
-    setAddedItems((prev) => ({ ...prev, [String(id)]: true }));
-    toast.success(`Added ${name} to wholesale inquiry!`);
+    const mainImg =
+      product.images?.[product.mainImageIndex || 0] ||
+      product.images?.[0] ||
+      "/wholesale-bulk.png";
+
+    addItem({
+      productId: product.id,
+      type: "wholesale",
+      title: product.name,
+      category: product.category,
+      price: Number(product.price) || 0,
+      image: mainImg,
+      specs: product.compatibleBike || "Master Carton",
+      packaging: "Sealed Export Master Carton",
+      inStock: product.stockStatus !== "out_of_stock",
+    });
+
+    setAddedItems((prev) => ({ ...prev, [String(product.id)]: true }));
+    toast.success(`Added ${product.name} to wholesale carton order!`, {
+      action: {
+        label: "View Cart",
+        onClick: () => router.push("/cart?tab=wholesale"),
+      },
+    });
     setTimeout(() => {
-      setAddedItems((prev) => ({ ...prev, [String(id)]: false }));
+      setAddedItems((prev) => ({ ...prev, [String(product.id)]: false }));
     }, 1800);
   };
 
@@ -124,7 +150,7 @@ export function RelatedWholesaleCartons({
 
                     <button
                       type="button"
-                      onClick={(e) => handleAdd(product.id, product.name, e)}
+                      onClick={(e) => handleAdd(product, e)}
                       aria-label="Add to wholesale cartons"
                       className={cn(
                         "size-9 rounded-full flex items-center justify-center transition-all cursor-pointer shrink-0 shadow-xs",

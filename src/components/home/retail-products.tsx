@@ -2,12 +2,14 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ArrowRight, Check, Eye, Plus, Star } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Button } from "../ui/button";
 import { getProducts } from "@/lib/api/products";
+import { useCartStore } from "@/lib/store/cart-store";
 
 export function RetailProducts({
   title = "Retail Counter & Online Shop",
@@ -16,7 +18,9 @@ export function RetailProducts({
   title?: string;
   className?: string;
 }) {
+  const router = useRouter();
   const [addedItems, setAddedItems] = useState<Record<string, boolean>>({});
+  const addItem = useCartStore((state) => state.addItem);
 
   const { data, isLoading } = useQuery({
     queryKey: ["home-featured-retail-products"],
@@ -31,10 +35,29 @@ export function RetailProducts({
 
   const products = data?.products || [];
 
-  const handleAdd = (id: string | number, name: string) => {
-    const idStr = String(id);
+  const handleAdd = (product: any) => {
+    const idStr = String(product.id);
+    const mainImg =
+      product.images?.[product.mainImageIndex || 0] || product.images?.[0] || "/bike-engine.png";
+
+    addItem({
+      productId: product.id,
+      type: "retail",
+      title: product.name,
+      category: product.category,
+      price: Number(product.price) || 0,
+      image: mainImg,
+      specs: product.compatibleBike || "Genuine Replacement",
+      inStock: product.stockStatus !== "out_of_stock",
+    });
+
     setAddedItems((prev) => ({ ...prev, [idStr]: true }));
-    toast.success(`Added ${name} to cart!`);
+    toast.success(`Added ${product.name} to cart!`, {
+      action: {
+        label: "View Cart",
+        onClick: () => router.push("/cart"),
+      },
+    });
     setTimeout(() => {
       setAddedItems((prev) => ({ ...prev, [idStr]: false }));
     }, 1800);
@@ -151,7 +174,7 @@ export function RetailProducts({
 
                       <button
                         type="button"
-                        onClick={() => handleAdd(product.id, product.name)}
+                        onClick={() => handleAdd(product)}
                         aria-label={`Add ${product.name} to cart`}
                         className={cn(
                           "shrink-0 size-9 rounded-full flex items-center justify-center transition-all shadow-sm cursor-pointer mt-0.5",

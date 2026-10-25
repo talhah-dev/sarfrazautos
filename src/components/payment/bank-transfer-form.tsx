@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Check, Copy, UploadCloud, X } from "lucide-react";
+import { AlertCircle, Check, Copy, UploadCloud, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
@@ -47,11 +47,13 @@ const bankAccounts = [
 
 export interface BankTransferFormProps {
   onProofChange?: (file: File | null) => void;
+  hasError?: boolean;
   className?: string;
 }
 
 export function BankTransferForm({
   onProofChange,
+  hasError = false,
   className = "",
 }: BankTransferFormProps) {
   const [selectedBankId, setSelectedBankId] = useState("meezan");
@@ -199,9 +201,9 @@ export function BankTransferForm({
         </div>
       </div>
 
-      <div className="space-y-4">
+      <div id="payment-proof-section" className="space-y-4 scroll-mt-28">
         <div className="space-y-2">
-          <Label className="text-sm font-semibold text-foreground block">
+          <Label htmlFor="payment-proof-input" className="text-sm font-semibold text-foreground block">
             Upload Transfer Screenshot / Proof
           </Label>
 
@@ -222,21 +224,51 @@ export function BankTransferForm({
               </button>
             </div>
           ) : (
-            <label className="border-2 border-dashed border-border hover:border-neutral-400 rounded-2xl p-6 flex flex-col items-center justify-center text-center cursor-pointer bg-card transition-colors">
-              <UploadCloud className="size-8 text-muted-foreground mb-2" />
-              <span className="text-xs font-semibold text-foreground">
-                Click or drag &amp; drop payment screenshot
-              </span>
-              <span className="text-[11px] text-muted-foreground mt-1">
-                PNG, JPG or PDF receipt from your bank app (Meezan, EasyPaisa, HBL, etc.)
-              </span>
-              <input
-                type="file"
-                accept="image/*,.pdf"
-                onChange={handleFileChange}
-                className="hidden"
-              />
-            </label>
+            <>
+              <label
+                className={cn(
+                  "border-2 border-dashed rounded-2xl p-6 flex flex-col items-center justify-center text-center cursor-pointer transition-all",
+                  hasError
+                    ? "border-red-500 bg-red-50/50 ring-2 ring-red-500/20"
+                    : "border-border hover:border-neutral-400 bg-card"
+                )}
+              >
+                <UploadCloud
+                  className={cn(
+                    "size-8 mb-2",
+                    hasError ? "text-red-500 animate-bounce" : "text-muted-foreground"
+                  )}
+                />
+                <span
+                  className={cn(
+                    "text-xs font-semibold",
+                    hasError ? "text-red-700" : "text-foreground"
+                  )}
+                >
+                  Click or drag &amp; drop payment screenshot
+                </span>
+                <span
+                  className={cn(
+                    "text-[11px] mt-1",
+                    hasError ? "text-red-600 font-medium" : "text-muted-foreground"
+                  )}
+                >
+                  PNG, JPG or PDF receipt from your bank app (Meezan, EasyPaisa, HBL, etc.)
+                </span>
+                <input
+                  type="file"
+                  accept="image/*,.pdf"
+                  onChange={handleFileChange}
+                  className="hidden"
+                />
+              </label>
+              {hasError && (
+                <p className="text-xs font-semibold text-red-600 flex items-center gap-1.5 mt-1.5">
+                  <AlertCircle className="size-4 shrink-0" />
+                  <span>Payment proof is required. Please upload your transfer screenshot.</span>
+                </p>
+              )}
+            </>
           )}
         </div>
       </div>
