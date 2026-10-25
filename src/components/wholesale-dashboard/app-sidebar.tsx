@@ -88,7 +88,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               <Home className="size-5!" />
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate text-base font-semibold text-neutral-900">
-                  Wholesale Dealer Hub
+                  Customer Portal
                 </span>
               </div>
             </SidebarMenuButton>

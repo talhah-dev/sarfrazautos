@@ -42,7 +42,7 @@ export function AdminLoginForm({ className = "", ...props }) {
     password: "",
   })
   const [fieldErrors, setFieldErrors] = useState<FormErrors>({})
-  const [generalError, setGeneralError] = useState("")
+  const [generalError, setGeneralError] = useState("")  
   const [isLoading, setIsLoading] = useState(false)
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
