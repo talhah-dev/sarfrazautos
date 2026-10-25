@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 import Navbar from "@/components/home/navbar";
-import RetailProductOverviewSection from "@/components/retail-product-overview/retail-product-overview-section";
+import ProductOverviewSection from "@/components/product-overview/product-overview-section";
 import Footer from "@/components/footer";
 
 export const metadata: Metadata = {
-  title: "Complete 70cc Cylinder Head Assembly | Sarfraz Autos",
+  title: "Product Overview | Sarfraz Autos",
   description:
-    "Product overview and specifications for genuine 70cc motorcycle cylinder head assembly, valves, and engine replacement parts in Karachi.",
+    "Product overview and specifications for genuine motorcycle engine parts, cylinder heads, and replacement accessories in Karachi.",
 };
 
 export default function ProductOverviewPage() {
@@ -14,7 +14,7 @@ export default function ProductOverviewPage() {
     <>
       <Navbar />
       <main className="min-h-screen bg-white">
-        <RetailProductOverviewSection />
+        <ProductOverviewSection defaultType="retail" />
       </main>
       <Footer />
     </>

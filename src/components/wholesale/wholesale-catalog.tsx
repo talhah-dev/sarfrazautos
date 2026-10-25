@@ -2,297 +2,149 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Check, Eye, Plus, Star } from "lucide-react";
+import { Check, Eye, PackageOpen, Plus, Star } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+import { getProducts } from "@/lib/api/products";
 
 export interface WholesaleProduct {
-  id: string;
+  id: string | number;
   name: string;
-  price: string;
-  originalPrice: string;
+  price: number | string;
+  originalPrice?: number | string;
   category: string;
   brand?: string;
-  rating?: number;
+  rating?: string | number;
   badge?: string;
-  image: string;
+  images?: string[];
+  mainImageIndex?: number;
+  slug?: string;
 }
 
-const allWholesaleProducts: WholesaleProduct[] = [
-  {
-    id: "ws-1",
-    name: "CD70 Complete Cylinder Head",
-    price: "Rs. 84,000",
-    originalPrice: "Rs. 105,000",
-    category: "Cylinders & Heads",
-    brand: "Honda",
-    rating: 4.9,
-    badge: "-20%",
-    image: "/wholesale-bulk.png",
-  },
-  {
-    id: "ws-2",
-    name: "4-Stroke Engine Block",
-    price: "Rs. 92,000",
-    originalPrice: "Rs. 108,000",
-    category: "Engine Blocks",
-    brand: "Honda",
-    rating: 4.8,
-    badge: "-15%",
-    image: "/wholesale-bulk.png",
-  },
-  {
-    id: "ws-3",
-    name: "125cc Piston Kit",
-    price: "Rs. 87,500",
-    originalPrice: "Rs. 116,000",
-    category: "Cylinders & Heads",
-    brand: "Honda",
-    rating: 4.9,
-    badge: "-25%",
-    image: "/wholesale-bulk.png",
-  },
-  {
-    id: "ws-4",
-    name: "Crown Heavy Duty Clutch Plates",
-    price: "Rs. 135,000",
-    originalPrice: "Rs. 150,000",
-    category: "Clutch Plates",
-    brand: "Crown",
-    rating: 4.7,
-    badge: "-10%",
-    image: "/wholesale-bulk.png",
-  },
-  {
-    id: "ws-5",
-    name: "Performance Crankshaft Assembly",
-    price: "Rs. 85,000",
-    originalPrice: "Rs. 100,000",
-    category: "Crankshafts",
-    brand: "Honda",
-    rating: 4.8,
-    badge: "-15%",
-    image: "/wholesale-bulk.png",
-  },
-  {
-    id: "ws-6",
-    name: "Deluxe High-Flow Oil Pump",
-    price: "Rs. 64,500",
-    originalPrice: "Rs. 80,000",
-    category: "Others",
-    brand: "Honda",
-    rating: 4.6,
-    badge: "-20%",
-    image: "/wholesale-bulk.png",
-  },
-  {
-    id: "ws-7",
-    name: "Camshaft & Rocker Arm Set",
-    price: "Rs. 92,000",
-    originalPrice: "Rs. 112,000",
-    category: "Cylinders & Heads",
-    brand: "Honda",
-    rating: 4.8,
-    badge: "-18%",
-    image: "/wholesale-bulk.png",
-  },
-  {
-    id: "ws-8",
-    name: "Complete Overhaul Gasket Set",
-    price: "Rs. 145,000",
-    originalPrice: "Rs. 205,000",
-    category: "Others",
-    brand: "Honda",
-    rating: 4.7,
-    badge: "-30%",
-    image: "/wholesale-bulk.png",
-  },
-  {
-    id: "ws-9",
-    name: "Japanese Standard Carburetor",
-    price: "Rs. 88,000",
-    originalPrice: "Rs. 103,500",
-    category: "Carburetors",
-    brand: "Honda",
-    rating: 4.9,
-    badge: "-15%",
-    image: "/wholesale-bulk.png",
-  },
-  {
-    id: "ws-10",
-    name: "CG125 Cylinder Block Barrel",
-    price: "Rs. 98,000",
-    originalPrice: "Rs. 111,000",
-    category: "Engine Blocks",
-    brand: "Honda",
-    rating: 4.8,
-    badge: "-12%",
-    image: "/wholesale-bulk.png",
-  },
-  {
-    id: "ws-11",
-    name: "Complete Clutch Housing & Plate",
-    price: "Rs. 94,500",
-    originalPrice: "Rs. 115,000",
-    category: "Clutch Plates",
-    brand: "Crown",
-    rating: 4.7,
-    badge: "-18%",
-    image: "/wholesale-bulk.png",
-  },
-  {
-    id: "ws-12",
-    name: "CD70 Heavy Duty Connecting Rod",
-    price: "Rs. 58,000",
-    originalPrice: "Rs. 72,500",
-    category: "Crankshafts",
-    brand: "Honda",
-    rating: 4.9,
-    badge: "-20%",
-    image: "/wholesale-bulk.png",
-  },
-  {
-    id: "ws-13",
-    name: "High-Compression Cylinder Kit 150cc",
-    price: "Rs. 110,000",
-    originalPrice: "Rs. 129,000",
-    category: "Cylinders & Heads",
-    brand: "Suzuki",
-    rating: 4.8,
-    badge: "-15%",
-    image: "/wholesale-bulk.png",
-  },
-  {
-    id: "ws-14",
-    name: "OEM Specification Stator Coil",
-    price: "Rs. 96,000",
-    originalPrice: "Rs. 123,000",
-    category: "Others",
-    brand: "Yamaha",
-    rating: 4.6,
-    badge: "-22%",
-    image: "/wholesale-bulk.png",
-  },
-  {
-    id: "ws-15",
-    name: "Front & Rear Brake Shoe Set",
-    price: "Rs. 125,000",
-    originalPrice: "Rs. 166,000",
-    category: "Others",
-    brand: "Crown",
-    rating: 4.8,
-    badge: "-25%",
-    image: "/wholesale-bulk.png",
-  },
-  {
-    id: "ws-16",
-    name: "Deluxe Carburetor Repair Kit",
-    price: "Rs. 42,000",
-    originalPrice: "Rs. 46,500",
-    category: "Carburetors",
-    brand: "Honda",
-    rating: 4.7,
-    badge: "-10%",
-    image: "/wholesale-bulk.png",
-  },
-  {
-    id: "ws-17",
-    name: "US70 Bulk Fuel Tank Lot (Carton)",
-    price: "Rs. 56,000",
-    originalPrice: "Rs. 65,000",
-    category: "Others",
-    brand: "United",
-    rating: 4.8,
-    badge: "-14%",
-    image: "/wholesale-bulk.png",
-  },
-  {
-    id: "ws-18",
-    name: "SS70 Full Wiring Loom Cartons",
-    price: "Rs. 48,000",
-    originalPrice: "Rs. 58,000",
-    category: "Others",
-    brand: "Super Star",
-    rating: 4.7,
-    badge: "-17%",
-    image: "/wholesale-bulk.png",
-  },
-  {
-    id: "ws-19",
-    name: "UD70 Cylinder Head Master Pack",
-    price: "Rs. 89,000",
-    originalPrice: "Rs. 102,000",
-    category: "Cylinders & Heads",
-    brand: "Unique",
-    rating: 4.8,
-    badge: "-12%",
-    image: "/wholesale-bulk.png",
-  },
-];
-
 export function WholesaleCatalog({
-  searchQuery = "",
-  activeCategory = "All",
-  activeBike = "All Brands",
+  searchQuery,
+  activeCategory,
+  activeBike,
+  currentPage = 1,
+  onPageChange,
+  onClearFilters,
   className = "",
 }: {
-  searchQuery?: string;
-  activeCategory?: string;
-  activeBike?: string;
+  searchQuery: string;
+  activeCategory: string;
+  activeBike: string;
+  currentPage?: number;
+  onPageChange?: (page: number) => void;
+  onClearFilters?: () => void;
   className?: string;
 }) {
   const [addedItems, setAddedItems] = useState<Record<string, boolean>>({});
 
-  const filteredProducts = allWholesaleProducts.filter((p) => {
-    const matchesSearch =
-      !searchQuery ||
-      p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      p.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (p.brand && p.brand.toLowerCase().includes(searchQuery.toLowerCase()));
+  const categoryQuery = !activeCategory || activeCategory === "All" ? "" : activeCategory;
+  const brandQuery =
+    !activeBike || activeBike === "All Brands" || activeBike === "All" ? "" : activeBike;
 
-    const matchesCategory =
-      activeCategory === "All" || p.category === activeCategory;
-
-    const matchesBike =
-      !activeBike ||
-      activeBike === "All Brands" ||
-      activeBike === "All" ||
-      p.name.toLowerCase().includes(activeBike.toLowerCase()) ||
-      (p.brand && p.brand.toLowerCase().includes(activeBike.toLowerCase())) ||
-      (activeBike === "Others" &&
-        !["Honda", "Suzuki", "Yamaha", "Crown", "Road Prince", "Super Power", "Unique", "United", "Super Star"].some((b) =>
-          p.name.toLowerCase().includes(b.toLowerCase()) || (p.brand && p.brand.toLowerCase().includes(b.toLowerCase()))
-        ));
-
-    return matchesSearch && matchesCategory && matchesBike;
+  const { data, isLoading } = useQuery({
+    queryKey: [
+      "wholesale-catalog",
+      {
+        page: currentPage,
+        limit: 16,
+        search: searchQuery,
+        category: categoryQuery,
+        brand: brandQuery,
+      },
+    ],
+    queryFn: () =>
+      getProducts({
+        page: currentPage,
+        limit: 16,
+        type: "wholesale",
+        search: searchQuery,
+        category: categoryQuery,
+        brand: brandQuery,
+      }),
   });
 
-  const handleAdd = (id: string) => {
-    setAddedItems((prev) => ({ ...prev, [id]: true }));
+  const products = data?.products || [];
+  const totalPages = data?.pagination?.totalPages || 1;
+
+  const handleAdd = (product: any, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const idStr = String(product.id);
+    setAddedItems((prev) => ({ ...prev, [idStr]: true }));
+    toast.success(`Added ${product.name} to carton list!`);
     setTimeout(() => {
-      setAddedItems((prev) => ({ ...prev, [id]: false }));
+      setAddedItems((prev) => ({ ...prev, [idStr]: false }));
     }, 1800);
   };
 
   return (
     <section className={cn("w-full bg-white md:pt-6 md:pb-20 pb-16", className)}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {filteredProducts.length === 0 ? (
+        {isLoading ? (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 md:gap-y-16 gap-y-10">
+            {Array.from({ length: 8 }).map((_, idx) => (
+              <div key={idx} className="flex flex-col animate-pulse">
+                <div className="aspect-square w-full rounded-2xl bg-neutral-100" />
+                <div className="mt-3.5 flex flex-col gap-2">
+                  <div className="h-3 bg-neutral-100 rounded w-1/3" />
+                  <div className="h-4 bg-neutral-100 rounded w-3/4" />
+                  <div className="h-4 bg-neutral-100 rounded w-1/2" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : products.length === 0 ? (
           <div className="text-center py-20 bg-neutral-50 rounded-3xl border border-neutral-200">
+            <PackageOpen className="size-10 text-neutral-300 mx-auto mb-2" />
             <h3 className="text-base font-semibold text-neutral-900">
-              No wholesale cartons found
+              No wholesale master cartons found
             </h3>
             <p className="text-xs text-neutral-500 mt-1 max-w-sm mx-auto">
-              We couldn&apos;t find matching wholesale cartons for &quot;{searchQuery}&quot;. Try searching for another part name or clear filters.
+              {searchQuery
+                ? `We couldn't find wholesale products matching "${searchQuery}". Try another keyword or clear filters.`
+                : "No wholesale products match the selected filters. Try choosing another brand or category."}
             </p>
+            {onClearFilters && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onClearFilters}
+                className="mt-4 h-9 px-4 text-xs font-medium cursor-pointer"
+              >
+                Clear all filters
+              </Button>
+            )}
           </div>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 md:gap-y-16 gap-y-10">
-            {filteredProducts.map((product) => {
-              const isAdded = !!addedItems[product.id];
+            {products.map((product: any) => {
+              const isAdded = !!addedItems[String(product.id)];
+              const primaryImage =
+                Array.isArray(product.images) && product.images.length > 0
+                  ? product.images[product.mainImageIndex || 0] || product.images[0]
+                  : "/wholesale-bulk.png";
+
+              const productHref = product.slug
+                ? `/wholesale-product-overview/${product.slug}`
+                : `/wholesale-product-overview?id=${product.id}`;
+
               return (
                 <div key={product.id} className="group flex flex-col">
                   <Link
-                    href="/wholesale-product-overview"
+                    href={productHref}
                     className="relative aspect-square w-full rounded-2xl bg-[#f4f4f5] overflow-hidden p-6 flex items-center justify-center transition-all duration-300 group-hover:bg-[#ebebee]"
                   >
                     {product.badge && (
@@ -301,7 +153,7 @@ export function WholesaleCatalog({
                       </span>
                     )}
                     <img
-                      src={product.image}
+                      src={primaryImage}
                       alt={product.name}
                       className="w-full h-full object-contain drop-shadow-sm transition-all duration-300 group-hover:scale-105 group-hover:brightness-75"
                     />
@@ -321,44 +173,36 @@ export function WholesaleCatalog({
                       </span>
                       <div className="flex items-center gap-1 text-neutral-700 font-semibold shrink-0">
                         <Star className="size-3.5 fill-amber-400 text-amber-400" />
-                        <span>{product.rating || 4.5}</span>
+                        <span>{product.rating || "5.0"}</span>
                       </div>
                     </div>
 
                     <div className="flex items-center justify-between gap-3 mt-0.5">
-                      <Link href="/wholesale-product-overview" className="min-w-0 flex-1 group/title">
+                      <Link href={productHref} className="min-w-0 flex-1 group/title">
                         <h3 className="font-medium text-neutral-900 group-hover/title:text-red-600 transition-colors text-sm md:text-base leading-snug line-clamp-2">
                           {product.name}
                         </h3>
                         <div className="flex items-center gap-2 mt-1">
                           <p className="font-semibold text-neutral-900 text-sm md:text-base">
-                            {product.price}
+                            Rs. {Number(product.price || 0).toLocaleString()}
                           </p>
                           {product.originalPrice && (
                             <span className="text-xs md:text-sm text-red-600 line-through font-normal">
-                              {product.originalPrice}
+                              Rs. {Number(product.originalPrice).toLocaleString()}
                             </span>
                           )}
                         </div>
-                        {product.brand && (
-                          <div className="flex items-center gap-1.5 mt-1.5 text-xs">
-                            <span className="text-neutral-400 font-medium">Brand:</span>
-                            <span className="font-semibold text-neutral-800">
-                              {product.brand}
-                            </span>
-                          </div>
-                        )}
                       </Link>
 
                       <button
                         type="button"
-                        onClick={() => handleAdd(product.id)}
-                        aria-label={`Order wholesale bulk ${product.name}`}
+                        onClick={(e) => handleAdd(product, e)}
+                        aria-label="Add to wholesale carton list"
                         className={cn(
-                          "shrink-0 size-9 rounded-full flex items-center justify-center transition-all shadow-sm cursor-pointer mt-0.5",
+                          "size-8 md:size-9 rounded-full flex items-center justify-center transition-all cursor-pointer shrink-0 shadow-xs",
                           isAdded
-                            ? "bg-green-600 text-white scale-105"
-                            : "bg-red-600 hover:bg-red-700 active:scale-95 text-white"
+                            ? "bg-green-600 text-white scale-95"
+                            : "bg-neutral-900 hover:bg-red-600 text-white"
                         )}
                       >
                         {isAdded ? (
@@ -372,6 +216,58 @@ export function WholesaleCatalog({
                 </div>
               );
             })}
+          </div>
+        )}
+
+        {totalPages > 1 && (
+          <div className="mt-12 flex justify-center">
+            <Pagination>
+              <PaginationContent className="gap-1">
+                <PaginationItem>
+                  <PaginationPrevious
+                    href="#"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      if (currentPage > 1 && onPageChange) onPageChange(currentPage - 1);
+                    }}
+                    className="rounded-full hover:bg-neutral-100 cursor-pointer text-xs"
+                  />
+                </PaginationItem>
+                {Array.from({ length: totalPages }).map((_, idx) => {
+                  const page = idx + 1;
+                  return (
+                    <PaginationItem key={page}>
+                      <PaginationLink
+                        href="#"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          if (onPageChange) onPageChange(page);
+                        }}
+                        isActive={currentPage === page}
+                        className={cn(
+                          "size-9 rounded-full cursor-pointer text-xs transition-colors",
+                          currentPage === page
+                            ? "bg-neutral-900 text-white hover:bg-neutral-900"
+                            : "hover:bg-neutral-100 text-neutral-700"
+                        )}
+                      >
+                        {page}
+                      </PaginationLink>
+                    </PaginationItem>
+                  );
+                })}
+                <PaginationItem>
+                  <PaginationNext
+                    href="#"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      if (currentPage < totalPages && onPageChange) onPageChange(currentPage + 1);
+                    }}
+                    className="rounded-full hover:bg-neutral-100 cursor-pointer text-xs"
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
           </div>
         )}
       </div>

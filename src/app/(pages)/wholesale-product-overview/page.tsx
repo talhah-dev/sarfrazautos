@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 import Navbar from "@/components/home/navbar";
-import WholesaleProductOverviewSection from "@/components/wholesale-product-overview/wholesale-product-overview-section";
+import ProductOverviewSection from "@/components/product-overview/product-overview-section";
 import Footer from "@/components/footer";
 
 export const metadata: Metadata = {
-  title: "CD70 Complete Cylinder Head (Master Carton of 12) | Sarfraz Autos Wholesale",
+  title: "Wholesale Product Overview | Sarfraz Autos",
   description:
-    "Source wholesale master cartons of 70cc motorcycle cylinder heads at direct dealer rates. MOQ 2 cartons with nationwide freight dispatch from Karachi.",
+    "Source wholesale master cartons of motorcycle spare parts at direct factory dealer rates. Bulk freight dispatch from Karachi.",
 };
 
 export default function WholesaleProductOverviewPage() {
@@ -14,7 +14,7 @@ export default function WholesaleProductOverviewPage() {
     <>
       <Navbar />
       <main className="min-h-screen bg-white">
-        <WholesaleProductOverviewSection />
+        <ProductOverviewSection defaultType="wholesale" />
       </main>
       <Footer />
     </>

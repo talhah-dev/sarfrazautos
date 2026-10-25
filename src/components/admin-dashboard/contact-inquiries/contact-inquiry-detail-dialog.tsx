@@ -13,22 +13,25 @@ import { Mail, Phone, Building2, Calendar, MessageSquare, CheckCircle2, Clock } 
 export function ContactInquiryDetailDialog({ inquiry, open, onOpenChange, onStatusChange }: any) {
   if (!inquiry) return null
 
-  const getStatusBadge = (status: any) => {
-    if (status === "New") {
-      return (
-        <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 text-xs font-medium gap-1">
-          <Clock className="size-3" />
-          New Message
-        </Badge>
-      )
+  const isNew = (inquiry.status || "").toLowerCase() === "new"
+
+  const formatDate = (dateVal: any) => {
+    if (!dateVal) return "—"
+    try {
+      const d = new Date(dateVal)
+      return d.toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+    } catch {
+      return String(dateVal)
     }
-    return (
-      <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 text-xs font-medium gap-1">
-        <CheckCircle2 className="size-3" />
-        Replied
-      </Badge>
-    )
   }
+
+  const cleanPhone = inquiry.phone ? inquiry.phone.replace(/[^0-9]/g, "") : ""
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -39,7 +42,17 @@ export function ContactInquiryDetailDialog({ inquiry, open, onOpenChange, onStat
               <MessageSquare className="size-4 text-red-600" />
               Contact Inquiry
             </span>
-            {getStatusBadge(inquiry.status)}
+            {isNew ? (
+              <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 text-xs font-medium gap-1">
+                <Clock className="size-3" />
+                New Message
+              </Badge>
+            ) : (
+              <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 text-xs font-medium gap-1">
+                <CheckCircle2 className="size-3" />
+                Replied
+              </Badge>
+            )}
           </DialogTitle>
         </DialogHeader>
 
@@ -60,9 +73,13 @@ export function ContactInquiryDetailDialog({ inquiry, open, onOpenChange, onStat
               <span className="text-neutral-500">Phone Number</span>
               <p className="font-semibold text-neutral-900 mt-0.5 flex items-center gap-1">
                 <Phone className="size-3 text-neutral-400" />
-                <a href={`tel:${inquiry.phone}`} className="hover:underline hover:text-red-600">
-                  {inquiry.phone}
-                </a>
+                {inquiry.phone ? (
+                  <a href={`tel:${inquiry.phone}`} className="hover:underline hover:text-red-600">
+                    {inquiry.phone}
+                  </a>
+                ) : (
+                  <span className="text-neutral-400 font-normal">Not provided</span>
+                )}
               </p>
             </div>
             <div>
@@ -78,7 +95,7 @@ export function ContactInquiryDetailDialog({ inquiry, open, onOpenChange, onStat
               <span className="text-neutral-500">Received Date & Time</span>
               <p className="font-medium text-neutral-700 mt-0.5 flex items-center gap-1">
                 <Calendar className="size-3 text-neutral-400" />
-                {inquiry.date}
+                {formatDate(inquiry.createdAt || inquiry.date)}
               </p>
             </div>
           </div>
@@ -92,12 +109,12 @@ export function ContactInquiryDetailDialog({ inquiry, open, onOpenChange, onStat
 
           <div className="flex items-center justify-between gap-2 pt-2 border-t border-neutral-100">
             <div>
-              {inquiry.status === "New" ? (
+              {isNew ? (
                 <Button
                   size="sm"
                   variant="outline"
                   className="text-emerald-700 border-emerald-200 hover:bg-emerald-50 cursor-pointer text-xs"
-                  onClick={() => onStatusChange(inquiry.id, "Replied")}
+                  onClick={() => onStatusChange(inquiry.id, "replied")}
                 >
                   <CheckCircle2 className="size-3.5 mr-1" /> Mark as Replied
                 </Button>
@@ -106,7 +123,7 @@ export function ContactInquiryDetailDialog({ inquiry, open, onOpenChange, onStat
                   size="sm"
                   variant="outline"
                   className="text-neutral-600 cursor-pointer text-xs"
-                  onClick={() => onStatusChange(inquiry.id, "New")}
+                  onClick={() => onStatusChange(inquiry.id, "new")}
                 >
                   Mark as Unread
                 </Button>
@@ -114,18 +131,20 @@ export function ContactInquiryDetailDialog({ inquiry, open, onOpenChange, onStat
             </div>
 
             <div className="flex items-center gap-2">
-              <a
-                href={`https://wa.me/${inquiry.phone.replace(/[^0-9]/g, "")}`}
-                target="_blank"
-                rel="noreferrer"
-              >
-                <Button
-                  size="sm"
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer text-xs"
+              {cleanPhone && (
+                <a
+                  href={`https://wa.me/${cleanPhone}`}
+                  target="_blank"
+                  rel="noreferrer"
                 >
-                  Reply via WhatsApp
-                </Button>
-              </a>
+                  <Button
+                    size="sm"
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer text-xs"
+                  >
+                    Reply via WhatsApp
+                  </Button>
+                </a>
+              )}
               <Button
                 size="sm"
                 variant="outline"
@@ -141,3 +160,5 @@ export function ContactInquiryDetailDialog({ inquiry, open, onOpenChange, onStat
     </Dialog>
   )
 }
+
+export default ContactInquiryDetailDialog

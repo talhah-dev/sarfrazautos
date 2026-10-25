@@ -13,6 +13,7 @@ function WholesaleShopContent() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("All");
   const [activeBike, setActiveBike] = useState("All Brands");
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     if (brandParam) {
@@ -34,26 +35,54 @@ function WholesaleShopContent() {
           ? "Unique"
           : brandParam;
       setActiveBike(mapped);
+      setCurrentPage(1);
     }
     if (categoryParam) {
       setActiveCategory(categoryParam);
+      setCurrentPage(1);
     }
   }, [brandParam, categoryParam]);
+
+  const handleSearchSubmit = (val: string) => {
+    setSearchQuery(val);
+    setCurrentPage(1);
+  };
+
+  const handleCategoryChange = (cat: string) => {
+    setActiveCategory(cat);
+    setCurrentPage(1);
+  };
+
+  const handleBikeChange = (bike: string) => {
+    setActiveBike(bike);
+    setCurrentPage(1);
+  };
+
+  const handleClearFilters = () => {
+    setSearchQuery("");
+    setActiveCategory("All");
+    setActiveBike("All Brands");
+    setCurrentPage(1);
+  };
 
   return (
     <>
       <WholesaleHero
         searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
+        onSearchSubmit={handleSearchSubmit}
         activeCategory={activeCategory}
-        onCategoryChange={setActiveCategory}
+        onCategoryChange={handleCategoryChange}
         activeBike={activeBike}
-        onBikeChange={setActiveBike}
+        onBikeChange={handleBikeChange}
+        onClearFilters={handleClearFilters}
       />
       <WholesaleCatalog
         searchQuery={searchQuery}
         activeCategory={activeCategory}
         activeBike={activeBike}
+        currentPage={currentPage}
+        onPageChange={setCurrentPage}
+        onClearFilters={handleClearFilters}
       />
     </>
   );

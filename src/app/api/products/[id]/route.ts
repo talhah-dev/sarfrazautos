@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server"
 import { db } from "@/lib/db"
 import { products } from "@/db/schema/products"
-import { eq } from "drizzle-orm"
+import { eq, or, and, ne } from "drizzle-orm"
+import { createSlug } from "@/lib/slug"
 
 export async function GET(
   req: Request,
@@ -9,19 +10,25 @@ export async function GET(
 ) {
   try {
     const { id } = await params
-    const productId = parseInt(id, 10)
+    const trimmedId = id?.trim()
 
-    if (isNaN(productId)) {
+    if (!trimmedId) {
       return NextResponse.json(
-        { success: false, error: "Invalid product ID" },
+        { success: false, error: "Invalid product identifier" },
         { status: 400 }
       )
     }
 
+    const isNumeric = /^\d+$/.test(trimmedId)
+    const condition = isNumeric
+      ? or(eq(products.id, parseInt(trimmedId, 10)), eq(products.slug, trimmedId))
+      : eq(products.slug, trimmedId)
+
     const [product] = await db
       .select()
       .from(products)
-      .where(eq(products.id, productId))
+      .where(condition)
+      .limit(1)
 
     if (!product) {
       return NextResponse.json(
@@ -59,7 +66,27 @@ export async function PUT(
       updatedAt: new Date(),
     }
 
-    if (body.name !== undefined) updateData.name = body.name.trim()
+    if (body.name !== undefined) {
+      const name = body.name.trim()
+      updateData.name = name
+      const targetSlug = body.slug ? body.slug.trim() : createSlug(name)
+      const [existing] = await db
+        .select({ id: products.id })
+        .from(products)
+        .where(and(eq(products.slug, targetSlug), ne(products.id, productId)))
+        .limit(1)
+
+      if (existing) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: "A product with this name is already available. Please choose a different name.",
+          },
+          { status: 409 }
+        )
+      }
+      updateData.slug = targetSlug
+    }
     if (body.type !== undefined) updateData.type = body.type.trim().toLowerCase()
     if (body.category !== undefined) updateData.category = body.category.trim()
     if (body.brand !== undefined) updateData.brand = body.brand.trim()

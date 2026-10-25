@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { db } from "@/lib/db"
 import { products } from "@/db/schema/products"
 import { eq, ilike, and, desc, count } from "drizzle-orm"
+import { createSlug } from "@/lib/slug"
 
 export async function GET(req: Request) {
   try {
@@ -22,10 +23,14 @@ export async function GET(req: Request) {
       conditions.push(eq(products.type, type))
     }
     if (category && category !== "all") {
-      conditions.push(eq(products.category, category))
+      conditions.push(ilike(products.category, category))
     }
     if (brand && brand !== "all") {
-      conditions.push(eq(products.brand, brand))
+      conditions.push(ilike(products.brand, brand))
+    }
+    const isFeaturedParam = searchParams.get("isFeatured")
+    if (isFeaturedParam !== null && isFeaturedParam !== undefined && isFeaturedParam !== "") {
+      conditions.push(eq(products.isFeatured, isFeaturedParam === "true" || isFeaturedParam === "1"))
     }
 
     const whereClause = conditions.length > 0 ? and(...conditions) : undefined
@@ -34,6 +39,10 @@ export async function GET(req: Request) {
       .select({ count: count() })
       .from(products)
       .where(whereClause)
+
+    const [allCountRow] = await db.select({ count: count() }).from(products)
+    const [retailCountRow] = await db.select({ count: count() }).from(products).where(eq(products.type, "retail"))
+    const [wholesaleCountRow] = await db.select({ count: count() }).from(products).where(eq(products.type, "wholesale"))
 
     const total = Number(totalRow?.count || 0)
     const totalPages = Math.ceil(total / limit)
@@ -50,6 +59,11 @@ export async function GET(req: Request) {
     return NextResponse.json({
       success: true,
       products: items,
+      stats: {
+        total: Number(allCountRow?.count || 0),
+        retail: Number(retailCountRow?.count || 0),
+        wholesale: Number(wholesaleCountRow?.count || 0),
+      },
       pagination: {
         page,
         limit,
@@ -76,10 +90,30 @@ export async function POST(req: Request) {
       )
     }
 
+    const name = body.name.trim()
+    const targetSlug = body.slug ? body.slug.trim() : createSlug(name)
+
+    const [existing] = await db
+      .select({ id: products.id })
+      .from(products)
+      .where(eq(products.slug, targetSlug))
+      .limit(1)
+
+    if (existing) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "A product with this name is already available. Please choose a different name.",
+        },
+        { status: 409 }
+      )
+    }
+
     const [created] = await db
       .insert(products)
       .values({
-        name: body.name.trim(),
+        name,
+        slug: targetSlug,
         type: body.type.trim().toLowerCase(),
         category: body.category.trim(),
         brand: body.brand.trim(),

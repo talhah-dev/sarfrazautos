@@ -2,19 +2,54 @@
 
 import { useState } from "react";
 import { FiArrowRight, FiMail, FiPhone } from "react-icons/fi";
+import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
+import { sendMessage } from "@/lib/api/messages";
 
 export function ContactSection({ className }: { className?: string }) {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [shopName, setShopName] = useState("");
+  const [message, setMessage] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitted(true);
-    setTimeout(() => setIsSubmitted(false), 5000);
+    if (!name.trim() || !email.trim() || !message.trim()) {
+      toast.error("Please fill in your name, email, and message.");
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      await sendMessage({
+        name: name.trim(),
+        email: email.trim(),
+        phone: phone.trim() || undefined,
+        shopName: shopName.trim() || undefined,
+        message: message.trim(),
+      });
+
+      toast.success("Message sent successfully! We will get back to you soon.");
+      setName("");
+      setEmail("");
+      setPhone("");
+      setShopName("");
+      setMessage("");
+      setIsSubmitted(true);
+      setTimeout(() => setIsSubmitted(false), 5000);
+    } catch (err: any) {
+      toast.error(err.message || "Failed to send message. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -38,11 +73,14 @@ export function ContactSection({ className }: { className?: string }) {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="name" className="text-sm font-medium text-neutral-900">
-                      Name
+                      Name *
                     </Label>
                     <Input
                       id="name"
                       required
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      disabled={isSubmitting}
                       placeholder="Your name"
                       className="h-11 rounded-lg border-neutral-300 bg-white px-3.5 text-sm placeholder:text-neutral-400 focus-visible:border-red-600 focus-visible:ring-red-600/20"
                     />
@@ -50,12 +88,15 @@ export function ContactSection({ className }: { className?: string }) {
 
                   <div className="space-y-2">
                     <Label htmlFor="email" className="text-sm font-medium text-neutral-900">
-                      Email
+                      Email *
                     </Label>
                     <Input
                       id="email"
                       type="email"
                       required
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      disabled={isSubmitting}
                       placeholder="you@example.com"
                       className="h-11 rounded-lg border-neutral-300 bg-white px-3.5 text-sm placeholder:text-neutral-400 focus-visible:border-red-600 focus-visible:ring-red-600/20"
                     />
@@ -70,6 +111,9 @@ export function ContactSection({ className }: { className?: string }) {
                     <Input
                       id="phone"
                       type="tel"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      disabled={isSubmitting}
                       placeholder="+92 (300) 000-0000"
                       className="h-11 rounded-lg border-neutral-300 bg-white px-3.5 text-sm placeholder:text-neutral-400 focus-visible:border-red-600 focus-visible:ring-red-600/20"
                     />
@@ -81,6 +125,9 @@ export function ContactSection({ className }: { className?: string }) {
                     </Label>
                     <Input
                       id="shopName"
+                      value={shopName}
+                      onChange={(e) => setShopName(e.target.value)}
+                      disabled={isSubmitting}
                       placeholder="Your shop name"
                       className="h-11 rounded-lg border-neutral-300 bg-white px-3.5 text-sm placeholder:text-neutral-400 focus-visible:border-red-600 focus-visible:ring-red-600/20"
                     />
@@ -89,12 +136,15 @@ export function ContactSection({ className }: { className?: string }) {
 
                 <div className="space-y-2">
                   <Label htmlFor="message" className="text-sm font-medium text-neutral-900">
-                    Message
+                    Message *
                   </Label>
                   <Textarea
                     id="message"
                     required
                     rows={5}
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)}
+                    disabled={isSubmitting}
                     placeholder="Tell us about your requirements or parts inquiry..."
                     className="min-h-[220px] resize-none rounded-lg border-neutral-300 bg-white p-3.5 text-sm placeholder:text-neutral-400 focus-visible:border-red-600 focus-visible:ring-red-600/20"
                   />
@@ -104,10 +154,22 @@ export function ContactSection({ className }: { className?: string }) {
               <div>
                 <Button
                   type="submit"
-                  className="w-full h-11 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg text-sm flex items-center justify-center gap-2 cursor-pointer shadow-none transition-colors"
+                  disabled={isSubmitting}
+                  className="w-full h-11 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg text-sm flex items-center justify-center gap-2 cursor-pointer shadow-none transition-colors disabled:opacity-60"
                 >
-                  <span>{isSubmitted ? "Message Sent!" : "Send message"}</span>
-                  <FiArrowRight className="size-4" />
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="size-4 animate-spin" />
+                      <span>Sending message...</span>
+                    </>
+                  ) : isSubmitted ? (
+                    <span>Message Sent!</span>
+                  ) : (
+                    <>
+                      <span>Send message</span>
+                      <FiArrowRight className="size-4" />
+                    </>
+                  )}
                 </Button>
                 {isSubmitted && (
                   <p className="text-xs text-green-600 text-center mt-2 font-medium">
@@ -139,10 +201,13 @@ export function ContactSection({ className }: { className?: string }) {
                     </div>
                     <a
                       href="tel:+923001234567"
-                      className="mt-1.5 block text-sm font-semibold text-neutral-950 hover:text-red-600 transition-colors truncate"
+                      className="text-sm font-semibold text-neutral-900 mt-1 block hover:text-red-600 transition-colors"
                     >
-                      +92 300 1234567
+                      +92 (300) 123-4567
                     </a>
+                    <span className="text-[11px] text-neutral-400">
+                      Mon-Sat from 9am to 8pm
+                    </span>
                   </div>
 
                   <div>
@@ -153,11 +218,14 @@ export function ContactSection({ className }: { className?: string }) {
                       </span>
                     </div>
                     <a
-                      href="mailto:info@sarfrazautos.com"
-                      className="mt-1.5 block text-sm font-semibold text-neutral-950 hover:text-red-600 transition-colors truncate"
+                      href="mailto:support@sarfrazautos.com"
+                      className="text-sm font-semibold text-neutral-900 mt-1 block hover:text-red-600 transition-colors"
                     >
-                      info@sarfrazautos.com
+                      support@sarfrazautos.com
                     </a>
+                    <span className="text-[11px] text-neutral-400">
+                      Online support 24/7
+                    </span>
                   </div>
                 </div>
               </div>

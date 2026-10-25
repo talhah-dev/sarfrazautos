@@ -10,6 +10,7 @@ export interface UploadedProductImage {
   id: string
   url: string
   name: string
+  file?: File
 }
 
 export function AdminProductImageUploader({
@@ -17,12 +18,14 @@ export function AdminProductImageUploader({
   initialMainIndex = 0,
   images: controlledImages,
   mainIndex: controlledMainIndex,
+  disabled = false,
   onChange,
 }: {
   initialImages?: UploadedProductImage[]
   initialMainIndex?: number
   images?: UploadedProductImage[]
   mainIndex?: number
+  disabled?: boolean
   onChange?: (images: UploadedProductImage[], mainIndex: number) => void
 }) {
   const [internalImages, setInternalImages] = useState<UploadedProductImage[]>(() => initialImages || [])
@@ -57,6 +60,7 @@ export function AdminProductImageUploader({
           id: `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
           url: reader.result as string,
           name: file.name,
+          file,
         })
         processed++
         if (processed === fileArray.length) {
@@ -109,6 +113,7 @@ export function AdminProductImageUploader({
           type="file"
           accept="image/*"
           multiple
+          disabled={disabled}
           onChange={(e) => {
             handleFiles(e.target.files)
             e.target.value = ""
@@ -118,8 +123,12 @@ export function AdminProductImageUploader({
 
         {images.length === 0 ? (
           <div
-            onClick={() => fileInputRef.current?.click()}
-            className="border-2 border-dashed border-neutral-200 rounded-xl aspect-square flex flex-col items-center justify-center gap-3 cursor-pointer hover:border-neutral-400 hover:bg-neutral-50/50 transition-colors relative overflow-hidden p-4 text-center"
+            onClick={() => {
+              if (!disabled) fileInputRef.current?.click()
+            }}
+            className={`border-2 border-dashed border-neutral-200 rounded-xl aspect-square flex flex-col items-center justify-center gap-3 relative overflow-hidden p-4 text-center ${
+              disabled ? "opacity-60 cursor-not-allowed" : "cursor-pointer hover:border-neutral-400 hover:bg-neutral-50/50 transition-colors"
+            }`}
           >
             <div className="size-12 rounded-full bg-neutral-100 flex items-center justify-center text-neutral-500">
               <Upload className="size-5" />

@@ -2,317 +2,134 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Check, Eye, Plus, Star } from "lucide-react";
+import { Check, Eye, Plus, Star, PackageOpen } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
-
-export interface RetailProduct {
-  id: string;
-  name: string;
-  price: string;
-  originalPrice: string;
-  category: string;
-  bike: string;
-  brand: string;
-  rating?: number;
-  badge?: string;
-  image: string;
-}
-
-const allProducts: RetailProduct[] = [
-  {
-    id: "rp-1",
-    name: "Complete 70cc Cylinder Head Assembly",
-    price: "Rs. 8,450",
-    originalPrice: "Rs. 11,200",
-    category: "Engine & Parts",
-    bike: "Honda CD70",
-    brand: "Honda",
-    rating: 4.8,
-    badge: "-25%",
-    image: "/bike-engine.png",
-  },
-  {
-    id: "rp-2",
-    name: "High-Compression 4-Stroke Engine Block",
-    price: "Rs. 16,800",
-    originalPrice: "Rs. 19,800",
-    category: "Engine & Parts",
-    bike: "Honda CG125",
-    brand: "Honda",
-    rating: 4.9,
-    badge: "-15%",
-    image: "/bike-engine.png",
-  },
-  {
-    id: "rp-3",
-    name: "125cc Piston & Ring Kit (Standard 0.00)",
-    price: "Rs. 4,200",
-    originalPrice: "Rs. 4,700",
-    category: "Engine & Parts",
-    bike: "Honda CG125",
-    brand: "Honda",
-    rating: 4.7,
-    badge: "-10%",
-    image: "/bike-engine.png",
-  },
-  {
-    id: "rp-4",
-    name: "Crown Heavy Duty Clutch Plate Set (5 Pcs)",
-    price: "Rs. 3,150",
-    originalPrice: "Rs. 3,950",
-    category: "Clutch & Gears",
-    bike: "Honda CG125",
-    brand: "Crown",
-    rating: 4.6,
-    badge: "-20%",
-    image: "/bike-engine.png",
-  },
-  {
-    id: "rp-5",
-    name: "CD70 Performance Crankshaft Assembly",
-    price: "Rs. 9,600",
-    originalPrice: "Rs. 11,300",
-    category: "Engine & Parts",
-    bike: "Honda CD70",
-    brand: "Honda",
-    rating: 4.8,
-    badge: "-15%",
-    image: "/bike-engine.png",
-  },
-  {
-    id: "rp-6",
-    name: "Deluxe High-Flow Engine Oil Pump",
-    price: "Rs. 2,450",
-    originalPrice: "Rs. 2,900",
-    category: "Others",
-    bike: "Honda CD70",
-    brand: "Honda",
-    rating: 4.5,
-    image: "/bike-engine.png",
-  },
-  {
-    id: "rp-7",
-    name: "Heavy Duty Camshaft & Rocker Arm Set",
-    price: "Rs. 5,100",
-    originalPrice: "Rs. 6,200",
-    category: "Engine & Parts",
-    bike: "Honda Pridor",
-    brand: "Honda",
-    rating: 4.7,
-    badge: "-18%",
-    image: "/bike-engine.png",
-  },
-  {
-    id: "rp-8",
-    name: "Complete Engine Overhaul Gasket Pack",
-    price: "Rs. 1,850",
-    originalPrice: "Rs. 2,650",
-    category: "Others",
-    bike: "Honda CD70",
-    brand: "Honda",
-    rating: 4.6,
-    badge: "-30%",
-    image: "/bike-engine.png",
-  },
-  {
-    id: "rp-9",
-    name: "Japanese Standard Carburetor Assembly",
-    price: "Rs. 4,950",
-    originalPrice: "Rs. 5,600",
-    category: "Carburetor & Air",
-    bike: "Honda CD70",
-    brand: "Honda",
-    rating: 4.9,
-    badge: "-12%",
-    image: "/bike-engine.png",
-  },
-  {
-    id: "rp-10",
-    name: "Complete Clutch Housing & Pressure Plate",
-    price: "Rs. 6,800",
-    originalPrice: "Rs. 8,000",
-    category: "Clutch & Gears",
-    bike: "Honda CG125",
-    brand: "Honda",
-    rating: 4.7,
-    badge: "-15%",
-    image: "/bike-engine.png",
-  },
-  {
-    id: "rp-11",
-    name: "Front & Rear Brake Shoe Set (Crown)",
-    price: "Rs. 1,650",
-    originalPrice: "Rs. 2,050",
-    category: "Brakes",
-    bike: "Honda CD70",
-    brand: "Crown",
-    rating: 4.8,
-    badge: "-20%",
-    image: "/bike-engine.png",
-  },
-  {
-    id: "rp-12",
-    name: "Electronic CDI Unit & Ignition Coil Kit",
-    price: "Rs. 2,850",
-    originalPrice: "Rs. 3,350",
-    category: "Electrical",
-    bike: "Suzuki GS150",
-    brand: "Suzuki",
-    rating: 4.5,
-    badge: "-15%",
-    image: "/bike-engine.png",
-  },
-  {
-    id: "rp-13",
-    name: "CG125 Performance Magneto Stator Plate",
-    price: "Rs. 4,600",
-    originalPrice: "Rs. 5,100",
-    category: "Electrical",
-    bike: "Honda CG125",
-    brand: "Honda",
-    rating: 4.7,
-    badge: "-10%",
-    image: "/bike-engine.png",
-  },
-  {
-    id: "rp-14",
-    name: "Primary & Secondary Gearbox Counter Shaft",
-    price: "Rs. 7,400",
-    originalPrice: "Rs. 8,600",
-    category: "Clutch & Gears",
-    bike: "Yamaha YBR125",
-    brand: "Yamaha",
-    rating: 4.8,
-    badge: "-14%",
-    image: "/bike-engine.png",
-  },
-  {
-    id: "rp-15",
-    name: "Front Hydraulic Disc Brake Caliper",
-    price: "Rs. 5,900",
-    originalPrice: "Rs. 7,200",
-    category: "Brakes",
-    bike: "Suzuki GS150",
-    brand: "Suzuki",
-    rating: 4.6,
-    badge: "-18%",
-    image: "/bike-engine.png",
-  },
-  {
-    id: "rp-16",
-    name: "Full Valve Set (Intake & Exhaust)",
-    price: "Rs. 2,250",
-    originalPrice: "Rs. 2,900",
-    category: "Engine & Parts",
-    bike: "Honda CD70",
-    brand: "Honda",
-    rating: 4.9,
-    badge: "-22%",
-    image: "/bike-engine.png",
-  },
-  {
-    id: "rp-17",
-    name: "US70 Genuine Fuel Tank Assembly",
-    price: "Rs. 4,800",
-    originalPrice: "Rs. 5,500",
-    category: "Others",
-    bike: "United US70",
-    brand: "United",
-    rating: 4.7,
-    badge: "-12%",
-    image: "/bike-engine.png",
-  },
-  {
-    id: "rp-18",
-    name: "SS70 Complete Wiring Harness Assembly",
-    price: "Rs. 2,150",
-    originalPrice: "Rs. 2,600",
-    category: "Electrical",
-    bike: "Super Star SS70",
-    brand: "Super Star",
-    rating: 4.6,
-    badge: "-17%",
-    image: "/bike-engine.png",
-  },
-  {
-    id: "rp-19",
-    name: "UD70 Cylinder Block & Piston Kit",
-    price: "Rs. 7,900",
-    originalPrice: "Rs. 9,200",
-    category: "Engine & Parts",
-    bike: "Unique UD70",
-    brand: "Unique",
-    rating: 4.8,
-    badge: "-14%",
-    image: "/bike-engine.png",
-  },
-];
+import { getProducts } from "@/lib/api/products";
+import { Button } from "@/components/ui/button";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 export function RetailCatalog({
   searchQuery = "",
   activeCategory = "All",
   activeBike = "All Brands",
+  currentPage = 1,
+  onPageChange,
+  onClearFilters,
   className = "",
 }: {
   searchQuery?: string;
   activeCategory?: string;
   activeBike?: string;
+  currentPage?: number;
+  onPageChange?: (page: number) => void;
+  onClearFilters?: () => void;
   className?: string;
 }) {
   const [addedItems, setAddedItems] = useState<Record<string, boolean>>({});
 
-  const filteredProducts = allProducts.filter((p) => {
-    const matchesSearch =
-      !searchQuery ||
-      p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      p.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      p.bike.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      p.brand.toLowerCase().includes(searchQuery.toLowerCase());
+  const brandQuery =
+    !activeBike || activeBike === "All Brands" || activeBike === "All"
+      ? ""
+      : activeBike === "Others"
+      ? ""
+      : activeBike;
 
-    const matchesCategory =
-      activeCategory === "All" || p.category === activeCategory;
+  const categoryQuery =
+    !activeCategory || activeCategory === "All" ? "" : activeCategory;
 
-    const matchesBike =
-      !activeBike ||
-      activeBike === "All Brands" ||
-      activeBike === "All" ||
-      p.bike.toLowerCase().includes(activeBike.toLowerCase()) ||
-      p.brand.toLowerCase().includes(activeBike.toLowerCase()) ||
-      (activeBike === "Others" &&
-        !["Honda", "Suzuki", "Yamaha", "Crown", "Road Prince", "Super Power", "Unique", "United", "Super Star"].some((b) =>
-          p.bike.toLowerCase().includes(b.toLowerCase()) || p.brand.toLowerCase().includes(b.toLowerCase())
-        ));
-
-    return matchesSearch && matchesCategory && matchesBike;
+  const { data, isLoading } = useQuery({
+    queryKey: [
+      "retail-catalog",
+      {
+        page: currentPage,
+        limit: 16,
+        search: searchQuery,
+        category: categoryQuery,
+        brand: brandQuery,
+      },
+    ],
+    queryFn: () =>
+      getProducts({
+        page: currentPage,
+        limit: 16,
+        type: "retail",
+        search: searchQuery,
+        category: categoryQuery,
+        brand: brandQuery,
+      }),
   });
 
-  const handleAdd = (id: string) => {
-    setAddedItems((prev) => ({ ...prev, [id]: true }));
+  const products = data?.products || [];
+  const totalPages = data?.pagination?.totalPages || 1;
+
+  const handleAdd = (id: string | number) => {
+    setAddedItems((prev) => ({ ...prev, [String(id)]: true }));
     setTimeout(() => {
-      setAddedItems((prev) => ({ ...prev, [id]: false }));
+      setAddedItems((prev) => ({ ...prev, [String(id)]: false }));
     }, 1800);
   };
 
   return (
     <section className={cn("w-full bg-white md:pt-6 md:pb-20 pb-16", className)}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {filteredProducts.length === 0 ? (
+        {isLoading ? (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 md:gap-y-16 gap-y-10">
+            {Array.from({ length: 8 }).map((_, idx) => (
+              <div key={idx} className="flex flex-col animate-pulse">
+                <div className="aspect-square w-full rounded-2xl bg-neutral-100" />
+                <div className="mt-3.5 flex flex-col gap-2">
+                  <div className="h-3 bg-neutral-100 rounded w-1/3" />
+                  <div className="h-4 bg-neutral-100 rounded w-3/4" />
+                  <div className="h-4 bg-neutral-100 rounded w-1/2" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : products.length === 0 ? (
           <div className="text-center py-20 bg-neutral-50 rounded-3xl border border-neutral-200">
+            <PackageOpen className="size-10 text-neutral-300 mx-auto mb-2" />
             <h3 className="text-base font-semibold text-neutral-900">
               No spare parts found
             </h3>
             <p className="text-xs text-neutral-500 mt-1 max-w-sm mx-auto">
-              We couldn&apos;t find matching products for &quot;{searchQuery}&quot;. Try searching for another part name or clear filters.
+              {searchQuery
+                ? `We couldn't find matching parts for "${searchQuery}". Try another keyword or clear filters.`
+                : "No parts match the selected filters. Try choosing another brand or category."}
             </p>
+            {onClearFilters && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onClearFilters}
+                className="mt-4 h-9 px-4 text-xs font-medium cursor-pointer"
+              >
+                Clear all filters
+              </Button>
+            )}
           </div>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 md:gap-y-16 gap-y-10">
-            {filteredProducts.map((product) => {
-              const isAdded = !!addedItems[product.id];
+            {products.map((product: any) => {
+              const isAdded = !!addedItems[String(product.id)];
+              const primaryImage =
+                Array.isArray(product.images) && product.images.length > 0
+                  ? product.images[product.mainImageIndex || 0] || product.images[0]
+                  : "/bike-engine.png";
+
+              const productHref = product.slug ? `/product-overview/${product.slug}` : `/product-overview?id=${product.id}`;
+
               return (
                 <div key={product.id} className="group flex flex-col">
                   <Link
-                    href="/product-overview"
+                    href={productHref}
                     className="relative aspect-square w-full rounded-2xl bg-[#f4f4f5] overflow-hidden p-6 flex items-center justify-center transition-all duration-300 group-hover:bg-[#ebebee]"
                   >
                     {product.badge && (
@@ -321,7 +138,7 @@ export function RetailCatalog({
                       </span>
                     )}
                     <img
-                      src={product.image}
+                      src={primaryImage}
                       alt={product.name}
                       className="w-full h-full object-contain drop-shadow-sm transition-all duration-300 group-hover:scale-105 group-hover:brightness-75"
                     />
@@ -341,22 +158,22 @@ export function RetailCatalog({
                       </span>
                       <div className="flex items-center gap-1 text-neutral-700 font-semibold shrink-0">
                         <Star className="size-3.5 fill-amber-400 text-amber-400" />
-                        <span>{product.rating || 4.5}</span>
+                        <span>{product.rating || "5.0"}</span>
                       </div>
                     </div>
 
                     <div className="flex items-center justify-between gap-3 mt-0.5">
-                      <Link href="/product-overview" className="min-w-0 flex-1 group/title">
+                      <Link href={productHref} className="min-w-0 flex-1 group/title">
                         <h3 className="font-medium text-neutral-900 group-hover/title:text-red-600 transition-colors text-sm md:text-base leading-snug line-clamp-2">
                           {product.name}
                         </h3>
                         <div className="flex items-center gap-2 mt-1">
                           <p className="font-semibold text-neutral-900 text-sm md:text-base">
-                            {product.price}
+                            Rs. {Number(product.price || 0).toLocaleString()}
                           </p>
                           {product.originalPrice && (
                             <span className="text-xs md:text-sm text-red-600 line-through font-normal">
-                              {product.originalPrice}
+                              Rs. {Number(product.originalPrice).toLocaleString()}
                             </span>
                           )}
                         </div>
@@ -390,6 +207,57 @@ export function RetailCatalog({
                 </div>
               );
             })}
+          </div>
+        )}
+
+        {totalPages > 1 && (
+          <div className="flex justify-center w-full pt-12 md:pt-16">
+            <Pagination>
+              <PaginationContent className="bg-white border border-neutral-200 p-1 rounded-full shadow-xs">
+                <PaginationItem>
+                  <PaginationPrevious
+                    href="#"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      if (currentPage > 1 && onPageChange) onPageChange(currentPage - 1);
+                    }}
+                    className="rounded-full hover:bg-neutral-100 cursor-pointer text-xs"
+                  />
+                </PaginationItem>
+                {Array.from({ length: totalPages }).map((_, i) => {
+                  const page = i + 1;
+                  const isActive = currentPage === page;
+                  return (
+                    <PaginationItem key={page}>
+                      <PaginationLink
+                        href="#"
+                        isActive={isActive}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          if (onPageChange) onPageChange(page);
+                        }}
+                        className={cn(
+                          "rounded-full cursor-pointer text-xs size-8",
+                          isActive && "bg-neutral-900 text-white hover:bg-neutral-800 hover:text-white"
+                        )}
+                      >
+                        {page}
+                      </PaginationLink>
+                    </PaginationItem>
+                  );
+                })}
+                <PaginationItem>
+                  <PaginationNext
+                    href="#"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      if (currentPage < totalPages && onPageChange) onPageChange(currentPage + 1);
+                    }}
+                    className="rounded-full hover:bg-neutral-100 cursor-pointer text-xs"
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
           </div>
         )}
       </div>

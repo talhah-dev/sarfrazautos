@@ -1,23 +1,33 @@
 "use client"
 
 import { Card, CardContent } from "@/components/ui/card"
-import { ArrowUpRight } from "lucide-react"
+import { useQuery } from "@tanstack/react-query"
+import { getProducts } from "@/lib/api/products"
 
 export function AdminProductsStatCards({
-  totalCount = 84,
-  retailCount = 36,
-  wholesaleCount = 48,
+  totalCount,
+  retailCount,
+  wholesaleCount,
 }: {
   totalCount?: number
   retailCount?: number
   wholesaleCount?: number
 }) {
+  const { data } = useQuery({
+    queryKey: ["products-stats"],
+    queryFn: () => getProducts({ limit: 1 }),
+    enabled: totalCount === undefined,
+  })
+
+  const total = totalCount !== undefined ? totalCount : (data?.stats?.total ?? 0)
+  const retail = retailCount !== undefined ? retailCount : (data?.stats?.retail ?? 0)
+  const wholesale = wholesaleCount !== undefined ? wholesaleCount : (data?.stats?.wholesale ?? 0)
+
   const cards = [
     {
       title: "Total Products",
       subtitle: "All products uploaded to store",
-      value: totalCount,
-      trend: "+12.5% than last month",
+      value: total,
       imageSrc: "/hero-parts-boxes.png",
       imageAlt: "Total Products",
       imageClass: "bottom-0 right-0 max-h-24 sm:max-h-28",
@@ -25,8 +35,7 @@ export function AdminProductsStatCards({
     {
       title: "Retail Products",
       subtitle: "Products for retail customers",
-      value: retailCount,
-      trend: "+4.2% than last week",
+      value: retail,
       imageSrc: "/bikes.png",
       imageAlt: "Retail Products",
       imageClass: "bottom-0 right-1 max-h-20 sm:max-h-24",
@@ -34,8 +43,7 @@ export function AdminProductsStatCards({
     {
       title: "Wholesale Products",
       subtitle: "Products for wholesale dealers",
-      value: wholesaleCount,
-      trend: "+8.6% than last week",
+      value: wholesale,
       imageSrc: "/wholesale-bulk.png",
       imageAlt: "Wholesale Products",
       imageClass: "bottom-0 right-0 max-h-24 sm:max-h-28",
@@ -49,7 +57,7 @@ export function AdminProductsStatCards({
           key={index}
           className="relative overflow-hidden rounded-2xl border border-neutral-200/80 bg-white shadow-2xs hover:border-neutral-300 transition-colors"
         >
-          <CardContent className=" flex flex-col justify-between min-h-[148px]">
+          <CardContent className="flex flex-col justify-between min-h-[148px]">
             <div className="relative z-10 pr-28">
               <h3 className="text-base sm:text-lg font-bold text-neutral-900 tracking-tight">
                 {card.title}
@@ -63,10 +71,6 @@ export function AdminProductsStatCards({
               <p className="text-3xl sm:text-4xl font-bold tracking-tight text-neutral-900 tabular-nums">
                 {card.value}
               </p>
-              <div className="flex items-center gap-1 text-xs font-semibold text-emerald-600 mt-1">
-                <ArrowUpRight className="size-3.5" />
-                <span>{card.trend}</span>
-              </div>
             </div>
 
             <img
@@ -80,3 +84,5 @@ export function AdminProductsStatCards({
     </div>
   )
 }
+
+export default AdminProductsStatCards

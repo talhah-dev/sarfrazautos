@@ -2,6 +2,8 @@ import { DM_Sans, Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import LenisScroll from "@/components/lenis";
+import QueryProvider from "@/providers/query-provider";
+import { Toaster } from "@/components/ui/sonner";
 
 const dmSans = DM_Sans({
   subsets: ["latin"],
@@ -35,9 +37,12 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={cn("h-full", "antialiased", geistSans.variable, geistMono.variable, "font-sans", dmSans.variable)}
     >
       <body className="min-h-full flex flex-col">
-        <LenisScroll>
-          {children}
-        </LenisScroll>
+        <QueryProvider>
+          <LenisScroll>
+            {children}
+          </LenisScroll>
+        </QueryProvider>
+        <Toaster position="bottom-right" richColors />
       </body>
     </html>
   );

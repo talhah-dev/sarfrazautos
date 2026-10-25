@@ -1,7 +1,22 @@
 "use client"
 
 import { useState } from "react"
-import { PackageCheck, Clock, XCircle, Truck, RefreshCw, RotateCcw, Ban } from "lucide-react"
+import {
+  PackageCheck,
+  Clock,
+  XCircle,
+  Truck,
+  RefreshCw,
+  RotateCcw,
+  Ban,
+  Trash2,
+  Loader2,
+  PackageOpen,
+  Search,
+  AlertTriangle,
+} from "lucide-react"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { toast } from "sonner"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -14,63 +29,106 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogMedia,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { AdminPagination } from "@/components/admin-dashboard/admin-pagination"
-
-const initialOrders = [
-  { id: "ORD-2026-001", dealer: "Ali Brothers Traders", product: "CD70 Cylinder Head x2", type: "Wholesale", amount: "Rs. 168,000", status: "Delivered", date: "04 Oct 2026" },
-  { id: "ORD-2026-002", dealer: "Zaman Auto Parts", product: "Clutch Plates x5", type: "Wholesale", amount: "Rs. 675,000", status: "Processing", date: "03 Oct 2026" },
-  { id: "ORD-2026-003", dealer: "Customer (Retail)", product: "125cc Piston Kit x1", type: "Retail", amount: "Rs. 1,850", status: "Delivered", date: "02 Oct 2026" },
-  { id: "ORD-2026-004", dealer: "Raza & Sons", product: "Engine Block x3", type: "Wholesale", amount: "Rs. 276,000", status: "Pending", date: "01 Oct 2026" },
-  { id: "ORD-2026-005", dealer: "Customer (Retail)", product: "Carburetor x1", type: "Retail", amount: "Rs. 2,400", status: "Delivered", date: "30 Sep 2026" },
-  { id: "ORD-2026-006", dealer: "Bilal Motor Works", product: "Overhaul Gasket Set x2", type: "Wholesale", amount: "Rs. 290,000", status: "Processing", date: "29 Sep 2026" },
-  { id: "ORD-2026-007", dealer: "Tariq Traders", product: "Crankshaft x4", type: "Wholesale", amount: "Rs. 340,000", status: "Delivered", date: "27 Sep 2026" },
-  { id: "ORD-2026-008", dealer: "Customer (Retail)", product: "Camshaft Kit x1", type: "Retail", amount: "Rs. 3,200", status: "Cancelled", date: "25 Sep 2026" },
-]
+import { getOrders, updateOrderStatus, deleteOrder } from "@/lib/api/orders"
 
 export function AdminOrderHistorySection() {
-  const [orderList, setOrderList] = useState(initialOrders)
+  const queryClient = useQueryClient()
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState("All")
   const [currentPage, setCurrentPage] = useState(1)
+  const [orderToDelete, setOrderToDelete] = useState<any | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [updatingId, setUpdatingId] = useState<number | null>(null)
 
-  const handleUpdateStatus = (orderId: string, newStatus: string) => {
-    setOrderList((prev) =>
-      prev.map((o) => (o.id === orderId ? { ...o, status: newStatus } : o))
-    )
-  }
+  const limit = 8
 
-  const filtered = orderList.filter((o) => {
-    const matchSearch =
-      o.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      o.dealer.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      o.product.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchStatus = statusFilter === "All" ? true : o.status === statusFilter
-    return matchSearch && matchStatus
+  const { data, isLoading } = useQuery({
+    queryKey: [
+      "orders",
+      {
+        page: currentPage,
+        limit,
+        search: searchQuery,
+        status: statusFilter === "All" ? "" : statusFilter.toLowerCase(),
+      },
+    ],
+    queryFn: () =>
+      getOrders({
+        page: currentPage,
+        limit,
+        search: searchQuery,
+        status: statusFilter === "All" ? "" : statusFilter.toLowerCase(),
+      }),
   })
 
+  const orders = data?.orders || []
+  const stats = data?.stats || { delivered: 0, inProgress: 0, cancelledReturned: 0 }
+  const totalPages = data?.pagination?.totalPages || 1
+
+  const handleUpdateStatus = async (orderId: number, newStatus: string) => {
+    try {
+      setUpdatingId(orderId)
+      await updateOrderStatus(orderId, newStatus)
+      queryClient.invalidateQueries({ queryKey: ["orders"] })
+      toast.success(`Order marked as ${newStatus}`)
+    } catch (err: any) {
+      toast.error(err.message || "Failed to update order status")
+    } finally {
+      setUpdatingId(null)
+    }
+  }
+
+  const handleConfirmDelete = async () => {
+    if (!orderToDelete) return
+    try {
+      setIsDeleting(true)
+      await deleteOrder(orderToDelete.id)
+      queryClient.invalidateQueries({ queryKey: ["orders"] })
+      toast.success("Order deleted successfully")
+      setOrderToDelete(null)
+    } catch (err: any) {
+      toast.error(err.message || "Failed to delete order")
+    } finally {
+      setIsDeleting(false)
+    }
+  }
+
   const statusBadge = (status: string) => {
-    if (status === "Delivered") {
+    const s = (status || "").toLowerCase()
+    if (s === "delivered") {
       return (
         <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 text-xs font-medium">
           Delivered
         </Badge>
       )
     }
-    if (status === "Processing") {
+    if (s === "processing") {
       return (
         <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 text-xs font-medium">
           Processing
         </Badge>
       )
     }
-    if (status === "Pending") {
+    if (s === "pending") {
       return (
         <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 text-xs font-medium">
           Pending
         </Badge>
       )
     }
-    if (status === "Returned") {
+    if (s === "returned") {
       return (
         <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200 text-xs font-medium">
           Returned
@@ -82,6 +140,23 @@ export function AdminOrderHistorySection() {
         Cancelled
       </Badge>
     )
+  }
+
+  const formatItems = (items: any) => {
+    if (Array.isArray(items) && items.length > 0) {
+      return items.map((i: any) => `${i.name || "Part"} x${i.quantity || 1}`).join(", ")
+    }
+    return "Auto Parts Package"
+  }
+
+  const formatDate = (dateVal: any) => {
+    if (!dateVal) return "—"
+    try {
+      const d = new Date(dateVal)
+      return d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })
+    } catch {
+      return "—"
+    }
   }
 
   return (
@@ -99,7 +174,7 @@ export function AdminOrderHistorySection() {
             <PackageCheck className="size-8 text-neutral-700 stroke-[1.5]" />
             <CardDescription className="pt-7">Delivered Orders</CardDescription>
             <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl text-neutral-900">
-              {orderList.filter((o) => o.status === "Delivered").length}
+              {stats.delivered}
             </CardTitle>
             <CardAction>
               <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 text-xs">
@@ -114,7 +189,7 @@ export function AdminOrderHistorySection() {
             <Clock className="size-8 text-neutral-700 stroke-[1.5]" />
             <CardDescription className="pt-7">Pending / Processing Orders</CardDescription>
             <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl text-neutral-900">
-              {orderList.filter((o) => o.status === "Pending" || o.status === "Processing").length}
+              {stats.inProgress}
             </CardTitle>
             <CardAction>
               <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 text-xs">
@@ -129,7 +204,7 @@ export function AdminOrderHistorySection() {
             <XCircle className="size-8 text-neutral-700 stroke-[1.5]" />
             <CardDescription className="pt-7">Cancelled / Returned</CardDescription>
             <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl text-neutral-900">
-              {orderList.filter((o) => o.status === "Cancelled" || o.status === "Returned").length}
+              {stats.cancelledReturned}
             </CardTitle>
             <CardAction>
               <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200 text-xs">
@@ -141,12 +216,16 @@ export function AdminOrderHistorySection() {
       </div>
 
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div className="w-64">
+        <div className="relative w-64">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-neutral-400" />
           <Input
             placeholder="Search orders..."
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="h-8 text-xs bg-white"
+            onChange={(e) => {
+              setSearchQuery(e.target.value)
+              setCurrentPage(1)
+            }}
+            className="pl-8 h-8 text-xs bg-white"
           />
         </div>
         <div className="flex items-center gap-1 overflow-x-auto">
@@ -154,9 +233,14 @@ export function AdminOrderHistorySection() {
             <button
               key={s}
               type="button"
-              onClick={() => setStatusFilter(s)}
+              onClick={() => {
+                setStatusFilter(s)
+                setCurrentPage(1)
+              }}
               className={`px-3 py-1 rounded-md text-xs font-medium transition-colors cursor-pointer ${
-                statusFilter === s ? "bg-neutral-900 text-white" : "bg-neutral-100 text-neutral-600 hover:bg-neutral-200"
+                statusFilter === s
+                  ? "bg-neutral-900 text-white"
+                  : "bg-neutral-100 text-neutral-600 hover:bg-neutral-200"
               }`}
             >
               {s}
@@ -180,108 +264,190 @@ export function AdminOrderHistorySection() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filtered.map((order) => (
-              <TableRow key={order.id} className="text-xs hover:bg-neutral-50/70">
-                <TableCell className="font-mono text-neutral-600">{order.id}</TableCell>
-                <TableCell className="font-medium text-neutral-900">{order.dealer}</TableCell>
-                <TableCell className="text-neutral-600 max-w-[180px] truncate">{order.product}</TableCell>
-                <TableCell>
-                  <Badge
-                    variant="outline"
-                    className={
-                      order.type === "Wholesale"
-                        ? "bg-blue-50 text-blue-700 border-blue-200 text-xs"
-                        : "bg-purple-50 text-purple-700 border-purple-200 text-xs"
-                    }
-                  >
-                    {order.type}
-                  </Badge>
-                </TableCell>
-                <TableCell className="font-semibold text-neutral-900 whitespace-nowrap">{order.amount}</TableCell>
-                <TableCell>{statusBadge(order.status)}</TableCell>
-                <TableCell className="text-neutral-600 whitespace-nowrap">{order.date}</TableCell>
-                <TableCell className="text-right pr-4">
-                  <div className="flex items-center justify-end gap-1.5">
-                    <div className="group relative">
-                      <button
-                        type="button"
-                        onClick={() => handleUpdateStatus(order.id, "Delivered")}
-                        className={`p-1.5 rounded-lg border transition-all cursor-pointer ${
-                          order.status === "Delivered"
-                            ? "bg-emerald-600 text-white border-emerald-600 shadow-2xs"
-                            : "hover:bg-emerald-50 text-neutral-500 hover:text-emerald-700 border-neutral-200 hover:border-emerald-300"
-                        }`}
-                      >
-                        <Truck className="size-3.5" />
-                      </button>
-                      <span className="pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-neutral-900 text-white text-[10px] font-medium px-2 py-0.5 rounded-md shadow-md whitespace-nowrap z-30">
-                        Deliver
-                      </span>
-                    </div>
-
-                    <div className="group relative">
-                      <button
-                        type="button"
-                        onClick={() => handleUpdateStatus(order.id, "Processing")}
-                        className={`p-1.5 rounded-lg border transition-all cursor-pointer ${
-                          order.status === "Processing"
-                            ? "bg-blue-600 text-white border-blue-600 shadow-2xs"
-                            : "hover:bg-blue-50 text-neutral-500 hover:text-blue-700 border-neutral-200 hover:border-blue-300"
-                        }`}
-                      >
-                        <RefreshCw className="size-3.5" />
-                      </button>
-                      <span className="pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-neutral-900 text-white text-[10px] font-medium px-2 py-0.5 rounded-md shadow-md whitespace-nowrap z-30">
-                        Processing
-                      </span>
-                    </div>
-
-                    <div className="group relative">
-                      <button
-                        type="button"
-                        onClick={() => handleUpdateStatus(order.id, "Cancelled")}
-                        className={`p-1.5 rounded-lg border transition-all cursor-pointer ${
-                          order.status === "Cancelled"
-                            ? "bg-red-600 text-white border-red-600 shadow-2xs"
-                            : "hover:bg-red-50 text-neutral-500 hover:text-red-700 border-neutral-200 hover:border-red-300"
-                        }`}
-                      >
-                        <Ban className="size-3.5" />
-                      </button>
-                      <span className="pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-neutral-900 text-white text-[10px] font-medium px-2 py-0.5 rounded-md shadow-md whitespace-nowrap z-30">
-                        Cancel
-                      </span>
-                    </div>
-
-                    <div className="group relative">
-                      <button
-                        type="button"
-                        onClick={() => handleUpdateStatus(order.id, "Returned")}
-                        className={`p-1.5 rounded-lg border transition-all cursor-pointer ${
-                          order.status === "Returned"
-                            ? "bg-purple-600 text-white border-purple-600 shadow-2xs"
-                            : "hover:bg-purple-50 text-neutral-500 hover:text-purple-700 border-neutral-200 hover:border-purple-300"
-                        }`}
-                      >
-                        <RotateCcw className="size-3.5" />
-                      </button>
-                      <span className="pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-neutral-900 text-white text-[10px] font-medium px-2 py-0.5 rounded-md shadow-md whitespace-nowrap z-30">
-                        Return
-                      </span>
-                    </div>
+            {isLoading ? (
+              <TableRow>
+                <TableCell colSpan={8} className="text-center py-12 text-neutral-500">
+                  <div className="flex flex-col items-center justify-center gap-2">
+                    <Loader2 className="size-5 animate-spin text-neutral-400" />
+                    <span className="text-xs">Loading orders...</span>
                   </div>
                 </TableCell>
               </TableRow>
-            ))}
+            ) : orders.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={8} className="text-center py-12 text-neutral-500">
+                  <div className="flex flex-col items-center justify-center gap-2">
+                    <PackageOpen className="size-8 text-neutral-300" />
+                    <p className="text-xs font-medium text-neutral-700">No orders found</p>
+                    <p className="text-[11px] text-neutral-400">
+                      {searchQuery ? "Try a different search query" : "New customer and wholesale orders will appear here"}
+                    </p>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ) : (
+              orders.map((order: any) => {
+                const isWholesale = (order.orderType || "").toLowerCase() === "wholesale"
+                const isThisUpdating = updatingId === order.id
+
+                return (
+                  <TableRow key={order.id} className="text-xs hover:bg-neutral-50/70">
+                    <TableCell className="font-mono text-neutral-600 font-medium">{order.orderNumber}</TableCell>
+                    <TableCell className="font-medium text-neutral-900">
+                      <div>
+                        <p>{order.customerName}</p>
+                        {order.customerCity && (
+                          <p className="text-[10px] text-neutral-400">{order.customerCity}</p>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-neutral-600 max-w-[180px] truncate">
+                      {formatItems(order.items)}
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        variant="outline"
+                        className={
+                          isWholesale
+                            ? "bg-blue-50 text-blue-700 border-blue-200 text-xs"
+                            : "bg-purple-50 text-purple-700 border-purple-200 text-xs"
+                        }
+                      >
+                        {isWholesale ? "Wholesale" : "Retail"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="font-semibold text-neutral-900 whitespace-nowrap">
+                      Rs. {Number(order.totalAmount || 0).toLocaleString()}
+                    </TableCell>
+                    <TableCell>{statusBadge(order.status)}</TableCell>
+                    <TableCell className="text-neutral-600 whitespace-nowrap">{formatDate(order.createdAt)}</TableCell>
+                    <TableCell className="text-right pr-4">
+                      <div className="flex items-center justify-end gap-1.5">
+                        <button
+                          type="button"
+                          disabled={isThisUpdating}
+                          onClick={() => handleUpdateStatus(order.id, "delivered")}
+                          title="Mark Delivered"
+                          className={`p-1.5 rounded-lg border transition-all cursor-pointer ${
+                            (order.status || "").toLowerCase() === "delivered"
+                              ? "bg-emerald-600 text-white border-emerald-600 shadow-2xs"
+                              : "hover:bg-emerald-50 text-neutral-500 hover:text-emerald-700 border-neutral-200 hover:border-emerald-300"
+                          }`}
+                        >
+                          <Truck className="size-3.5" />
+                        </button>
+
+                        <button
+                          type="button"
+                          disabled={isThisUpdating}
+                          onClick={() => handleUpdateStatus(order.id, "processing")}
+                          title="Mark Processing"
+                          className={`p-1.5 rounded-lg border transition-all cursor-pointer ${
+                            (order.status || "").toLowerCase() === "processing"
+                              ? "bg-blue-600 text-white border-blue-600 shadow-2xs"
+                              : "hover:bg-blue-50 text-neutral-500 hover:text-blue-700 border-neutral-200 hover:border-blue-300"
+                          }`}
+                        >
+                          <RefreshCw className="size-3.5" />
+                        </button>
+
+                        <button
+                          type="button"
+                          disabled={isThisUpdating}
+                          onClick={() => handleUpdateStatus(order.id, "cancelled")}
+                          title="Mark Cancelled"
+                          className={`p-1.5 rounded-lg border transition-all cursor-pointer ${
+                            (order.status || "").toLowerCase() === "cancelled"
+                              ? "bg-red-600 text-white border-red-600 shadow-2xs"
+                              : "hover:bg-red-50 text-neutral-500 hover:text-red-700 border-neutral-200 hover:border-red-300"
+                          }`}
+                        >
+                          <Ban className="size-3.5" />
+                        </button>
+
+                        <button
+                          type="button"
+                          disabled={isThisUpdating}
+                          onClick={() => handleUpdateStatus(order.id, "returned")}
+                          title="Mark Returned"
+                          className={`p-1.5 rounded-lg border transition-all cursor-pointer ${
+                            (order.status || "").toLowerCase() === "returned"
+                              ? "bg-purple-600 text-white border-purple-600 shadow-2xs"
+                              : "hover:bg-purple-50 text-neutral-500 hover:text-purple-700 border-neutral-200 hover:border-purple-300"
+                          }`}
+                        >
+                          <RotateCcw className="size-3.5" />
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => setOrderToDelete(order)}
+                          title="Delete Order"
+                          className="p-1.5 rounded-lg border border-neutral-200 text-neutral-400 hover:text-red-600 hover:bg-red-50 hover:border-red-200 transition-all cursor-pointer"
+                        >
+                          <Trash2 className="size-3.5" />
+                        </button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                )
+              })
+            )}
           </TableBody>
         </Table>
       </div>
 
-      <AdminPagination
-        currentPage={currentPage}
-        totalPages={5}
-        onPageChange={setCurrentPage}
-      />
+      {totalPages > 1 && (
+        <AdminPagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+        />
+      )}
+
+      <AlertDialog
+        open={Boolean(orderToDelete)}
+        onOpenChange={(open) => {
+          if (!open && !isDeleting) setOrderToDelete(null)
+        }}
+      >
+        <AlertDialogContent size="sm">
+          <AlertDialogHeader>
+            <AlertDialogMedia className="bg-red-50 text-red-600">
+              <AlertTriangle className="size-5" />
+            </AlertDialogMedia>
+            <AlertDialogTitle>Delete order?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete order <span className="font-semibold text-neutral-900">{orderToDelete?.orderNumber}</span> ({orderToDelete?.customerName})? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              disabled={isDeleting}
+              onClick={() => setOrderToDelete(null)}
+            >
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              variant="destructive"
+              disabled={isDeleting}
+              onClick={handleConfirmDelete}
+              className="flex items-center gap-1.5"
+            >
+              {isDeleting ? (
+                <>
+                  <Loader2 className="size-3.5 animate-spin" />
+                  <span>Deleting...</span>
+                </>
+              ) : (
+                "Delete"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
+
+export default AdminOrderHistorySection
