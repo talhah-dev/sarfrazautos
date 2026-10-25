@@ -35,12 +35,12 @@ const data = {
   navMain: [
     {
       title: "Overview",
-      url: "/wholesale-dashboard",
+      url: "/customer-portal",
       icon: <LayoutDashboardIcon className="size-4" />,
     },
     {
       title: "Bulk Orders",
-      url: "/wholesale-dashboard/bulk-orders",
+      url: "/customer-portal/bulk-orders",
       icon: <ClipboardListIcon className="size-4" />,
     },
     {
@@ -52,17 +52,17 @@ const data = {
   documents: [
     {
       name: "Commercial Invoices",
-      url: "/wholesale-dashboard/commercial-invoices",
+      url: "/customer-portal/commercial-invoices",
       icon: <FileTextIcon className="size-4" />,
     },
     {
       name: "Payment History",
-      url: "/wholesale-dashboard/payment-history",
+      url: "/customer-portal/payment-history",
       icon: <ReceiptTextIcon className="size-4" />,
     },
     {
       name: "Order History",
-      url: "/wholesale-dashboard/order-history",
+      url: "/customer-portal/order-history",
       icon: <HistoryIcon className="size-4" />,
     },
   ],
@@ -83,7 +83,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <SidebarMenuItem>
             <SidebarMenuButton
               className="data-[slot=sidebar-menu-button]:p-1.5!"
-              render={<Link href="/wholesale-dashboard" />}
+              render={<Link href="/customer-portal" />}
             >
               <Home className="size-5!" />
               <div className="grid flex-1 text-left text-sm leading-tight">

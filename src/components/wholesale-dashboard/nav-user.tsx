@@ -82,13 +82,13 @@ export function NavUser({
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <Link href="/wholesale-dashboard/dealer-account">
+              <Link href="/customer-portal/dealer-account">
                 <DropdownMenuItem className="cursor-pointer">
                   <CircleUserRoundIcon className="size-4 mr-2" />
                   Dealer Account
                 </DropdownMenuItem>
               </Link>
-              <Link href="/wholesale-dashboard/commercial-invoices">
+              <Link href="/customer-portal/commercial-invoices">
                 <DropdownMenuItem className="cursor-pointer">
                   <CreditCardIcon className="size-4 mr-2" />
                   Commercial Billing
