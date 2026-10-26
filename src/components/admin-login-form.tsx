@@ -1,7 +1,7 @@
 "use client"
 
-import { ChangeEvent, FormEvent, useState } from "react"
-import { useRouter } from "next/navigation"
+import { ChangeEvent, FormEvent, useState, useEffect, Suspense } from "react"
+import { useSearchParams } from "next/navigation"
 import { z } from "zod"
 import { cn } from "cn"
 import { Button } from "@/components/ui/button"
@@ -35,15 +35,24 @@ type FormErrors = {
   password?: string
 }
 
-export function AdminLoginForm({ className = "", ...props }) {
-  const router = useRouter()
+function AdminLoginFormInner({ className = "", ...props }: { className?: string } & React.ComponentProps<"form">) {
+  const searchParams = useSearchParams()
+  const errorParam = searchParams.get("error")
+
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   })
   const [fieldErrors, setFieldErrors] = useState<FormErrors>({})
-  const [generalError, setGeneralError] = useState("")  
+  const [generalError, setGeneralError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+
+  useEffect(() => {
+    setIsLoading(false)
+    if (errorParam === "unauthorized") {
+      setGeneralError("Access denied. Your account does not have administrator privileges.")
+    }
+  }, [errorParam])
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
@@ -75,6 +84,7 @@ export function AdminLoginForm({ className = "", ...props }) {
         email: flattened.email?.[0],
         password: flattened.password?.[0],
       })
+      setIsLoading(false)
       return
     }
 
@@ -92,8 +102,7 @@ export function AdminLoginForm({ className = "", ...props }) {
         return
       }
 
-      router.push("/admin/dashboard")
-      router.refresh()
+      window.location.href = "/admin/dashboard"
     } catch (err: any) {
       setGeneralError(err?.message || "An unexpected error occurred during authentication.")
       setIsLoading(false)
@@ -172,5 +181,13 @@ export function AdminLoginForm({ className = "", ...props }) {
         </Field>
       </FieldGroup>
     </form>
+  )
+}
+
+export function AdminLoginForm(props: React.ComponentProps<typeof AdminLoginFormInner>) {
+  return (
+    <Suspense fallback={<div className="h-48 flex items-center justify-center"><Loader2 className="size-6 animate-spin text-neutral-400" /></div>}>
+      <AdminLoginFormInner {...props} />
+    </Suspense>
   )
 }
