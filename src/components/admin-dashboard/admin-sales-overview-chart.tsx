@@ -1,5 +1,6 @@
 "use client"
 
+import { useQuery } from "@tanstack/react-query"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import {
   ChartContainer,
@@ -8,55 +9,48 @@ import {
   type ChartConfig,
 } from "@/components/ui/chart"
 import { Badge } from "@/components/ui/badge"
+import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts"
 
-const chartData = [
-  { month: "Jan", expense: 31, profit: 31, earning: 31 },
-  { month: "Feb", expense: 83, profit: 83, earning: 83 },
-  { month: "Mar", expense: 53, profit: 53, earning: 53 },
-  { month: "Apr", expense: 36, profit: 36, earning: 36 },
-  { month: "May", expense: 64, profit: 64, earning: 64 },
-  { month: "Jun", expense: 47, profit: 47, earning: 47 },
-  { month: "Jul", expense: 95, profit: 95, earning: 95 },
-  { month: "Aug", expense: 69, profit: 69, earning: 69 },
-  { month: "Sep", expense: 29, profit: 29, earning: 29 },
-  { month: "Oct", expense: 73, profit: 73, earning: 73 },
-  { month: "Nov", expense: 27, profit: 27, earning: 27 },
-  { month: "Dec", expense: 53, profit: 53, earning: 53 },
-]
-
 const chartConfig = {
-  expense: {
-    label: "Expense",
+  retail: {
+    label: "Retail Sales",
     color: "#dc2626",
   },
-  profit: {
-    label: "Profit",
+  wholesale: {
+    label: "Wholesale Sales",
     color: "#f87171",
-  },
-  earning: {
-    label: "Earning",
-    color: "#fca5a5",
   },
 } satisfies ChartConfig
 
 export function AdminSalesOverviewChart() {
+  const { data, isLoading } = useQuery({
+    queryKey: ["admin-dashboard-stats"],
+    queryFn: async () => {
+      const res = await fetch("/api/admin/dashboard")
+      const json = await res.json()
+      if (!res.ok || !json.success) {
+        throw new Error(json.error || "Failed to fetch stats")
+      }
+      return json
+    },
+  })
+
+  const salesOverview = data?.salesOverview
+  const chartData = salesOverview?.monthly || []
+  const totalVolume = salesOverview?.totalVolume || "Rs. 0"
+
   const legendItems = [
     {
       id: 1,
-      title: "Earning",
-      color: "bg-red-300",
+      title: "Retail Sales",
+      color: "bg-red-600",
     },
     {
       id: 2,
-      title: "Profit",
+      title: "Wholesale Sales",
       color: "bg-red-400",
-    },
-    {
-      id: 3,
-      title: "Expense",
-      color: "bg-red-600",
     },
   ]
 
@@ -68,17 +62,26 @@ export function AdminSalesOverviewChart() {
             Sales Overview
           </CardTitle>
           <div className="flex items-center gap-2">
-            <h3 className="text-3xl font-medium text-card-foreground">
-              Rs. 3.86M
-            </h3>
-            <Badge
-              className={cn("bg-emerald-50 text-emerald-700 border-emerald-200 shadow-none font-normal")}
-            >
-              +18%
-            </Badge>
-            <span className="text-xs text-muted-foreground">
-              than last year
-            </span>
+            {isLoading ? (
+              <>
+                <Skeleton className="h-9 w-32 rounded-lg" />
+                <Skeleton className="h-5 w-12 rounded-full" />
+              </>
+            ) : (
+              <>
+                <h3 className="text-3xl font-medium text-card-foreground">
+                  {totalVolume}
+                </h3>
+                <Badge
+                  className={cn("bg-emerald-50 text-emerald-700 border-emerald-200 shadow-none font-normal")}
+                >
+                  +18%
+                </Badge>
+                <span className="text-xs text-muted-foreground">
+                  total order volume
+                </span>
+              </>
+            )}
           </div>
         </div>
         <div className="flex items-center gap-3">
@@ -91,54 +94,49 @@ export function AdminSalesOverviewChart() {
         </div>
       </CardHeader>
       <CardContent className="px-6">
-        <ChartContainer config={chartConfig} className="h-[300px] w-full min-h-[300px]">
-          <BarChart accessibilityLayer data={chartData}>
-            <CartesianGrid
-              vertical={false}
-              strokeDasharray="3 3"
-              stroke="rgba(144, 164, 174, 0.25)"
-            />
-            <XAxis
-              dataKey="month"
-              tickLine={false}
-              tickMargin={10}
-              axisLine={false}
-              tickFormatter={(value) => value.slice(0, 3)}
-              fontSize={12}
-            />
-            <YAxis
-              tickLine={false}
-              axisLine={false}
-              tickMargin={10}
-              fontSize={12}
-              tickFormatter={(value) => `${value / 10}L`}
-              domain={[0, 100]}
-              ticks={[0, 50, 100, 150, 200, 250, 300]}
-            />
-            <ChartTooltip content={<ChartTooltipContent hideLabel />} />
-            <Bar
-              dataKey="expense"
-              stackId="a"
-              fill="var(--color-expense)"
-              radius={[0, 0, 4, 4]}
-              barSize={20}
-            />
-            <Bar
-              dataKey="profit"
-              stackId="a"
-              fill="var(--color-profit)"
-              radius={[0, 0, 0, 0]}
-              barSize={20}
-            />
-            <Bar
-              dataKey="earning"
-              stackId="a"
-              fill="var(--color-earning)"
-              radius={[4, 4, 0, 0]}
-              barSize={20}
-            />
-          </BarChart>
-        </ChartContainer>
+        {isLoading ? (
+          <Skeleton className="h-[300px] w-full rounded-xl" />
+        ) : (
+          <ChartContainer config={chartConfig} className="h-[300px] w-full min-h-[300px]">
+            <BarChart accessibilityLayer data={chartData}>
+              <CartesianGrid
+                vertical={false}
+                strokeDasharray="3 3"
+                stroke="rgba(144, 164, 174, 0.25)"
+              />
+              <XAxis
+                dataKey="month"
+                tickLine={false}
+                tickMargin={10}
+                axisLine={false}
+                tickFormatter={(value) => value.slice(0, 3)}
+                fontSize={12}
+              />
+              <YAxis
+                tickLine={false}
+                axisLine={false}
+                tickMargin={10}
+                fontSize={12}
+                tickFormatter={(value) => `${value}k`}
+              />
+              <ChartTooltip content={<ChartTooltipContent hideLabel />} />
+              <Bar
+                dataKey="retail"
+                stackId="a"
+                fill="var(--color-retail)"
+                radius={[0, 0, 4, 4]}
+                barSize={20}
+              />
+              <Bar
+                dataKey="wholesale"
+                stackId="a"
+                fill="var(--color-wholesale)"
+                radius={[4, 4, 0, 0]}
+                barSize={20}
+              />
+            </BarChart>
+          </ChartContainer>
+        )}
       </CardContent>
     </Card>
   )

@@ -38,7 +38,7 @@ export function AdminProductsTable() {
   const [productToDelete, setProductToDelete] = useState<any | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
 
-  const limit = 8
+  const limit = 20
 
   const { data, isLoading } = useQuery({
     queryKey: [

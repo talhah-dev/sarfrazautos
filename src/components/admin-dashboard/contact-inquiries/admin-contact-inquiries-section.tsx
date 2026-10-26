@@ -50,7 +50,7 @@ export function AdminContactInquiriesSection() {
   const [isDeleting, setIsDeleting] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
 
-  const limit = 8
+  const limit = 20
 
   const { data, isLoading } = useQuery({
     queryKey: [

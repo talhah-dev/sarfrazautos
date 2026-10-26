@@ -7,15 +7,17 @@ import {
   CheckCircle2,
   Clock,
   Package,
-  ArrowRight,
   Boxes,
   Truck,
   RotateCcwIcon,
+  Loader2,
 } from "lucide-react"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { toast } from "sonner"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
+import { Card, CardHeader, CardContent } from "@/components/ui/card"
 import {
   Table,
   TableBody,
@@ -31,98 +33,60 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { AdminPagination } from "@/components/admin-dashboard/admin-pagination"
-
-const initialReturns = [
-  {
-    id: "RET-2026-052",
-    orderId: "ORD-2026-004",
-    client: "Raza & Sons",
-    city: "Gujranwala",
-    type: "Wholesale",
-    product: "CD70 4-Stroke Cylinder Head",
-    quantity: 2,
-    returnAmount: 168000,
-    reason: "Duplicate carton shipped by dispatch team",
-    condition: "Sealed Carton / 100% Brand New",
-    status: "Pending Receipt",
-    date: "13 Oct 2026",
-  },
-  {
-    id: "RET-2026-051",
-    orderId: "ORD-2026-002",
-    client: "Zaman Auto Parts",
-    city: "Karachi",
-    type: "Wholesale",
-    product: "125cc Heavy Clutch Plates Set",
-    quantity: 1,
-    returnAmount: 68000,
-    reason: "Dealer ordered CG125 instead of CD70 by mistake",
-    condition: "Original Blister Packaging Intact",
-    status: "Received",
-    date: "11 Oct 2026",
-  },
-  {
-    id: "RET-2026-049",
-    orderId: "ORD-2026-003",
-    client: "Muhammad Tariq (Retail)",
-    city: "Karachi",
-    type: "Retail",
-    product: "70cc Standard Carburetor Assembly",
-    quantity: 1,
-    returnAmount: 2400,
-    reason: "Customer bike is CD Dream model, carburetor mismatch",
-    condition: "Unused in Box",
-    status: "Restocked",
-    date: "09 Oct 2026",
-  },
-  {
-    id: "RET-2026-045",
-    orderId: "ORD-2026-001",
-    client: "Ali Brothers Traders",
-    city: "Lahore",
-    type: "Wholesale",
-    product: "CD70 Complete Overhaul Gasket Kits",
-    quantity: 3,
-    returnAmount: 105000,
-    reason: "Excess stock adjustment agreed during seasonal discount",
-    condition: "Restocked to Saddar Warehouse",
-    status: "Refunded",
-    date: "04 Oct 2026",
-  },
-]
+import { getReturns, updateReturnStatus } from "@/lib/api/returns"
 
 export function AdminReturnsSection() {
-  const [returnsList, setReturnsList] = useState(initialReturns)
+  const queryClient = useQueryClient()
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState("All")
   const [selectedReturn, setSelectedReturn] = useState<any>(null)
   const [currentPage, setCurrentPage] = useState(1)
+  const [updatingId, setUpdatingId] = useState<string | number | null>(null)
 
-  const pendingCount = returnsList.filter((r) => r.status === "Pending Receipt" || r.status === "Received").length
-  const restockedCount = returnsList.filter((r) => r.status === "Restocked" || r.status === "Refunded").length
-  const totalReturnVal = returnsList.reduce((acc, curr) => acc + curr.returnAmount, 0)
+  const limit = 20
 
-  const filteredReturns = returnsList.filter((r) => {
-    const matchesSearch =
-      r.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      r.orderId.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      r.client.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      r.product.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesStatus = statusFilter === "All" ? true : r.status === statusFilter
-    return matchesSearch && matchesStatus
+  const { data, isLoading } = useQuery({
+    queryKey: [
+      "returns",
+      {
+        page: currentPage,
+        limit,
+        search: searchQuery,
+        status: statusFilter === "All" ? "" : statusFilter.toLowerCase(),
+      },
+    ],
+    queryFn: () =>
+      getReturns({
+        page: currentPage,
+        limit,
+        search: searchQuery,
+        status: statusFilter === "All" ? "" : statusFilter.toLowerCase(),
+      }),
   })
 
-  const updateReturnStatus = (id: string, newStatus: string) => {
-    setReturnsList((prev) =>
-      prev.map((r) => (r.id === id ? { ...r, status: newStatus } : r))
-    )
-    if (selectedReturn && selectedReturn.id === id) {
-      setSelectedReturn((prev: any) => ({ ...prev, status: newStatus }))
+  const returnsList = data?.returns || []
+  const stats = data?.stats || { total: 0, inbound: 0, restocked: 0, totalValue: 0, efficiency: "98.5%" }
+  const totalPages = data?.pagination?.totalPages || 1
+
+  const handleUpdateStatus = async (id: string | number, newStatus: string) => {
+    try {
+      setUpdatingId(id)
+      await updateReturnStatus(id, newStatus)
+      queryClient.invalidateQueries({ queryKey: ["returns"] })
+      toast.success(`Return status updated to ${newStatus}`)
+      if (selectedReturn && (selectedReturn.id === id || selectedReturn.returnId === id)) {
+        setSelectedReturn((prev: any) => prev ? { ...prev, status: newStatus } : null)
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Failed to update return status")
+    } finally {
+      setUpdatingId(null)
     }
   }
 
   const getStatusBadge = (status: string) => {
-    if (status === "Restocked" || status === "Refunded") {
+    const s = (status || "").toLowerCase()
+    if (s === "restocked" || s === "refunded") {
       return (
         <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 text-xs font-medium gap-1">
           <CheckCircle2 className="size-3" />
@@ -130,7 +94,7 @@ export function AdminReturnsSection() {
         </Badge>
       )
     }
-    if (status === "Received") {
+    if (s === "received") {
       return (
         <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 text-xs font-medium gap-1">
           <Truck className="size-3" />
@@ -144,6 +108,20 @@ export function AdminReturnsSection() {
         Pending Receipt
       </Badge>
     )
+  }
+
+  const formatDate = (dateVal: any) => {
+    if (!dateVal) return "—"
+    try {
+      const d = new Date(dateVal)
+      return d.toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      })
+    } catch {
+      return String(dateVal)
+    }
   }
 
   return (
@@ -167,7 +145,7 @@ export function AdminReturnsSection() {
               <Clock className="size-4" />
             </div>
           </div>
-          <p className="text-2xl font-bold text-neutral-900 mt-3">{pendingCount}</p>
+          <p className="text-2xl font-bold text-neutral-900 mt-3">{stats.inbound}</p>
           <span className="text-[11px] text-amber-600 font-medium mt-1 inline-block">
             Goods in transit or awaiting intake
           </span>
@@ -180,7 +158,7 @@ export function AdminReturnsSection() {
               <Boxes className="size-4" />
             </div>
           </div>
-          <p className="text-2xl font-bold text-neutral-900 mt-3">{restockedCount}</p>
+          <p className="text-2xl font-bold text-neutral-900 mt-3">{stats.restocked}</p>
           <span className="text-[11px] text-emerald-600 font-medium mt-1 inline-block">
             Available back in stock
           </span>
@@ -194,7 +172,7 @@ export function AdminReturnsSection() {
             </div>
           </div>
           <p className="text-2xl font-bold text-neutral-900 mt-3">
-            Rs. {totalReturnVal.toLocaleString()}
+            Rs. {Number(stats.totalValue || 0).toLocaleString()}
           </p>
           <span className="text-[11px] text-neutral-500 font-medium mt-1 inline-block">
             Managed across Saddar & Hub branches
@@ -208,7 +186,7 @@ export function AdminReturnsSection() {
               <Package className="size-4" />
             </div>
           </div>
-          <p className="text-2xl font-bold text-neutral-900 mt-3">98.5%</p>
+          <p className="text-2xl font-bold text-neutral-900 mt-3">{stats.efficiency || "98.5%"}</p>
           <span className="text-[11px] text-blue-600 font-medium mt-1 inline-block">
             Resellable mint condition returns
           </span>
@@ -216,13 +194,16 @@ export function AdminReturnsSection() {
       </div>
 
       <Card className="rounded-2xl border bg-white pb-0">
-        <CardHeader className="flex sm:flex-row flex-col sm:items-center justify-between gap-4 px-6 ">
+        <CardHeader className="flex sm:flex-row flex-col sm:items-center justify-between gap-4 px-6">
           <div className="relative w-full sm:w-72">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-neutral-400" />
             <Input
               placeholder="Search return ID, order, client..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => {
+                setSearchQuery(e.target.value)
+                setCurrentPage(1)
+              }}
               className="pl-9 h-9 text-xs"
             />
           </div>
@@ -232,7 +213,10 @@ export function AdminReturnsSection() {
                 key={st}
                 size="sm"
                 variant={statusFilter === st ? "default" : "outline"}
-                onClick={() => setStatusFilter(st)}
+                onClick={() => {
+                  setStatusFilter(st)
+                  setCurrentPage(1)
+                }}
                 className="h-8 text-xs cursor-pointer rounded-xl"
               >
                 {st}
@@ -255,69 +239,92 @@ export function AdminReturnsSection() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredReturns.map((r) => (
-                  <TableRow key={r.id} className="text-xs hover:bg-neutral-50/50">
-                    <TableCell>
-                      <div className="font-semibold text-neutral-900">{r.id}</div>
-                      <div className="text-[11px] text-neutral-400">{r.date}</div>
-                    </TableCell>
-                    <TableCell className="font-mono text-neutral-700 font-medium">
-                      {r.orderId}
-                    </TableCell>
-                    <TableCell>
-                      <div className="font-medium text-neutral-900">{r.client}</div>
-                      <div className="text-[11px] text-neutral-500">{r.city} • {r.type}</div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="font-medium text-neutral-800">{r.product}</div>
-                      <div className="text-[11px] text-neutral-500">Qty: {r.quantity} Carton(s)</div>
-                    </TableCell>
-                    <TableCell className="font-bold text-neutral-900">
-                      Rs. {r.returnAmount.toLocaleString()}
-                    </TableCell>
-                    <TableCell>
-                      {getStatusBadge(r.status)}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-1.5">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setSelectedReturn(r)}
-                          className="h-7 px-2 text-xs text-neutral-700 hover:text-neutral-900 cursor-pointer"
-                        >
-                          Details
-                        </Button>
-                        {r.status === "Pending Receipt" && (
-                          <Button
-                            size="sm"
-                            onClick={() => updateReturnStatus(r.id, "Received")}
-                            className="h-7 px-2.5 text-xs bg-blue-600 hover:bg-blue-700 text-white cursor-pointer"
-                          >
-                            Mark Received
-                          </Button>
-                        )}
-                        {r.status === "Received" && (
-                          <Button
-                            size="sm"
-                            onClick={() => updateReturnStatus(r.id, "Restocked")}
-                            className="h-7 px-2.5 text-xs bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer"
-                          >
-                            Restock
-                          </Button>
-                        )}
+                {isLoading ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="h-32 text-center text-xs text-neutral-500">
+                      <div className="flex items-center justify-center gap-2">
+                        <Loader2 className="size-4 animate-spin" />
+                        <span>Loading return orders...</span>
                       </div>
                     </TableCell>
                   </TableRow>
-                ))}
+                ) : returnsList.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="h-32 text-center text-xs text-neutral-500">
+                      No return orders found matching your criteria.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  returnsList.map((r: any) => (
+                    <TableRow key={r.id} className="text-xs hover:bg-neutral-50/50">
+                      <TableCell>
+                        <div className="font-semibold text-neutral-900">{r.returnId || r.id}</div>
+                        <div className="text-[11px] text-neutral-400">{formatDate(r.submittedAt || r.createdAt)}</div>
+                      </TableCell>
+                      <TableCell className="font-mono text-neutral-700 font-medium">
+                        {r.orderId}
+                      </TableCell>
+                      <TableCell>
+                        <div className="font-medium text-neutral-900">{r.client}</div>
+                        <div className="text-[11px] text-neutral-500">{r.city} • {r.type}</div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="font-medium text-neutral-800">{r.product}</div>
+                        <div className="text-[11px] text-neutral-500">Qty: {r.quantity}</div>
+                      </TableCell>
+                      <TableCell className="font-bold text-neutral-900">
+                        Rs. {Number(r.returnAmount || 0).toLocaleString()}
+                      </TableCell>
+                      <TableCell>
+                        {getStatusBadge(r.status)}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex items-center justify-end gap-1.5">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setSelectedReturn(r)}
+                            className="h-7 px-2 text-xs text-neutral-700 hover:text-neutral-900 cursor-pointer"
+                          >
+                            Details
+                          </Button>
+                          {(r.status || "").toLowerCase() === "pending receipt" && (
+                            <Button
+                              size="sm"
+                              disabled={updatingId === r.id}
+                              onClick={() => handleUpdateStatus(r.id, "Received")}
+                              className="h-7 px-2.5 text-xs bg-blue-600 hover:bg-blue-700 text-white cursor-pointer"
+                            >
+                              Mark Received
+                            </Button>
+                          )}
+                          {(r.status || "").toLowerCase() === "received" && (
+                            <Button
+                              size="sm"
+                              disabled={updatingId === r.id}
+                              onClick={() => handleUpdateStatus(r.id, "Restocked")}
+                              className="h-7 px-2.5 text-xs bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer"
+                            >
+                              Restock
+                            </Button>
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
               </TableBody>
             </Table>
           </div>
-          <AdminPagination
-            currentPage={currentPage}
-            totalPages={5}
-            onPageChange={setCurrentPage}
-          />
+          {totalPages > 1 && (
+            <div className="py-4">
+              <AdminPagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={setCurrentPage}
+              />
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -335,45 +342,47 @@ export function AdminReturnsSection() {
               <div className="p-3.5 bg-neutral-50 rounded-xl border border-neutral-200/80 flex items-center justify-between">
                 <div>
                   <h4 className="font-semibold text-neutral-900 text-sm">{selectedReturn.product}</h4>
-                  <p className="text-[11px] text-neutral-500 mt-0.5 font-mono">{selectedReturn.id} • Order: {selectedReturn.orderId}</p>
+                  <p className="text-[11px] text-neutral-500 mt-0.5 font-mono">{selectedReturn.returnId || selectedReturn.id} • Order: {selectedReturn.orderId}</p>
                 </div>
                 {getStatusBadge(selectedReturn.status)}
               </div>
 
               <div className="p-3 rounded-lg border border-neutral-100 bg-neutral-50/50">
                 <span className="text-neutral-400 text-[11px]">Client / Dealer</span>
-                <p className="font-semibold text-neutral-900 mt-0.5">{selectedReturn.client} ({selectedReturn.city})</p>
-                <p className="text-neutral-500 text-[11px]">Date Logged: {selectedReturn.date}</p>
+                <p className="font-semibold text-neutral-900 mt-0.5">{selectedReturn.client} ({selectedReturn.city || "—"})</p>
+                <p className="text-neutral-500 text-[11px]">Date Logged: {formatDate(selectedReturn.submittedAt || selectedReturn.createdAt)}</p>
               </div>
 
               <div className="p-3 rounded-lg border border-neutral-100 bg-neutral-50/50">
                 <span className="text-neutral-400 text-[11px]">Reason for Return</span>
-                <p className="font-medium text-neutral-900 mt-1 leading-relaxed">{selectedReturn.reason}</p>
+                <p className="font-medium text-neutral-900 mt-1 leading-relaxed">{selectedReturn.reason || "No reason specified"}</p>
                 <div className="mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-50 text-emerald-800 text-[11px] font-medium border border-emerald-200/70">
                   <Package className="size-3" />
-                  Condition: {selectedReturn.condition}
+                  Condition: {selectedReturn.condition || "Inspection Pending"}
                 </div>
               </div>
 
               <div className="flex items-center justify-between p-3 rounded-lg border border-neutral-100 bg-neutral-50/50 font-semibold">
                 <span className="text-neutral-600">Restock Credit Amount:</span>
-                <span className="text-neutral-900 text-sm">Rs. {selectedReturn.returnAmount.toLocaleString()}</span>
+                <span className="text-neutral-900 text-sm">Rs. {Number(selectedReturn.returnAmount || 0).toLocaleString()}</span>
               </div>
 
               <div className="flex items-center justify-end gap-2 pt-2 border-t border-neutral-100">
-                {selectedReturn.status === "Pending Receipt" && (
+                {(selectedReturn.status || "").toLowerCase() === "pending receipt" && (
                   <Button
                     size="sm"
-                    onClick={() => updateReturnStatus(selectedReturn.id, "Received")}
+                    disabled={updatingId === selectedReturn.id}
+                    onClick={() => handleUpdateStatus(selectedReturn.id, "Received")}
                     className="h-8 text-xs bg-blue-600 hover:bg-blue-700 text-white cursor-pointer"
                   >
                     Confirm Goods Received
                   </Button>
                 )}
-                {selectedReturn.status === "Received" && (
+                {(selectedReturn.status || "").toLowerCase() === "received" && (
                   <Button
                     size="sm"
-                    onClick={() => updateReturnStatus(selectedReturn.id, "Restocked")}
+                    disabled={updatingId === selectedReturn.id}
+                    onClick={() => handleUpdateStatus(selectedReturn.id, "Restocked")}
                     className="h-8 text-xs bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer"
                   >
                     Restock To Inventory & Credit Account
@@ -395,3 +404,5 @@ export function AdminReturnsSection() {
     </div>
   )
 }
+
+export default AdminReturnsSection

@@ -52,7 +52,7 @@ export function AdminOrderHistorySection() {
   const [isDeleting, setIsDeleting] = useState(false)
   const [updatingId, setUpdatingId] = useState<number | null>(null)
 
-  const limit = 8
+  const limit = 20
 
   const { data, isLoading } = useQuery({
     queryKey: [

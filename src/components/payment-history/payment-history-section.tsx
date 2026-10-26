@@ -1,11 +1,13 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import Link from "next/link"
-import { ChevronRight, Eye, Download, Search, CheckCircle2, Clock } from "lucide-react"
+import { useQuery } from "@tanstack/react-query"
+import { ChevronRight, Eye, Search, CheckCircle2, Clock, Loader2 } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Skeleton } from "@/components/ui/skeleton"
 import { PaymentSlipDialog } from "./payment-slip-dialog"
 import { Card, CardAction, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import {
@@ -16,6 +18,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { AdminPagination } from "@/components/admin-dashboard/admin-pagination"
+import { getCustomerPayments } from "@/lib/api/customer-payments"
 
 export interface PaymentRecord {
   id: string
@@ -28,104 +32,41 @@ export interface PaymentRecord {
   status: "Cleared" | "In Processing" | "Failed"
 }
 
-const paymentsData: PaymentRecord[] = [
-  {
-    id: "pay-1",
-    txnId: "PAY-981240",
-    date: "24 Sep 2026",
-    method: "Bank Transfer (IBFT)",
-    bankName: "Bank Alfalah (Raast)",
-    invoiceNumber: "INV-2026-0891",
-    amount: 500000,
-    status: "Cleared",
-  },
-  {
-    id: "pay-2",
-    txnId: "PAY-976520",
-    date: "22 Sep 2026",
-    method: "Direct Deposit Slip",
-    bankName: "Meezan Bank Ltd",
-    invoiceNumber: "INV-2026-0844",
-    amount: 445000,
-    status: "Cleared",
-  },
-  {
-    id: "pay-3",
-    txnId: "PAY-971033",
-    date: "18 Sep 2026",
-    method: "Habib Bank Cheque (#4401)",
-    bankName: "HBL Commercial",
-    invoiceNumber: "INV-2026-0720",
-    amount: 385000,
-    status: "Cleared",
-  },
-  {
-    id: "pay-4",
-    txnId: "PAY-968910",
-    date: "15 Sep 2026",
-    method: "Bank Transfer (IBFT)",
-    bankName: "Faysal Bank Islamic",
-    invoiceNumber: "INV-2026-0685",
-    amount: 768000,
-    status: "Cleared",
-  },
-  {
-    id: "pay-5",
-    txnId: "PAY-964205",
-    date: "05 Sep 2026",
-    method: "Online Raast QR",
-    bankName: "Allied Bank (ABL)",
-    invoiceNumber: "INV-2026-0610",
-    amount: 250000,
-    status: "Cleared",
-  },
-]
-
 export function PaymentHistorySection() {
-  const [payments, setPayments] = useState<PaymentRecord[]>(paymentsData)
-  const [stats, setStats] = useState({
-    totalCleared: "Rs. 2,348,000",
-    inProcessing: "Rs. 300,000",
-    totalTransactions: 6,
-  })
-  const [isLoading, setIsLoading] = useState(true)
+  const [currentPage, setCurrentPage] = useState(1)
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState("All")
   const [selectedPayment, setSelectedPayment] = useState<PaymentRecord | null>(null)
 
-  useEffect(() => {
-    let isMounted = true
-    async function loadPayments() {
-      try {
-        const res = await fetch("/api/customer/payments")
-        const data = await res.json()
-        if (data?.success && isMounted) {
-          if (Array.isArray(data.payments)) setPayments(data.payments)
-          if (data.stats) setStats(data.stats)
-        }
-      } catch (err) {
-      } finally {
-        if (isMounted) setIsLoading(false)
-      }
-    }
-    loadPayments()
-    return () => {
-      isMounted = false
-    }
-  }, [])
+  const limit = 20
 
-  const filteredPayments = payments.filter((payment) => {
-    const matchesSearch =
-      payment.txnId.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      payment.method.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      payment.bankName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      payment.invoiceNumber.toLowerCase().includes(searchQuery.toLowerCase())
-
-    const matchesStatus =
-      statusFilter === "All" ? true : payment.status === statusFilter
-
-    return matchesSearch && matchesStatus
+  const { data, isLoading } = useQuery({
+    queryKey: [
+      "customer-payments",
+      {
+        page: currentPage,
+        limit,
+        search: searchQuery,
+        status: statusFilter === "All" ? "" : statusFilter.toLowerCase(),
+      },
+    ],
+    queryFn: () =>
+      getCustomerPayments({
+        page: currentPage,
+        limit,
+        search: searchQuery,
+        status: statusFilter === "All" ? "" : statusFilter.toLowerCase(),
+      }),
   })
+
+  const payments: PaymentRecord[] = data?.payments || []
+  const stats = data?.stats || {
+    totalCleared: "Rs. 0",
+    inProcessing: "Rs. 0",
+    totalTransactions: 0,
+    pendingCount: 0,
+  }
+  const totalPages = data?.pagination?.totalPages || 1
 
   const getStatusBadge = (status: PaymentRecord["status"]) => {
     switch (status) {
@@ -171,15 +112,6 @@ export function PaymentHistorySection() {
             Complete record of cleared bank transfers, cheques, and official payment receipts.
           </p>
         </div>
-
-        <Button
-          variant="outline"
-          className="h-10 px-4 text-xs font-medium cursor-pointer shadow-xs"
-          onClick={() => alert("Downloading Complete Payments Log PDF")}
-        >
-          <Download className="w-4 h-4 mr-2" />
-          Export Payments (PDF)
-        </Button>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
@@ -188,11 +120,11 @@ export function PaymentHistorySection() {
             <CheckCircle2 className="size-8 text-emerald-600 stroke-[1.5]" />
             <CardDescription className="pt-7">Total Payments Cleared</CardDescription>
             <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl text-neutral-900">
-              {stats.totalCleared}
+              {isLoading ? <Skeleton className="h-8 w-32" /> : stats.totalCleared}
             </CardTitle>
             <CardAction>
               <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 text-xs">
-                {stats.totalTransactions} Transactions
+                {isLoading ? "..." : `${stats.totalTransactions} Transactions`}
               </Badge>
             </CardAction>
           </CardHeader>
@@ -203,11 +135,11 @@ export function PaymentHistorySection() {
             <Clock className="size-8 text-neutral-700 stroke-[1.5]" />
             <CardDescription className="pt-7">Pending Verifications</CardDescription>
             <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl text-neutral-900">
-              0 Pending
+              {isLoading ? <Skeleton className="h-8 w-24" /> : `${stats.pendingCount || 0} Pending`}
             </CardTitle>
             <CardAction>
               <Badge variant="outline" className="text-xs">
-                Up to Date
+                {stats.pendingCount === 0 ? "Up to Date" : "Under Review"}
               </Badge>
             </CardAction>
           </CardHeader>
@@ -220,7 +152,10 @@ export function PaymentHistorySection() {
             <Input
               placeholder="Search receipt, method, bank, invoice..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => {
+                setSearchQuery(e.target.value)
+                setCurrentPage(1)
+              }}
               className="h-8 text-xs"
             />
           </div>
@@ -230,7 +165,10 @@ export function PaymentHistorySection() {
               <Button
                 key={st}
                 type="button"
-                onClick={() => setStatusFilter(st)}
+                onClick={() => {
+                  setStatusFilter(st)
+                  setCurrentPage(1)
+                }}
                 className={`cursor-pointer ${
                   statusFilter === st
                     ? ""
@@ -257,45 +195,75 @@ export function PaymentHistorySection() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredPayments.map((payment) => (
-                <TableRow key={payment.id} className="text-xs hover:bg-neutral-50/70">
-                  <TableCell className="font-semibold text-neutral-900 font-mono">
-                    {payment.txnId}
-                  </TableCell>
-                  <TableCell className="text-neutral-600 whitespace-nowrap">
-                    {payment.date}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex flex-col">
-                      <span className="font-medium text-neutral-900">{payment.method}</span>
-                      <span className="text-[11px] text-neutral-500">{payment.bankName}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-neutral-600 font-mono text-[11px]">
-                    {payment.invoiceNumber}
-                  </TableCell>
-                  <TableCell className="font-semibold text-emerald-700 whitespace-nowrap">
-                    Rs. {payment.amount.toLocaleString()}
-                  </TableCell>
-                  <TableCell>
-                    {getStatusBadge(payment.status)}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-7 px-2.5 text-xs text-neutral-700 hover:text-neutral-900 border-neutral-200 cursor-pointer gap-1.5"
-                      onClick={() => setSelectedPayment(payment)}
-                    >
-                      <Eye className="size-3.5" />
-                      <span>View Slip</span>
-                    </Button>
+              {isLoading ? (
+                Array.from({ length: 5 }).map((_, i) => (
+                  <TableRow key={i}>
+                    <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-16" /></TableCell>
+                    <TableCell className="text-right"><Skeleton className="h-7 w-20 ml-auto" /></TableCell>
+                  </TableRow>
+                ))
+              ) : payments.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="h-32 text-center text-sm text-neutral-500">
+                    No payment records found.
                   </TableCell>
                 </TableRow>
-              ))}
+              ) : (
+                payments.map((payment) => (
+                  <TableRow key={payment.id} className="text-xs hover:bg-neutral-50/70">
+                    <TableCell className="font-semibold text-neutral-900 font-mono">
+                      {payment.txnId}
+                    </TableCell>
+                    <TableCell className="text-neutral-600 whitespace-nowrap">
+                      {payment.date}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex flex-col">
+                        <span className="font-medium text-neutral-900">{payment.method}</span>
+                        <span className="text-[11px] text-neutral-500">{payment.bankName}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-neutral-600 font-mono text-[11px]">
+                      {payment.invoiceNumber}
+                    </TableCell>
+                    <TableCell className="font-semibold text-emerald-700 whitespace-nowrap">
+                      Rs. {payment.amount.toLocaleString()}
+                    </TableCell>
+                    <TableCell>
+                      {getStatusBadge(payment.status)}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-7 px-2.5 text-xs text-neutral-700 hover:text-neutral-900 border-neutral-200 cursor-pointer gap-1.5"
+                        onClick={() => setSelectedPayment(payment)}
+                      >
+                        <Eye className="size-3.5" />
+                        <span>View Slip</span>
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </div>
+
+        {totalPages > 1 && (
+          <div className="pt-2 border-t border-neutral-100">
+            <AdminPagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+            />
+          </div>
+        )}
       </div>
 
       <PaymentSlipDialog

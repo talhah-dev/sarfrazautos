@@ -89,11 +89,11 @@ export function CommercialInvoiceReceiptDialog({ invoice, open, onOpenChange }: 
               </span>
               <div className="flex items-center gap-1.5 font-semibold text-neutral-900">
                 <Building2 className="size-3.5 text-neutral-500" />
-                Tariq Auto Traders
+                {invoice.customerName || "Registered Dealer"}
               </div>
-              <p className="text-neutral-600">Dealer Code: DLR-5021</p>
-              <p className="text-neutral-600">Badami Bagh Auto Market, Lahore</p>
-              <p className="text-neutral-500 text-[11px]">NTN: 7120491-0 • Active Taxpayer</p>
+              <p className="text-neutral-600">Dealer Code: {invoice.dealerCode || "DLR-5021"}</p>
+              <p className="text-neutral-600">{invoice.customerCity || "Karachi, Pakistan"}</p>
+              <p className="text-neutral-500 text-[11px]">FBR Verified Account</p>
             </div>
 
             <div className="space-y-1 sm:text-right">

@@ -1,41 +1,57 @@
 "use client"
 
 import Link from "next/link"
+import { useQuery } from "@tanstack/react-query"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
+import { Skeleton } from "@/components/ui/skeleton"
 import { ArrowRight, CalendarDays, ShoppingBag } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 export function AdminStatisticsBlock() {
+  const { data, isLoading } = useQuery({
+    queryKey: ["admin-dashboard-stats"],
+    queryFn: async () => {
+      const res = await fetch("/api/admin/dashboard")
+      const json = await res.json()
+      if (!res.ok || !json.success) {
+        throw new Error(json.error || "Failed to fetch stats")
+      }
+      return json
+    },
+  })
+
+  const stats = data?.stats
+
   const mainMetrics = [
     {
       label: "Total Earned",
-      value: "Rs. 2,785,000",
-      percentage: "+18%",
+      value: stats?.totalEarned || "Rs. 0",
+      percentage: stats?.earnedBadge || "+18%",
       isPositive: true,
     },
     {
-      label: "Expense",
-      value: "Rs. 845,000",
-      percentage: "-5%",
-      isPositive: false,
+      label: "Total Orders",
+      value: stats?.totalOrders || "0 Orders",
+      percentage: stats?.ordersBadge || "0 total",
+      isPositive: true,
     },
   ]
 
   const secondaryStats = [
     {
       title: "Weekly Sales",
-      value: "Rs. 458,700",
-      percentage: "+18%",
+      value: stats?.weeklySales || "Rs. 0",
+      percentage: stats?.weeklyBadge || "Active",
       icon: CalendarDays,
       href: "/admin/orders",
       isPositive: true,
     },
     {
       title: "Orders Delivered",
-      value: "231",
-      percentage: "+12%",
+      value: stats?.ordersDelivered || "0",
+      percentage: stats?.deliveredBadge || "0% rate",
       icon: ShoppingBag,
       href: "/admin/orders",
       isPositive: true,
@@ -63,20 +79,29 @@ export function AdminStatisticsBlock() {
                       <p className="text-xs font-normal text-muted-foreground">
                         {metric.label}
                       </p>
-                      <div className="flex items-center gap-1">
-                        <p className="text-2xl font-medium text-card-foreground">
-                          {metric.value}
-                        </p>
-                        <Badge
-                          className={cn(
-                            "font-normal text-muted-foreground",
-                            metric.isPositive
-                              ? "bg-teal-400/10 text-teal-600"
-                              : "bg-red-500/10 text-red-600"
-                          )}
-                        >
-                          {metric.percentage}
-                        </Badge>
+                      <div className="flex items-center gap-1.5 mt-1">
+                        {isLoading ? (
+                          <>
+                            <Skeleton className="h-8 w-32 rounded-lg" />
+                            <Skeleton className="h-5 w-12 rounded-full" />
+                          </>
+                        ) : (
+                          <>
+                            <p className="text-2xl font-medium text-card-foreground">
+                              {metric.value}
+                            </p>
+                            <Badge
+                              className={cn(
+                                "font-normal text-muted-foreground",
+                                metric.isPositive
+                                  ? "bg-teal-400/10 text-teal-600"
+                                  : "bg-red-500/10 text-red-600"
+                              )}
+                            >
+                              {metric.percentage}
+                            </Badge>
+                          </>
+                        )}
                       </div>
                     </div>
                     {index < mainMetrics.length - 1 && (
@@ -106,20 +131,29 @@ export function AdminStatisticsBlock() {
                   <p className="text-lg font-medium text-card-foreground">
                     {stat.title}
                   </p>
-                  <div className="flex items-center gap-2">
-                    <p className="text-2xl font-medium text-card-foreground">
-                      {stat.value}
-                    </p>
-                    <Badge
-                      className={cn(
-                        "font-normal text-muted-foreground",
-                        stat.isPositive
-                          ? "bg-teal-400/10 text-teal-600"
-                          : "bg-red-500/10 text-red-600"
-                      )}
-                    >
-                      {stat.percentage}
-                    </Badge>
+                  <div className="flex items-center gap-2 mt-1">
+                    {isLoading ? (
+                      <>
+                        <Skeleton className="h-8 w-28 rounded-lg" />
+                        <Skeleton className="h-5 w-12 rounded-full" />
+                      </>
+                    ) : (
+                      <>
+                        <p className="text-2xl font-medium text-card-foreground">
+                          {stat.value}
+                        </p>
+                        <Badge
+                          className={cn(
+                            "font-normal text-muted-foreground",
+                            stat.isPositive
+                              ? "bg-teal-400/10 text-teal-600"
+                              : "bg-red-500/10 text-red-600"
+                          )}
+                        >
+                          {stat.percentage}
+                        </Badge>
+                      </>
+                    )}
                   </div>
                 </div>
                 <Link

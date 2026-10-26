@@ -1,84 +1,155 @@
 import { NextResponse } from "next/server"
+import { db } from "@/lib/db"
+import { payments } from "@/db/schema/payments"
+import { eq, ilike, and, or, desc, count, sql } from "drizzle-orm"
 
-const initialPayments = [
-  {
-    id: "pay-1",
-    txnId: "PAY-981240",
-    date: "24 Sep 2026",
-    method: "Bank Transfer (IBFT)",
-    bankName: "Bank Alfalah (Raast)",
-    invoiceNumber: "INV-2026-0891",
-    amount: 500000,
-    status: "Cleared",
-  },
-  {
-    id: "pay-2",
-    txnId: "PAY-976520",
-    date: "22 Sep 2026",
-    method: "Direct Deposit Slip",
-    bankName: "Meezan Bank Ltd",
-    invoiceNumber: "INV-2026-0844",
-    amount: 445000,
-    status: "Cleared",
-  },
-  {
-    id: "pay-3",
-    txnId: "PAY-971033",
-    date: "18 Sep 2026",
-    method: "Habib Bank Cheque (#4401)",
-    bankName: "HBL Commercial",
-    invoiceNumber: "INV-2026-0720",
-    amount: 385000,
-    status: "Cleared",
-  },
-  {
-    id: "pay-4",
-    txnId: "PAY-964119",
-    date: "14 Sep 2026",
-    method: "Bank Transfer (Raast)",
-    bankName: "Faysal Bank Islamic",
-    invoiceNumber: "INV-2026-0688",
-    amount: 760000,
-    status: "Cleared",
-  },
-  {
-    id: "pay-5",
-    txnId: "PAY-958012",
-    date: "10 Sep 2026",
-    method: "Cash Bilty Deposit",
-    bankName: "United Bank Limited",
-    invoiceNumber: "INV-2026-0798",
-    amount: 300000,
-    status: "In Processing",
-  },
-  {
-    id: "pay-6",
-    txnId: "PAY-949102",
-    date: "04 Sep 2026",
-    method: "Online Transfer (1Link)",
-    bankName: "MCB Bank Ltd",
-    invoiceNumber: "INV-2026-0540",
-    amount: 150000,
-    status: "Failed",
-  },
-]
-
-export async function GET() {
+export async function GET(req: Request) {
   try {
-    const totalPaid = initialPayments
-      .filter((p) => p.status === "Cleared")
-      .reduce((sum, p) => sum + p.amount, 0)
-    const inProcessing = initialPayments
-      .filter((p) => p.status === "In Processing")
-      .reduce((sum, p) => sum + p.amount, 0)
+    const { searchParams } = new URL(req.url)
+    const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10))
+    const limit = Math.max(1, parseInt(searchParams.get("limit") || "20", 10))
+    const search = searchParams.get("search")?.trim() || ""
+    const statusParam = searchParams.get("status")?.trim().toLowerCase() || ""
+
+    const conditions = []
+
+    if (search) {
+      conditions.push(
+        or(
+          ilike(payments.paymentNumber, `%${search}%`),
+          ilike(payments.customerName, `%${search}%`),
+          ilike(payments.orderNumber, `%${search}%`),
+          ilike(payments.method, `%${search}%`),
+          ilike(payments.notes, `%${search}%`)
+        )
+      )
+    }
+
+    if (statusParam && statusParam !== "all") {
+      if (statusParam === "cleared" || statusParam === "approved") {
+        conditions.push(
+          or(
+            ilike(payments.status, "cleared"),
+            ilike(payments.status, "approved")
+          )
+        )
+      } else if (statusParam === "in processing" || statusParam === "pending") {
+        conditions.push(
+          or(
+            ilike(payments.status, "in processing"),
+            ilike(payments.status, "pending")
+          )
+        )
+      } else if (statusParam === "failed" || statusParam === "rejected") {
+        conditions.push(
+          or(
+            ilike(payments.status, "failed"),
+            ilike(payments.status, "rejected")
+          )
+        )
+      } else {
+        conditions.push(ilike(payments.status, statusParam))
+      }
+    }
+
+    const whereClause = conditions.length > 0 ? and(...conditions) : undefined
+
+    const [totalRow] = await db
+      .select({ count: count() })
+      .from(payments)
+      .where(whereClause)
+
+    const total = Number(totalRow?.count || 0)
+    const totalPages = Math.max(1, Math.ceil(total / limit))
+    const offset = (page - 1) * limit
+
+    const items = await db
+      .select()
+      .from(payments)
+      .where(whereClause)
+      .orderBy(desc(payments.submittedAt), desc(payments.createdAt))
+      .limit(limit)
+      .offset(offset)
+
+    const allPayments = await db.select().from(payments)
+
+    const totalClearedAmount = allPayments
+      .filter((p) => {
+        const s = (p.status || "").toLowerCase()
+        return s === "approved" || s === "cleared"
+      })
+      .reduce((sum, p) => sum + (p.amount || 0), 0)
+
+    const totalInProcessingAmount = allPayments
+      .filter((p) => {
+        const s = (p.status || "").toLowerCase()
+        return s === "pending" || s === "in processing"
+      })
+      .reduce((sum, p) => sum + (p.amount || 0), 0)
+
+    const pendingCount = allPayments.filter((p) => {
+      const s = (p.status || "").toLowerCase()
+      return s === "pending" || s === "in processing"
+    }).length
+
+    const formattedPayments = items.map((p) => {
+      const s = (p.status || "").toLowerCase()
+      let statusFormatted: "Cleared" | "In Processing" | "Failed" = "In Processing"
+      if (s === "approved" || s === "cleared") {
+        statusFormatted = "Cleared"
+      } else if (s === "rejected" || s === "failed") {
+        statusFormatted = "Failed"
+      }
+
+      const dateStr = p.submittedAt
+        ? new Date(p.submittedAt).toLocaleDateString("en-GB", {
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+          })
+        : "Recently"
+
+      const bankName =
+        p.notes ||
+        (p.method === "EasyPaisa"
+          ? "Telenor Microfinance"
+          : p.method === "JazzCash"
+          ? "Mobilink Microfinance"
+          : "Bank Alfalah (Raast)")
+
+      const invoiceNumber = p.orderNumber
+        ? p.orderNumber.replace("ORD", "INV")
+        : `INV-${p.paymentNumber}`
+
+      return {
+        id: String(p.id),
+        txnId: p.paymentNumber,
+        date: dateStr,
+        method: p.method || "Bank Transfer",
+        bankName,
+        invoiceNumber,
+        amount: p.amount || 0,
+        status: statusFormatted,
+        customerName: p.customerName,
+        screenshotUrl: p.screenshotUrl,
+        notes: p.notes,
+      }
+    })
 
     return NextResponse.json({
       success: true,
-      payments: initialPayments,
+      payments: formattedPayments,
       stats: {
-        totalCleared: `Rs. ${totalPaid.toLocaleString()}`,
-        inProcessing: `Rs. ${inProcessing.toLocaleString()}`,
-        totalTransactions: initialPayments.length,
+        totalCleared: `Rs. ${totalClearedAmount.toLocaleString()}`,
+        inProcessing: `Rs. ${totalInProcessingAmount.toLocaleString()}`,
+        totalTransactions: allPayments.length,
+        pendingCount,
+      },
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages,
       },
     })
   } catch (error: any) {

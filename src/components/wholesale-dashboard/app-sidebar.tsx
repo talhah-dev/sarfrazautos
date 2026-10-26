@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { useQuery } from "@tanstack/react-query"
 import { NavDocuments } from "@/components/wholesale-dashboard/nav-documents"
 import { NavMain } from "@/components/wholesale-dashboard/nav-main"
 import { NavSecondary } from "@/components/wholesale-dashboard/nav-secondary"
@@ -20,18 +21,13 @@ import {
   ClipboardListIcon,
   FileTextIcon,
   ReceiptTextIcon,
-  HistoryIcon,
   CircleHelpIcon,
   Home,
 } from "lucide-react"
 import Link from "next/link"
+import { getCustomerProfile } from "@/lib/api/customer-profile"
 
-const data = {
-  user: {
-    name: "Tariq Auto Traders",
-    email: "dealer@sarfrazautos.com",
-    avatar: "/icon.png",
-  },
+const defaultData = {
   navMain: [
     {
       title: "Overview",
@@ -39,8 +35,8 @@ const data = {
       icon: <LayoutDashboardIcon className="size-4" />,
     },
     {
-      title: "Bulk Orders",
-      url: "/customer-portal/bulk-orders",
+      title: "My Orders",
+      url: "/customer-portal/orders",
       icon: <ClipboardListIcon className="size-4" />,
     },
     {
@@ -60,11 +56,6 @@ const data = {
       url: "/customer-portal/payment-history",
       icon: <ReceiptTextIcon className="size-4" />,
     },
-    {
-      name: "Order History",
-      url: "/customer-portal/order-history",
-      icon: <HistoryIcon className="size-4" />,
-    },
   ],
   navSecondary: [
     {
@@ -76,6 +67,17 @@ const data = {
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const { data: profile } = useQuery({
+    queryKey: ["customer-profile"],
+    queryFn: getCustomerProfile,
+  })
+
+  const user = {
+    name: profile?.businessName || "Tariq Auto Traders",
+    email: profile?.email || "dealer@sarfrazautos.com",
+    avatar: "/icon.png",
+  }
+
   return (
     <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader>
@@ -96,12 +98,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} />
-        <NavDocuments items={data.documents} label="Ledger & Invoices" />
-        <NavSecondary items={data.navSecondary} className="mt-auto" />
+        <NavMain items={defaultData.navMain} />
+        <NavDocuments items={defaultData.documents} label="Ledger & Invoices" />
+        <NavSecondary items={defaultData.navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={data.user} />
+        <NavUser user={user} />
       </SidebarFooter>
     </Sidebar>
   )

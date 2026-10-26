@@ -11,9 +11,11 @@ import {
   Building2,
   Phone,
   Mail,
-  ShieldCheck,
   ArrowRight,
+  Loader2,
 } from "lucide-react"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { toast } from "sonner"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -38,91 +40,53 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { AdminPagination } from "@/components/admin-dashboard/admin-pagination"
-
-const initialRequests = [
-  {
-    id: "REQ-104",
-    shopName: "Al-Madina Auto Spares",
-    ownerName: "Tariq Mahmood",
-    email: "tariq.madina@gmail.com",
-    phone: "0300-8472910",
-    city: "Faisalabad",
-    address: "Shop #12, Katchery Bazaar, Circular Road",
-    cnic: "33100-8492019-1",
-    ntn: "4192084-2",
-    date: "11 Oct 2026",
-    status: "Pending",
-  },
-  {
-    id: "REQ-103",
-    shopName: "Chaudhry Bike Center",
-    ownerName: "Muhammad Farooq",
-    email: "farooq.chaudhry@yahoo.com",
-    phone: "0321-9874512",
-    city: "Gujranwala",
-    address: "Near Sialkoti Gate, Main GT Road",
-    cnic: "34101-7294019-5",
-    ntn: "8204910-1",
-    date: "10 Oct 2026",
-    status: "Pending",
-  },
-  {
-    id: "REQ-102",
-    shopName: "Khan Brothers Motorcycles",
-    ownerName: "Imran Khan Niazi",
-    email: "khan.brothers@gmail.com",
-    phone: "0333-5129481",
-    city: "Rawalpindi",
-    address: "Plaza 4, Gawalmandi Auto Market",
-    cnic: "37405-1928475-3",
-    ntn: "9102847-8",
-    date: "09 Oct 2026",
-    status: "Approved",
-  },
-  {
-    id: "REQ-101",
-    shopName: "Multan Autos & Machinery",
-    ownerName: "Sheikh Abdul Rehman",
-    email: "rehman.multan@gmail.com",
-    phone: "0301-7482910",
-    city: "Multan",
-    address: "Shop #8, Hussain Agahi Auto Sector",
-    cnic: "36302-8471920-7",
-    ntn: "3819204-5",
-    date: "08 Oct 2026",
-    status: "Approved",
-  },
-  {
-    id: "REQ-100",
-    shopName: "Zubair Spare Traders",
-    ownerName: "Zubair Ahmed",
-    email: "zubair.traders@hotmail.com",
-    phone: "0345-2849102",
-    city: "Hyderabad",
-    address: "Auto Market, Station Road",
-    cnic: "41303-9182746-1",
-    ntn: "Unregistered",
-    date: "07 Oct 2026",
-    status: "Rejected",
-  },
-]
+import { getDealerRequests, updateDealerRequestStatus } from "@/lib/api/dealer-requests"
 
 export function AdminDealerRequestsTable() {
-  const [requests, setRequests] = useState(initialRequests)
+  const queryClient = useQueryClient()
   const [selectedDealer, setSelectedDealer] = useState<any>(null)
   const [currentPage, setCurrentPage] = useState(1)
+  const [updatingId, setUpdatingId] = useState<string | number | null>(null)
 
-  const updateStatus = (id: string, newStatus: "Approved" | "Rejected") => {
-    setRequests((prev) =>
-      prev.map((r) => (r.id === id ? { ...r, status: newStatus } : r))
-    )
-    if (selectedDealer && selectedDealer.id === id) {
-      setSelectedDealer((prev: any) => ({ ...prev, status: newStatus }))
+  const limit = 20
+
+  const { data, isLoading } = useQuery({
+    queryKey: [
+      "dealer-requests",
+      {
+        page: currentPage,
+        limit,
+      },
+    ],
+    queryFn: () =>
+      getDealerRequests({
+        page: currentPage,
+        limit,
+      }),
+  })
+
+  const requests = data?.requests || []
+  const totalPages = data?.pagination?.totalPages || 1
+
+  const updateStatus = async (id: string | number, newStatus: "Approved" | "Rejected") => {
+    try {
+      setUpdatingId(id)
+      await updateDealerRequestStatus(id, newStatus)
+      queryClient.invalidateQueries({ queryKey: ["dealer-requests"] })
+      toast.success(`Dealer request marked as ${newStatus}`)
+      if (selectedDealer && (selectedDealer.id === id || selectedDealer.requestId === id)) {
+        setSelectedDealer((prev: any) => prev ? { ...prev, status: newStatus } : null)
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Failed to update dealer request status")
+    } finally {
+      setUpdatingId(null)
     }
   }
 
   const getStatusBadge = (status: string) => {
-    if (status === "Approved") {
+    const s = (status || "").toLowerCase()
+    if (s === "approved") {
       return (
         <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 text-xs font-medium gap-1">
           <CheckCircle2 className="size-3" />
@@ -130,7 +94,7 @@ export function AdminDealerRequestsTable() {
         </Badge>
       )
     }
-    if (status === "Pending") {
+    if (s === "pending") {
       return (
         <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 text-xs font-medium gap-1">
           <Clock className="size-3" />
@@ -146,35 +110,51 @@ export function AdminDealerRequestsTable() {
     )
   }
 
+  const formatDate = (dateVal: any) => {
+    if (!dateVal) return "—"
+    try {
+      const d = new Date(dateVal)
+      return d.toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      })
+    } catch {
+      return String(dateVal)
+    }
+  }
+
   return (
     <>
-      <Card className="w-full rounded-2xl border bg-white pb-0">
-        <CardHeader className="flex sm:flex-row flex-col justify-between sm:items-center items-start gap-4 px-6 pb-4">
+      <Card className="rounded-xl border border-neutral-200 bg-white shadow-xs overflow-hidden">
+        <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 gap-2">
           <div>
-            <CardTitle className="text-lg font-semibold text-neutral-900 tracking-tight">
-              Recent Dealer Requests
+            <CardTitle className="text-base font-semibold text-neutral-900">
+              Dealer Verification Requests
             </CardTitle>
             <CardDescription className="text-xs text-neutral-500 mt-0.5">
-              Wholesale accounts registration requests pending verification and pricing access.
+              Wholesale applicants awaiting validation for trade discount accounts.
             </CardDescription>
           </div>
-          <Link
-            href="/admin/dealer-requests"
-            className="inline-flex items-center gap-1.5 h-8 rounded-xl border border-input bg-background hover:bg-neutral-100 text-neutral-700 hover:text-neutral-900 text-xs font-medium px-3 shadow-2xs transition-colors shrink-0"
-          >
-            <span>Manage All</span>
-            <ArrowRight className="size-3.5" />
+          <Link href="/admin/dealer-requests">
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 text-xs font-medium gap-1.5 self-start sm:self-auto cursor-pointer"
+            >
+              View All Requests
+              <ArrowRight className="size-3.5" />
+            </Button>
           </Link>
         </CardHeader>
-
-        <CardContent className="px-6 ">
-          <div className="overflow-x-auto rounded-xl border border-neutral-200/80">
+        <CardContent className="p-0">
+          <div className="overflow-x-auto border-t border-neutral-100">
             <Table>
-              <TableHeader className="bg-neutral-50/70">
-                <TableRow className="hover:bg-transparent">
+              <TableHeader>
+                <TableRow className="bg-neutral-50/50 hover:bg-neutral-50/50">
                   <TableHead className="text-xs font-semibold text-neutral-700">Shop / Business</TableHead>
                   <TableHead className="text-xs font-semibold text-neutral-700">Owner Name</TableHead>
-                  <TableHead className="text-xs font-semibold text-neutral-700">City & Contact</TableHead>
+                  <TableHead className="text-xs font-semibold text-neutral-700">Contact & City</TableHead>
                   <TableHead className="text-xs font-semibold text-neutral-700">CNIC / NTN</TableHead>
                   <TableHead className="text-xs font-semibold text-neutral-700">Date</TableHead>
                   <TableHead className="text-xs font-semibold text-neutral-700">Status</TableHead>
@@ -182,74 +162,97 @@ export function AdminDealerRequestsTable() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {requests.map((r) => (
-                  <TableRow key={r.id} className="text-xs hover:bg-neutral-50/50">
-                    <TableCell>
-                      <div className="font-semibold text-neutral-900">{r.shopName}</div>
-                      <div className="text-[11px] text-neutral-400 font-mono">{r.id}</div>
-                    </TableCell>
-                    <TableCell className="text-neutral-700 font-medium">
-                      {r.ownerName}
-                    </TableCell>
-                    <TableCell>
-                      <div className="text-neutral-800 font-medium">{r.phone}</div>
-                      <div className="text-[11px] text-neutral-500 flex items-center gap-1 mt-0.5">
-                        <MapPin className="size-3" />
-                        {r.city}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="font-mono text-neutral-700 text-[11px]">{r.cnic}</div>
-                      <div className="text-[11px] text-neutral-400">NTN: {r.ntn}</div>
-                    </TableCell>
-                    <TableCell className="text-neutral-600 whitespace-nowrap">
-                      {r.date}
-                    </TableCell>
-                    <TableCell>
-                      {getStatusBadge(r.status)}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-1.5">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-7 px-2 text-xs text-neutral-700 hover:text-neutral-900 cursor-pointer"
-                          onClick={() => setSelectedDealer(r)}
-                        >
-                          <Eye className="size-3.5 mr-1" />
-                          View
-                        </Button>
-                        {r.status === "Pending" && (
-                          <>
-                            <Button
-                              size="sm"
-                              className="h-7 px-2.5 text-xs bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer"
-                              onClick={() => updateStatus(r.id, "Approved")}
-                            >
-                              Approve
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="h-7 px-2 text-xs text-red-600 border-red-200 hover:bg-red-50 cursor-pointer"
-                              onClick={() => updateStatus(r.id, "Rejected")}
-                            >
-                              Reject
-                            </Button>
-                          </>
-                        )}
+                {isLoading ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="h-32 text-center text-xs text-neutral-500">
+                      <div className="flex items-center justify-center gap-2">
+                        <Loader2 className="size-4 animate-spin" />
+                        <span>Loading dealer requests...</span>
                       </div>
                     </TableCell>
                   </TableRow>
-                ))}
+                ) : requests.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="h-32 text-center text-xs text-neutral-500">
+                      No dealer verification requests found.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  requests.map((r: any) => (
+                    <TableRow key={r.id} className="text-xs hover:bg-neutral-50/50">
+                      <TableCell>
+                        <div className="font-semibold text-neutral-900">{r.shopName}</div>
+                        <div className="text-[11px] text-neutral-400 font-mono">{r.requestId || r.id}</div>
+                      </TableCell>
+                      <TableCell className="text-neutral-700 font-medium">
+                        {r.ownerName}
+                      </TableCell>
+                      <TableCell>
+                        <div className="text-neutral-800 font-medium">{r.phone}</div>
+                        <div className="text-[11px] text-neutral-500 flex items-center gap-1 mt-0.5">
+                          <MapPin className="size-3" />
+                          {r.city}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="font-mono text-neutral-700 text-[11px]">{r.cnic || "—"}</div>
+                        <div className="text-[11px] text-neutral-400">NTN: {r.ntn || "Unregistered"}</div>
+                      </TableCell>
+                      <TableCell className="text-neutral-600 whitespace-nowrap">
+                        {formatDate(r.submittedAt || r.createdAt)}
+                      </TableCell>
+                      <TableCell>
+                        {getStatusBadge(r.status)}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex items-center justify-end gap-1.5">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 px-2 text-xs text-neutral-700 hover:text-neutral-900 cursor-pointer"
+                            onClick={() => setSelectedDealer(r)}
+                          >
+                            <Eye className="size-3.5 mr-1" />
+                            View
+                          </Button>
+                          {(r.status || "").toLowerCase() === "pending" && (
+                            <>
+                              <Button
+                                size="sm"
+                                disabled={updatingId === r.id}
+                                className="h-7 px-2.5 text-xs bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer"
+                                onClick={() => updateStatus(r.id, "Approved")}
+                              >
+                                Approve
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                disabled={updatingId === r.id}
+                                className="h-7 px-2 text-xs text-red-600 border-red-200 hover:bg-red-50 cursor-pointer"
+                                onClick={() => updateStatus(r.id, "Rejected")}
+                              >
+                                Reject
+                              </Button>
+                            </>
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
               </TableBody>
             </Table>
           </div>
-          <AdminPagination
-            currentPage={currentPage}
-            totalPages={5}
-            onPageChange={setCurrentPage}
-          />
+          {totalPages > 1 && (
+            <div className="py-2">
+              <AdminPagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={setCurrentPage}
+              />
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -263,88 +266,74 @@ export function AdminDealerRequestsTable() {
           </DialogHeader>
 
           {selectedDealer && (
-            <div className="flex flex-col gap-4 mt-2">
-              <div className="p-3.5 bg-neutral-50 rounded-xl border border-neutral-200/80 flex items-center justify-between">
-                <div>
-                  <h4 className="font-semibold text-neutral-900 text-sm">{selectedDealer.shopName}</h4>
-                  <p className="text-xs text-neutral-500 mt-0.5 font-mono">{selectedDealer.id} • Applied {selectedDealer.date}</p>
+            <div className="space-y-4 pt-2">
+              <div className="rounded-lg border border-neutral-100 bg-neutral-50/50 p-4 space-y-2.5">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <h4 className="font-semibold text-neutral-900 text-sm">{selectedDealer.shopName}</h4>
+                    <p className="text-xs text-neutral-500">Applicant: {selectedDealer.ownerName}</p>
+                  </div>
+                  {getStatusBadge(selectedDealer.status)}
                 </div>
-                {getStatusBadge(selectedDealer.status)}
-              </div>
 
-              <div className="grid grid-cols-2 gap-3 text-xs">
-                <div className="p-2.5 rounded-lg border border-neutral-100 bg-neutral-50/50">
-                  <span className="text-neutral-400 text-[11px] flex items-center gap-1">
-                    <ShieldCheck className="size-3" /> Owner
-                  </span>
-                  <p className="font-medium text-neutral-900 mt-1">{selectedDealer.ownerName}</p>
-                </div>
-                <div className="p-2.5 rounded-lg border border-neutral-100 bg-neutral-50/50">
-                  <span className="text-neutral-400 text-[11px] flex items-center gap-1">
-                    <MapPin className="size-3" /> City
-                  </span>
-                  <p className="font-medium text-neutral-900 mt-1">{selectedDealer.city}</p>
-                </div>
-                <div className="p-2.5 rounded-lg border border-neutral-100 bg-neutral-50/50">
-                  <span className="text-neutral-400 text-[11px] flex items-center gap-1">
-                    <Phone className="size-3" /> Phone
-                  </span>
-                  <p className="font-medium text-neutral-900 mt-1">{selectedDealer.phone}</p>
-                </div>
-                <div className="p-2.5 rounded-lg border border-neutral-100 bg-neutral-50/50">
-                  <span className="text-neutral-400 text-[11px] flex items-center gap-1">
-                    <Mail className="size-3" /> Email
-                  </span>
-                  <p className="font-medium text-neutral-900 mt-1 truncate">{selectedDealer.email}</p>
+                <div className="grid grid-cols-2 gap-2 text-xs pt-2 border-t border-neutral-200/60">
+                  <div className="flex items-center gap-1.5 text-neutral-600">
+                    <Phone className="size-3.5 text-neutral-400" />
+                    <span>{selectedDealer.phone}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 text-neutral-600">
+                    <MapPin className="size-3.5 text-neutral-400" />
+                    <span>{selectedDealer.city}</span>
+                  </div>
+                  <div className="col-span-2 flex items-center gap-1.5 text-neutral-600">
+                    <Mail className="size-3.5 text-neutral-400" />
+                    <span className="truncate">{selectedDealer.email}</span>
+                  </div>
                 </div>
               </div>
 
-              <div className="text-xs p-3 rounded-lg border border-neutral-100 bg-neutral-50/50">
-                <span className="text-neutral-400 text-[11px]">Shop Address</span>
-                <p className="font-medium text-neutral-900 mt-1">{selectedDealer.address}</p>
+              <div className="rounded-lg border border-neutral-100 p-3 space-y-2 text-xs">
+                <div className="flex justify-between py-1 border-b border-neutral-100">
+                  <span className="text-neutral-500">CNIC Number:</span>
+                  <span className="font-mono text-neutral-800">{selectedDealer.cnic || "—"}</span>
+                </div>
+                <div className="flex justify-between py-1 border-b border-neutral-100">
+                  <span className="text-neutral-500">NTN Registration:</span>
+                  <span className="font-mono text-neutral-800">{selectedDealer.ntn || "Unregistered"}</span>
+                </div>
+                <div className="flex justify-between py-1 border-b border-neutral-100">
+                  <span className="text-neutral-500">Application Date:</span>
+                  <span className="text-neutral-800">{formatDate(selectedDealer.submittedAt || selectedDealer.createdAt)}</span>
+                </div>
+                <div className="flex flex-col py-1">
+                  <span className="text-neutral-500 mb-0.5">Physical Address:</span>
+                  <span className="text-neutral-800 font-medium">{selectedDealer.address || "—"}</span>
+                </div>
               </div>
 
-              <div className="flex items-center justify-between text-xs p-3 rounded-lg border border-neutral-100 bg-neutral-50/50 font-mono">
-                <div>
-                  <span className="text-neutral-400 text-[11px] font-sans">CNIC</span>
-                  <p className="font-medium text-neutral-900 mt-0.5">{selectedDealer.cnic}</p>
-                </div>
-                <div>
-                  <span className="text-neutral-400 text-[11px] font-sans">NTN Number</span>
-                  <p className="font-medium text-neutral-900 mt-0.5">{selectedDealer.ntn}</p>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-end gap-2 pt-2 border-t border-neutral-100">
-                {selectedDealer.status === "Pending" ? (
-                  <>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="h-8 text-xs text-red-600 border-red-200 hover:bg-red-50 cursor-pointer"
-                      onClick={() => updateStatus(selectedDealer.id, "Rejected")}
-                    >
-                      Reject Application
-                    </Button>
-                    <Button
-                      size="sm"
-                      className="h-8 text-xs bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer"
-                      onClick={() => updateStatus(selectedDealer.id, "Approved")}
-                    >
-                      Approve Dealership
-                    </Button>
-                  </>
-                ) : (
+              {(selectedDealer.status || "").toLowerCase() === "pending" && (
+                <div className="flex gap-2 pt-2">
+                  <Button
+                    size="sm"
+                    disabled={updatingId === selectedDealer.id}
+                    className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer text-xs"
+                    onClick={() => updateStatus(selectedDealer.id, "Approved")}
+                  >
+                    <CheckCircle2 className="size-3.5 mr-1" />
+                    Approve Dealer
+                  </Button>
                   <Button
                     size="sm"
                     variant="outline"
-                    className="h-8 text-xs cursor-pointer"
-                    onClick={() => setSelectedDealer(null)}
+                    disabled={updatingId === selectedDealer.id}
+                    className="flex-1 text-red-600 border-red-200 hover:bg-red-50 cursor-pointer text-xs"
+                    onClick={() => updateStatus(selectedDealer.id, "Rejected")}
                   >
-                    Close
+                    <XCircle className="size-3.5 mr-1" />
+                    Reject Application
                   </Button>
-                )}
-              </div>
+                </div>
+              )}
             </div>
           )}
         </DialogContent>
@@ -352,3 +341,5 @@ export function AdminDealerRequestsTable() {
     </>
   )
 }
+
+export default AdminDealerRequestsTable

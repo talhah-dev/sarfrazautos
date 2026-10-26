@@ -1,22 +1,17 @@
 "use client"
 
 import { useState } from "react"
+import { useQuery } from "@tanstack/react-query"
 import {
   Clock,
   Search,
-  AlertCircle,
-  TrendingDown,
-  Building2,
-  Calendar,
   Send,
-  Download,
-  AlertTriangle,
   FileSpreadsheet,
+  Loader2,
 } from "lucide-react"
 import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
+import { Card, CardHeader, CardContent } from "@/components/ui/card"
 import {
   Table,
   TableBody,
@@ -32,105 +27,82 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { AdminPagination } from "@/components/admin-dashboard/admin-pagination"
-
-const initialAgingData = [
-  {
-    dealerCode: "DLR-5021",
-    dealerName: "Ali Brothers Traders",
-    city: "Lahore",
-    creditLimit: 1500000,
-    totalDue: 840000,
-    days0_30: 520000,
-    days31_60: 220000,
-    days61_90: 100000,
-    days90Plus: 0,
-    lastPayment: "04 Oct 2026 (Rs. 168,000)",
-    status: "Healthy",
-    phone: "0300-8472910",
-  },
-  {
-    dealerCode: "DLR-4819",
-    dealerName: "Zaman Auto Parts",
-    city: "Karachi",
-    creditLimit: 2000000,
-    totalDue: 1450000,
-    days0_30: 850000,
-    days31_60: 420000,
-    days61_90: 180000,
-    days90Plus: 0,
-    lastPayment: "03 Oct 2026 (Rs. 675,000)",
-    status: "Healthy",
-    phone: "0321-9874512",
-  },
-  {
-    dealerCode: "DLR-3912",
-    dealerName: "Raza & Sons",
-    city: "Gujranwala",
-    creditLimit: 800000,
-    totalDue: 690000,
-    days0_30: 210000,
-    days31_60: 260000,
-    days61_90: 140000,
-    days90Plus: 80000,
-    lastPayment: "01 Oct 2026 (Rs. 276,000)",
-    status: "Attention",
-    phone: "0333-5129481",
-  },
-  {
-    dealerCode: "DLR-2980",
-    dealerName: "Bilal Motor Works",
-    city: "Faisalabad",
-    creditLimit: 1200000,
-    totalDue: 980000,
-    days0_30: 340000,
-    days31_60: 290000,
-    days61_90: 210000,
-    days90Plus: 140000,
-    lastPayment: "29 Sep 2026 (Rs. 290,000)",
-    status: "Overdue",
-    phone: "0301-7482910",
-  },
-  {
-    dealerCode: "DLR-1045",
-    dealerName: "Tariq Traders",
-    city: "Rawalpindi",
-    creditLimit: 1000000,
-    totalDue: 930000,
-    days0_30: 730000,
-    days31_60: 50000,
-    days61_90: 50000,
-    days90Plus: 100000,
-    lastPayment: "27 Sep 2026 (Rs. 340,000)",
-    status: "Overdue",
-    phone: "0345-2849102",
-  },
-]
+import { getAgingReports } from "@/lib/api/aging-reports"
 
 export function AdminAgingReportSection() {
-  const [agingData, setAgingData] = useState(initialAgingData)
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedReminder, setSelectedReminder] = useState<any>(null)
   const [copied, setCopied] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
 
-  const totalOutstanding = agingData.reduce((acc, curr) => acc + curr.totalDue, 0)
-  const totalDays0_30 = agingData.reduce((acc, curr) => acc + curr.days0_30, 0)
-  const totalDays31_60 = agingData.reduce((acc, curr) => acc + curr.days31_60, 0)
-  const totalDays61_90 = agingData.reduce((acc, curr) => acc + curr.days61_90, 0)
-  const totalDays90Plus = agingData.reduce((acc, curr) => acc + curr.days90Plus, 0)
-
-  const filteredData = agingData.filter((d) => {
-    return (
-      d.dealerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      d.dealerCode.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      d.city.toLowerCase().includes(searchQuery.toLowerCase())
-    )
+  const { data, isLoading } = useQuery({
+    queryKey: ["aging-reports", currentPage, searchQuery],
+    queryFn: () =>
+      getAgingReports({
+        page: currentPage,
+        limit: 20,
+        search: searchQuery,
+      }),
   })
+
+  const agingData = data?.agingData || []
+  const stats = data?.stats || {
+    totalOutstanding: 0,
+    days0_30: 0,
+    days31_60: 0,
+    days61_90: 0,
+    days90Plus: 0,
+    totalDealers: 0,
+  }
+  const totalPages = data?.pagination?.totalPages || 1
+  const total = data?.pagination?.total || 0
 
   const handleCopyReminder = (text: string) => {
     navigator.clipboard.writeText(text)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
+  }
+
+  const handleExportCSV = () => {
+    if (!agingData.length) return
+    const headers = [
+      "Dealer Code",
+      "Dealer Name",
+      "City",
+      "Credit Limit",
+      "Total Due",
+      "0-30 Days",
+      "31-60 Days",
+      "61-90 Days",
+      "90+ Days",
+      "Last Payment",
+      "Status",
+      "Phone",
+    ]
+    const rows = agingData.map((d: any) => [
+      `"${d.dealerCode || ""}"`,
+      `"${d.dealerName || ""}"`,
+      `"${d.city || ""}"`,
+      d.creditLimit || 0,
+      d.totalDue || 0,
+      d.days0_30 || 0,
+      d.days31_60 || 0,
+      d.days61_90 || 0,
+      d.days90Plus || 0,
+      `"${d.lastPayment || ""}"`,
+      `"${d.status || ""}"`,
+      `"${d.phone || ""}"`,
+    ])
+    const csvContent =
+      "data:text/csv;charset=utf-8," +
+      [headers.join(","), ...rows.map((e: any) => e.join(","))].join("\n")
+    const encodedUri = encodeURI(csvContent)
+    const link = document.createElement("a")
+    link.setAttribute("href", encodedUri)
+    link.setAttribute("download", `aging_report_${Date.now()}.csv`)
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
   }
 
   return (
@@ -147,7 +119,7 @@ export function AdminAgingReportSection() {
         <Button
           variant="outline"
           size="sm"
-          onClick={() => alert("Aging report exported to CSV successfully.")}
+          onClick={handleExportCSV}
           className="h-9 text-xs gap-1.5 cursor-pointer rounded-xl border-neutral-300"
         >
           <FileSpreadsheet className="size-3.5 text-neutral-600" />
@@ -161,7 +133,7 @@ export function AdminAgingReportSection() {
             Total Outstanding
           </span>
           <p className="text-2xl font-bold text-neutral-900 mt-2">
-            Rs. {totalOutstanding.toLocaleString()}
+            Rs. {Number(stats.totalOutstanding || 0).toLocaleString()}
           </p>
           <span className="text-[11px] text-neutral-500 font-medium mt-1 inline-block">
             Across active wholesale accounts
@@ -174,7 +146,7 @@ export function AdminAgingReportSection() {
             0 – 30 Days (Current)
           </span>
           <p className="text-xl font-bold text-neutral-900 mt-2">
-            Rs. {totalDays0_30.toLocaleString()}
+            Rs. {Number(stats.days0_30 || 0).toLocaleString()}
           </p>
           <span className="text-[11px] text-emerald-600 font-medium mt-1 inline-block">
             Standard payment credit cycle
@@ -187,7 +159,7 @@ export function AdminAgingReportSection() {
             31 – 60 Days (Due)
           </span>
           <p className="text-xl font-bold text-neutral-900 mt-2">
-            Rs. {totalDays31_60.toLocaleString()}
+            Rs. {Number(stats.days31_60 || 0).toLocaleString()}
           </p>
           <span className="text-[11px] text-amber-600 font-medium mt-1 inline-block">
             First reminder notice zone
@@ -200,7 +172,7 @@ export function AdminAgingReportSection() {
             61 – 90 Days (Overdue)
           </span>
           <p className="text-xl font-bold text-neutral-900 mt-2">
-            Rs. {totalDays61_90.toLocaleString()}
+            Rs. {Number(stats.days61_90 || 0).toLocaleString()}
           </p>
           <span className="text-[11px] text-orange-600 font-medium mt-1 inline-block">
             Urgent settlement required
@@ -213,7 +185,7 @@ export function AdminAgingReportSection() {
             90+ Days (Critical)
           </span>
           <p className="text-xl font-bold text-red-600 mt-2">
-            Rs. {totalDays90Plus.toLocaleString()}
+            Rs. {Number(stats.days90Plus || 0).toLocaleString()}
           </p>
           <span className="text-[11px] text-red-600 font-medium mt-1 inline-block">
             Credit hold / Stop dispatches
@@ -228,12 +200,15 @@ export function AdminAgingReportSection() {
             <Input
               placeholder="Search dealer, city, code..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => {
+                setSearchQuery(e.target.value)
+                setCurrentPage(1)
+              }}
               className="pl-9 h-9 text-xs"
             />
           </div>
           <span className="text-xs text-neutral-500 font-medium">
-            Showing {filteredData.length} Dealers with Ledger Balances
+            Showing {agingData.length} of {total} Dealers with Ledger Balances
           </span>
         </CardHeader>
         <CardContent className="px-6 pt-0">
@@ -253,58 +228,75 @@ export function AdminAgingReportSection() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredData.map((d) => (
-                  <TableRow key={d.dealerCode} className="text-xs hover:bg-neutral-50/50">
-                    <TableCell>
-                      <div className="font-semibold text-neutral-900">{d.dealerName}</div>
-                      <div className="text-[11px] text-neutral-400 font-mono">{d.dealerCode}</div>
-                    </TableCell>
-                    <TableCell className="text-neutral-700 font-medium">
-                      {d.city}
-                    </TableCell>
-                    <TableCell className="text-neutral-600 font-mono">
-                      Rs. {d.creditLimit.toLocaleString()}
-                    </TableCell>
-                    <TableCell className="font-bold text-neutral-900">
-                      Rs. {d.totalDue.toLocaleString()}
-                    </TableCell>
-                    <TableCell className="text-emerald-700 font-medium">
-                      Rs. {d.days0_30.toLocaleString()}
-                    </TableCell>
-                    <TableCell className="text-amber-700 font-medium">
-                      Rs. {d.days31_60.toLocaleString()}
-                    </TableCell>
-                    <TableCell className="text-orange-700 font-medium">
-                      Rs. {d.days61_90.toLocaleString()}
-                    </TableCell>
-                    <TableCell>
-                      {d.days90Plus > 0 ? (
-                        <span className="font-bold text-red-600 bg-red-50 px-2 py-0.5 rounded-md border border-red-200">
-                          Rs. {d.days90Plus.toLocaleString()}
-                        </span>
-                      ) : (
-                        <span className="text-neutral-400">Rs. 0</span>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => setSelectedReminder(d)}
-                        className="h-7 px-2.5 text-xs text-red-600 border-red-200 hover:bg-red-50 cursor-pointer gap-1"
-                      >
-                        <Send className="size-3" />
-                        <span>Remind</span>
-                      </Button>
+                {isLoading ? (
+                  <TableRow>
+                    <TableCell colSpan={9} className="h-48 text-center">
+                      <div className="flex flex-col items-center justify-center gap-2">
+                        <Loader2 className="size-6 animate-spin text-neutral-400" />
+                        <span className="text-xs text-neutral-500">Loading aging records...</span>
+                      </div>
                     </TableCell>
                   </TableRow>
-                ))}
+                ) : agingData.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={9} className="h-40 text-center text-xs text-neutral-500">
+                      No aging reports found.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  agingData.map((d: any) => (
+                    <TableRow key={d.dealerCode} className="text-xs hover:bg-neutral-50/50">
+                      <TableCell>
+                        <div className="font-semibold text-neutral-900">{d.dealerName}</div>
+                        <div className="text-[11px] text-neutral-400 font-mono">{d.dealerCode}</div>
+                      </TableCell>
+                      <TableCell className="text-neutral-700 font-medium">
+                        {d.city}
+                      </TableCell>
+                      <TableCell className="text-neutral-600 font-mono">
+                        Rs. {Number(d.creditLimit || 0).toLocaleString()}
+                      </TableCell>
+                      <TableCell className="font-bold text-neutral-900">
+                        Rs. {Number(d.totalDue || 0).toLocaleString()}
+                      </TableCell>
+                      <TableCell className="text-emerald-700 font-medium">
+                        Rs. {Number(d.days0_30 || 0).toLocaleString()}
+                      </TableCell>
+                      <TableCell className="text-amber-700 font-medium">
+                        Rs. {Number(d.days31_60 || 0).toLocaleString()}
+                      </TableCell>
+                      <TableCell className="text-orange-700 font-medium">
+                        Rs. {Number(d.days61_90 || 0).toLocaleString()}
+                      </TableCell>
+                      <TableCell>
+                        {Number(d.days90Plus || 0) > 0 ? (
+                          <span className="font-bold text-red-600 bg-red-50 px-2 py-0.5 rounded-md border border-red-200">
+                            Rs. {Number(d.days90Plus || 0).toLocaleString()}
+                          </span>
+                        ) : (
+                          <span className="text-neutral-400">Rs. 0</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setSelectedReminder(d)}
+                          className="h-7 px-2.5 text-xs text-red-600 border-red-200 hover:bg-red-50 cursor-pointer gap-1"
+                        >
+                          <Send className="size-3" />
+                          <span>Remind</span>
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
               </TableBody>
             </Table>
           </div>
           <AdminPagination
             currentPage={currentPage}
-            totalPages={5}
+            totalPages={totalPages}
             onPageChange={setCurrentPage}
           />
         </CardContent>
@@ -328,25 +320,25 @@ export function AdminAgingReportSection() {
                 </div>
                 <div className="text-right">
                   <span className="text-[11px] text-neutral-400">Total Outstanding</span>
-                  <p className="font-bold text-neutral-900 text-sm">Rs. {selectedReminder.totalDue.toLocaleString()}</p>
+                  <p className="font-bold text-neutral-900 text-sm">Rs. {Number(selectedReminder.totalDue || 0).toLocaleString()}</p>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="p-2.5 rounded-lg border border-neutral-100 bg-neutral-50/50">
                   <span className="text-neutral-400 text-[11px]">Due Over 60 Days</span>
-                  <p className="font-bold text-orange-600 mt-1">Rs. {selectedReminder.days61_90.toLocaleString()}</p>
+                  <p className="font-bold text-orange-600 mt-1">Rs. {Number(selectedReminder.days61_90 || 0).toLocaleString()}</p>
                 </div>
                 <div className="p-2.5 rounded-lg border border-red-100 bg-red-50/50">
                   <span className="text-red-600 text-[11px]">Critical (Over 90 Days)</span>
-                  <p className="font-bold text-red-700 mt-1">Rs. {selectedReminder.days90Plus.toLocaleString()}</p>
+                  <p className="font-bold text-red-700 mt-1">Rs. {Number(selectedReminder.days90Plus || 0).toLocaleString()}</p>
                 </div>
               </div>
 
               <div className="p-3 rounded-lg border border-neutral-100 bg-neutral-50/50">
                 <span className="text-neutral-400 text-[11px]">Drafted WhatsApp Reminder:</span>
                 <p className="font-sans text-neutral-800 mt-1.5 p-2 bg-white rounded border border-neutral-200 text-xs leading-relaxed">
-                  Salam {selectedReminder.dealerName}! This is a reminder from Sarfraz Autos Wholesale regarding your outstanding ledger balance of Rs. {selectedReminder.totalDue.toLocaleString()} (including Rs. {selectedReminder.days90Plus.toLocaleString()} overdue beyond 90 days). Kindly arrange payment clearance via bank transfer to avoid dispatch delays. JazakAllah.
+                  Salam {selectedReminder.dealerName}! This is a reminder from Sarfraz Autos Wholesale regarding your outstanding ledger balance of Rs. {Number(selectedReminder.totalDue || 0).toLocaleString()} (including Rs. {Number(selectedReminder.days90Plus || 0).toLocaleString()} overdue beyond 90 days). Kindly arrange payment clearance via bank transfer to avoid dispatch delays. JazakAllah.
                 </p>
               </div>
 
@@ -354,14 +346,14 @@ export function AdminAgingReportSection() {
                 <Button
                   size="sm"
                   variant="outline"
-                  onClick={() => handleCopyReminder(`Salam ${selectedReminder.dealerName}! This is a reminder from Sarfraz Autos Wholesale regarding your outstanding ledger balance of Rs. ${selectedReminder.totalDue.toLocaleString()} (including Rs. ${selectedReminder.days90Plus.toLocaleString()} overdue beyond 90 days). Kindly arrange payment clearance via bank transfer to avoid dispatch delays. JazakAllah.`)}
+                  onClick={() => handleCopyReminder(`Salam ${selectedReminder.dealerName}! This is a reminder from Sarfraz Autos Wholesale regarding your outstanding ledger balance of Rs. ${Number(selectedReminder.totalDue || 0).toLocaleString()} (including Rs. ${Number(selectedReminder.days90Plus || 0).toLocaleString()} overdue beyond 90 days). Kindly arrange payment clearance via bank transfer to avoid dispatch delays. JazakAllah.`)}
                   className="h-8 text-xs cursor-pointer"
                 >
                   {copied ? "Copied!" : "Copy Message"}
                 </Button>
                 <Button
                   size="sm"
-                  onClick={() => window.open(`https://wa.me/${selectedReminder.phone.replace(/[^0-9]/g, "")}?text=${encodeURIComponent(`Salam ${selectedReminder.dealerName}! This is a reminder from Sarfraz Autos Wholesale regarding your outstanding ledger balance of Rs. ${selectedReminder.totalDue.toLocaleString()} (including Rs. ${selectedReminder.days90Plus.toLocaleString()} overdue beyond 90 days). Kindly arrange payment clearance via bank transfer to avoid dispatch delays. JazakAllah.`)}`, "_blank")}
+                  onClick={() => window.open(`https://wa.me/${(selectedReminder.phone || "").replace(/[^0-9]/g, "")}?text=${encodeURIComponent(`Salam ${selectedReminder.dealerName}! This is a reminder from Sarfraz Autos Wholesale regarding your outstanding ledger balance of Rs. ${Number(selectedReminder.totalDue || 0).toLocaleString()} (including Rs. ${Number(selectedReminder.days90Plus || 0).toLocaleString()} overdue beyond 90 days). Kindly arrange payment clearance via bank transfer to avoid dispatch delays. JazakAllah.`)}`, "_blank")}
                   className="h-8 text-xs bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer"
                 >
                   Open WhatsApp

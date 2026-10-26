@@ -9,6 +9,7 @@ import {
   CreditCard,
   ShieldCheck,
   Truck,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -17,12 +18,17 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useCart } from "@/lib/store/cart-store";
 import { useCheckoutInfo } from "@/lib/store/checkout-store";
+import { createOrder } from "@/lib/api/orders";
+import { createPayment } from "@/lib/api/payments";
+import { uploadProductImage } from "@/lib/api/products";
 import BankTransferForm from "./bank-transfer-form";
 import PaymentSuccess from "./payment-success";
 
 export function PaymentSection({ className = "" }: { className?: string }) {
   const [paymentMethod, setPaymentMethod] = useState<"bank" | "cod">("bank");
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [confirmedAmount, setConfirmedAmount] = useState<string>("");
   const [proofFile, setProofFile] = useState<File | null>(null);
   const [hasProofError, setHasProofError] = useState(false);
   const [orderId] = useState(() => `#SA-${Math.floor(10000 + Math.random() * 90000)}`);
@@ -35,8 +41,15 @@ export function PaymentSection({ className = "" }: { className?: string }) {
   const shipping = isPickup || subtotal >= 5000 || subtotal === 0 ? 0 : 250;
   const total = subtotal + shipping;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (isSubmitting) return;
+
+    if (items.length === 0) {
+      toast.error("Your shopping cart is empty. Please add items to cart first.");
+      return;
+    }
 
     if (paymentMethod === "bank" && !proofFile) {
       setHasProofError(true);
@@ -50,10 +63,77 @@ export function PaymentSection({ className = "" }: { className?: string }) {
       return;
     }
 
-    setIsSubmitted(true);
-    clearCart();
-    if (typeof window !== "undefined") {
-      window.scrollTo({ top: 0, behavior: "smooth" });
+    try {
+      setIsSubmitting(true);
+
+      let screenshotUrl = "";
+      if (paymentMethod === "bank" && proofFile) {
+        try {
+          screenshotUrl = await uploadProductImage(proofFile);
+        } catch {
+          screenshotUrl = "";
+        }
+      }
+
+      const orderItems = items.map((item) => ({
+        id: item.id,
+        productId: item.productId,
+        name: item.title,
+        title: item.title,
+        price: item.price,
+        quantity: item.quantity,
+        specs: item.specs || "",
+        image: item.image,
+        type: item.type,
+      }));
+
+      const finalAmount = total;
+      const customerName = info.fullName?.trim() || "Customer";
+      const notesParts = [
+        info.address ? `Address: ${info.address}` : "",
+        info.apartment ? `Apartment: ${info.apartment}` : "",
+        info.notes ? `Note: ${info.notes}` : "",
+        `Method: ${paymentMethod === "bank" ? "Bank Transfer" : "Cash on Delivery"}`,
+      ].filter(Boolean);
+
+      await createOrder({
+        orderNumber: orderId,
+        customerName,
+        customerPhone: info.phone?.trim() || null,
+        customerCity: info.city?.trim() || null,
+        orderType: wholesaleSubtotal > 0 ? "wholesale" : "retail",
+        items: orderItems,
+        totalAmount: finalAmount,
+        status: "pending",
+        paymentStatus: paymentMethod === "bank" ? "processing" : "pending",
+        notes: notesParts.join(" | "),
+      });
+
+      if (paymentMethod === "bank") {
+        try {
+          const cleanId = orderId.replace(/[^0-9]/g, "") || String(Math.floor(1000 + Math.random() * 9000));
+          await createPayment({
+            paymentNumber: `PAY-${cleanId}`,
+            customerName,
+            orderNumber: orderId,
+            amount: finalAmount,
+            method: "Bank Transfer",
+            screenshotUrl: screenshotUrl || null,
+            status: "Pending",
+          });
+        } catch {}
+      }
+
+      setConfirmedAmount(`Rs. ${finalAmount.toLocaleString()}`);
+      setIsSubmitted(true);
+      clearCart();
+      if (typeof window !== "undefined") {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Failed to place order. Please try again.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -64,7 +144,7 @@ export function PaymentSection({ className = "" }: { className?: string }) {
           <PaymentSuccess
             orderId={orderId}
             paymentMethod={paymentMethod}
-            amount={`Rs. ${total.toLocaleString()}`}
+            amount={confirmedAmount || `Rs. ${total.toLocaleString()}`}
           />
         </div>
       </section>
@@ -296,13 +376,23 @@ export function PaymentSection({ className = "" }: { className?: string }) {
 
                 <Button
                   type="button"
+                  disabled={isSubmitting || items.length === 0}
                   onClick={handleSubmit}
                   className="w-full h-12 cursor-pointer flex items-center justify-center gap-2 text-sm font-medium"
                 >
-                  <ShieldCheck className="size-4" />
-                  {paymentMethod === "bank"
-                    ? "Submit Payment Proof & Confirm"
-                    : "Confirm & Place Order (COD)"}
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="size-4 animate-spin" />
+                      <span>Placing Order...</span>
+                    </>
+                  ) : (
+                    <>
+                      <ShieldCheck className="size-4" />
+                      {paymentMethod === "bank"
+                        ? "Submit Payment Proof & Confirm"
+                        : "Confirm & Place Order (COD)"}
+                    </>
+                  )}
                 </Button>
               </CardContent>
             </Card>

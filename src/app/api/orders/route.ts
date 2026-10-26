@@ -96,12 +96,9 @@ export async function POST(req: Request) {
   try {
     const body = await req.json()
 
-    if (!body.customerName || body.totalAmount === undefined) {
-      return NextResponse.json(
-        { success: false, error: "Missing required fields (customerName, totalAmount)" },
-        { status: 400 }
-      )
-    }
+    const customerName = (body.customerName && body.customerName.trim())
+      ? body.customerName.trim()
+      : "Valued Customer"
 
     const randomSuffix = Math.floor(1000 + Math.random() * 9000)
     const orderNumber =
@@ -111,12 +108,12 @@ export async function POST(req: Request) {
       .insert(orders)
       .values({
         orderNumber,
-        customerName: body.customerName.trim(),
+        customerName,
         customerPhone: body.customerPhone ? body.customerPhone.trim() : null,
         customerCity: body.customerCity ? body.customerCity.trim() : null,
         orderType: (body.orderType || "retail").toLowerCase(),
         items: Array.isArray(body.items) ? body.items : [],
-        totalAmount: parseInt(body.totalAmount, 10) || 0,
+        totalAmount: parseInt(String(body.totalAmount ?? 0), 10) || 0,
         status: (body.status || "pending").toLowerCase(),
         paymentStatus: (body.paymentStatus || "pending").toLowerCase(),
         notes: body.notes ? body.notes.trim() : null,

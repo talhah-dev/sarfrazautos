@@ -2,10 +2,13 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Check, Eye, Plus, Star, PackageOpen } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { getProducts } from "@/lib/api/products";
+import { useCartStore } from "@/lib/store/cart-store";
 import { Button } from "@/components/ui/button";
 import {
   Pagination,
@@ -70,10 +73,38 @@ export function RetailCatalog({
   const products = data?.products || [];
   const totalPages = data?.pagination?.totalPages || 1;
 
-  const handleAdd = (id: string | number) => {
-    setAddedItems((prev) => ({ ...prev, [String(id)]: true }));
+  const router = useRouter();
+  const addItem = useCartStore((state) => state.addItem);
+
+  const handleAdd = (product: any, e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    const idStr = String(product.id);
+    const mainImg =
+      product.images?.[product.mainImageIndex || 0] || product.images?.[0] || "/bike-engine.png";
+
+    addItem({
+      productId: product.id,
+      type: "retail",
+      title: product.name,
+      category: product.category,
+      price: Number(product.price) || 0,
+      image: mainImg,
+      specs: product.compatibleBike || "Genuine Replacement",
+      inStock: product.stockStatus !== "out_of_stock",
+    });
+
+    setAddedItems((prev) => ({ ...prev, [idStr]: true }));
+    toast.success(`Added ${product.name} to cart!`, {
+      action: {
+        label: "View Cart",
+        onClick: () => router.push("/cart"),
+      },
+    });
     setTimeout(() => {
-      setAddedItems((prev) => ({ ...prev, [String(id)]: false }));
+      setAddedItems((prev) => ({ ...prev, [idStr]: false }));
     }, 1800);
   };
 
@@ -187,7 +218,7 @@ export function RetailCatalog({
 
                       <button
                         type="button"
-                        onClick={() => handleAdd(product.id)}
+                        onClick={(e) => handleAdd(product, e)}
                         aria-label={`Add ${product.name} to order`}
                         className={cn(
                           "shrink-0 size-9 rounded-full flex items-center justify-center transition-all shadow-sm cursor-pointer mt-0.5",

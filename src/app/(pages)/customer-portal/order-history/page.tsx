@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation"
 
 export default function OrderHistoryRedirect() {
-  redirect("/customer-portal")
+  redirect("/customer-portal/orders")
 }

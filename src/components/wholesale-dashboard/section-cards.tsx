@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useQuery } from "@tanstack/react-query"
 import { Badge } from "@/components/ui/badge"
 import {
   Card,
@@ -9,68 +9,61 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
 import { ShoppingBag, Clock } from "lucide-react"
 import { PiCoinsLight } from "react-icons/pi"
 
-export interface DashboardStats {
-  totalMoneySpent: string
-  totalPurchases: string
-  ordersInProcessing: string
-  monthlyIncrease?: string
-}
-
-export function SectionCards({ initialStats }: { initialStats?: DashboardStats }) {
-  const [stats, setStats] = useState<DashboardStats>(
-    initialStats || {
-      totalMoneySpent: "Rs. 18,42,000",
-      totalPurchases: "198 Orders",
-      ordersInProcessing: "2 Orders",
-      monthlyIncrease: "+Rs. 1.2L This Month",
-    }
-  )
-
-  useEffect(() => {
-    let isMounted = true
-    async function fetchStats() {
-      try {
-        const res = await fetch("/api/customer/dashboard")
-        const data = await res.json()
-        if (data?.success && data?.stats && isMounted) {
-          setStats(data.stats)
-        }
-      } catch (e) {
+export function SectionCards() {
+  const { data, isLoading } = useQuery({
+    queryKey: ["customer-dashboard-stats"],
+    queryFn: async () => {
+      const res = await fetch("/api/customer/dashboard")
+      const json = await res.json()
+      if (!res.ok || !json.success) {
+        throw new Error(json.error || "Failed to fetch stats")
       }
-    }
-    fetchStats()
-    return () => {
-      isMounted = false
-    }
-  }, [])
+      return json
+    },
+  })
+
+  const stats = data?.stats
 
   return (
     <div className="grid grid-cols-1 gap-4 px-4 lg:px-6 @xl/main:grid-cols-2 @5xl/main:grid-cols-3">
-      <Card className="@container/card">
+      <Card className="@container/card bg-white shadow-2xs">
         <CardHeader>
           <PiCoinsLight className="size-8 text-neutral-700 opacity-80" />
           <CardDescription className="pt-7">Total Money Spent</CardDescription>
-          <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-            {stats.totalMoneySpent}
-          </CardTitle>
+          <div className="mt-1">
+            {isLoading ? (
+              <Skeleton className="h-8 w-32 rounded-lg" />
+            ) : (
+              <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl text-neutral-900">
+                {stats?.totalMoneySpent || "Rs. 0"}
+              </CardTitle>
+            )}
+          </div>
           <CardAction>
             <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 text-xs">
-              {stats.monthlyIncrease || "+Rs. 1.2L This Month"}
+              {stats?.monthlyIncrease || "+14.8% This Month"}
             </Badge>
           </CardAction>
         </CardHeader>
       </Card>
 
-      <Card className="@container/card">
+      <Card className="@container/card bg-white shadow-2xs">
         <CardHeader>
           <ShoppingBag className="size-8 text-neutral-700 stroke-[1.5]" />
           <CardDescription className="pt-7">Total Purchases</CardDescription>
-          <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-            {stats.totalPurchases}
-          </CardTitle>
+          <div className="mt-1">
+            {isLoading ? (
+              <Skeleton className="h-8 w-24 rounded-lg" />
+            ) : (
+              <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl text-neutral-900">
+                {stats?.totalPurchases || "0 Orders"}
+              </CardTitle>
+            )}
+          </div>
           <CardAction>
             <Badge variant="outline" className="text-xs">
               Retail + Wholesale
@@ -79,16 +72,22 @@ export function SectionCards({ initialStats }: { initialStats?: DashboardStats }
         </CardHeader>
       </Card>
 
-      <Card className="@container/card">
+      <Card className="@container/card bg-white shadow-2xs">
         <CardHeader>
           <Clock className="size-8 text-neutral-700 stroke-[1.5]" />
           <CardDescription className="pt-7">Orders In Processing</CardDescription>
-          <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-            {stats.ordersInProcessing}
-          </CardTitle>
+          <div className="mt-1">
+            {isLoading ? (
+              <Skeleton className="h-8 w-24 rounded-lg" />
+            ) : (
+              <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl text-neutral-900">
+                {stats?.ordersInProcessing || "0 Orders"}
+              </CardTitle>
+            )}
+          </div>
           <CardAction>
             <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 text-xs">
-              Packing Now
+              Processing
             </Badge>
           </CardAction>
         </CardHeader>

@@ -1,8 +1,9 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import Link from "next/link"
-import { ChevronRight, Eye, Search, FileText } from "lucide-react"
+import { useQuery } from "@tanstack/react-query"
+import { ChevronRight, Eye, Search, Loader2 } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -15,133 +16,60 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-
-export interface CommercialInvoice {
-  id: string
-  invoiceNumber: string
-  orderNumber: string
-  issueDate: string
-  dueDate: string
-  itemsSummary: string
-  amount: number
-  status: "Paid" | "Pending" | "Overdue"
-}
-
-const invoicesData: CommercialInvoice[] = [
-  {
-    id: "inv-1",
-    invoiceNumber: "INV-2026-0891",
-    orderNumber: "BO-9482",
-    issueDate: "24 Sep 2026",
-    dueDate: "08 Oct 2026",
-    itemsSummary: "24x CD70 Complete Cylinder Head",
-    amount: 620000,
-    status: "Paid",
-  },
-  {
-    id: "inv-2",
-    invoiceNumber: "INV-2026-0844",
-    orderNumber: "BO-9420",
-    issueDate: "22 Sep 2026",
-    dueDate: "06 Oct 2026",
-    itemsSummary: "40x Crown Heavy Duty Clutch Plates",
-    amount: 445000,
-    status: "Paid",
-  },
-  {
-    id: "inv-3",
-    invoiceNumber: "INV-2026-0798",
-    orderNumber: "BO-9391",
-    issueDate: "21 Sep 2026",
-    dueDate: "05 Oct 2026",
-    itemsSummary: "60x 125cc Piston Kits",
-    amount: 890000,
-    status: "Pending",
-  },
-  {
-    id: "inv-4",
-    invoiceNumber: "INV-2026-0720",
-    orderNumber: "BO-9350",
-    issueDate: "18 Sep 2026",
-    dueDate: "02 Oct 2026",
-    itemsSummary: "18x Heavy Duty Wheel Hub Assembly",
-    amount: 385000,
-    status: "Paid",
-  },
-  {
-    id: "inv-5",
-    invoiceNumber: "INV-2026-0685",
-    orderNumber: "BO-9304",
-    issueDate: "15 Sep 2026",
-    dueDate: "29 Sep 2026",
-    itemsSummary: "32x CD70 Performance Crankshafts",
-    amount: 768000,
-    status: "Paid",
-  },
-]
+import { AdminPagination } from "@/components/admin-dashboard/admin-pagination"
+import { getInvoices } from "@/lib/api/invoices"
 
 export function CommercialInvoicesSection() {
-  const [invoices, setInvoices] = useState<CommercialInvoice[]>(invoicesData)
-  const [isLoading, setIsLoading] = useState(true)
+  const [currentPage, setCurrentPage] = useState(1)
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState("All")
-  const [selectedInvoice, setSelectedInvoice] = useState<CommercialInvoice | null>(null)
+  const [selectedInvoice, setSelectedInvoice] = useState<any | null>(null)
 
-  useEffect(() => {
-    let isMounted = true
-    async function loadInvoices() {
-      try {
-        const res = await fetch("/api/customer/invoices")
-        const data = await res.json()
-        if (data?.success && Array.isArray(data?.invoices) && isMounted) {
-          setInvoices(data.invoices)
-        }
-      } catch (err) {
-      } finally {
-        if (isMounted) setIsLoading(false)
-      }
-    }
-    loadInvoices()
-    return () => {
-      isMounted = false
-    }
-  }, [])
+  const limit = 20
 
-  const filteredInvoices = invoices.filter((inv) => {
-    const matchesSearch =
-      inv.invoiceNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      inv.orderNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      inv.itemsSummary.toLowerCase().includes(searchQuery.toLowerCase())
-
-    const matchesStatus =
-      statusFilter === "All" ? true : inv.status === statusFilter
-
-    return matchesSearch && matchesStatus
+  const { data, isLoading } = useQuery({
+    queryKey: [
+      "commercial-invoices",
+      {
+        page: currentPage,
+        limit,
+        search: searchQuery,
+        status: statusFilter === "All" ? "" : statusFilter.toLowerCase(),
+      },
+    ],
+    queryFn: () =>
+      getInvoices({
+        page: currentPage,
+        limit,
+        search: searchQuery,
+        status: statusFilter === "All" ? "" : statusFilter.toLowerCase(),
+      }),
   })
 
-  const getStatusBadge = (status: CommercialInvoice["status"]) => {
-    switch (status) {
-      case "Paid":
-        return (
-          <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 text-xs font-medium">
-            Paid
-          </Badge>
-        )
-      case "Pending":
-        return (
-          <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 text-xs font-medium">
-            Pending
-          </Badge>
-        )
-      case "Overdue":
-        return (
-          <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200 text-xs font-medium">
-            Overdue
-          </Badge>
-        )
-      default:
-        return <Badge variant="outline">{status}</Badge>
+  const invoices = data?.invoices || []
+  const totalPages = data?.pagination?.totalPages || 1
+
+  const getStatusBadge = (status: string) => {
+    const s = (status || "").toLowerCase()
+    if (s === "paid") {
+      return (
+        <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 text-xs font-medium">
+          Paid
+        </Badge>
+      )
     }
+    if (s === "pending") {
+      return (
+        <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 text-xs font-medium">
+          Pending
+        </Badge>
+      )
+    }
+    return (
+      <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200 text-xs font-medium">
+        Overdue
+      </Badge>
+    )
   }
 
   return (
@@ -160,43 +88,50 @@ export function CommercialInvoicesSection() {
             Commercial Invoices
           </h2>
           <p className="text-sm text-neutral-500 mt-1">
-            Download and view official sales invoices and tax billing records for wholesale orders.
+            Download and view official sales invoices and tax billing records for wholesale and retail orders.
           </p>
         </div>
       </div>
 
-      <div className="flex flex-col gap-4 border border-neutral-200 rounded-xl bg-white p-4 sm:p-5 shadow-xs">
+      <div className="flex flex-col gap-4 border border-neutral-200 rounded-xl bg-white p-4 sm:p-5 shadow-2xs">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="w-full sm:w-64">
+          <div className="relative w-full sm:w-64">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-neutral-400" />
             <Input
               placeholder="Search invoice or order #..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="h-8 text-xs"
+              onChange={(e) => {
+                setSearchQuery(e.target.value)
+                setCurrentPage(1)
+              }}
+              className="pl-9 h-8 text-xs"
             />
           </div>
 
-          <div className="flex items-center gap-1">
-            {["All", "Paid", "Pending"].map((st) => (
-              <Button
+          <div className="flex items-center gap-1.5">
+            {["All", "Paid", "Pending", "Overdue"].map((st) => (
+              <button
                 key={st}
                 type="button"
-                onClick={() => setStatusFilter(st)}
-                className={`cursor-pointer ${
+                onClick={() => {
+                  setStatusFilter(st)
+                  setCurrentPage(1)
+                }}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
                   statusFilter === st
-                    ? ""
-                    : "bg-neutral-100 text-neutral-600 hover:bg-neutral-200 hover:text-neutral-900"
+                    ? "bg-neutral-900 text-white"
+                    : "bg-neutral-100 text-neutral-600 hover:bg-neutral-200"
                 }`}
               >
                 {st}
-              </Button>
+              </button>
             ))}
           </div>
         </div>
 
         <div className="overflow-x-auto">
           <Table>
-            <TableHeader>
+            <TableHeader className="bg-neutral-50/70">
               <TableRow className="hover:bg-transparent">
                 <TableHead className="text-xs font-semibold text-neutral-700">Invoice #</TableHead>
                 <TableHead className="text-xs font-semibold text-neutral-700">Order #</TableHead>
@@ -208,42 +143,65 @@ export function CommercialInvoicesSection() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredInvoices.map((inv) => (
-                <TableRow key={inv.id} className="text-xs hover:bg-neutral-50/70">
-                  <TableCell className="font-semibold text-neutral-900 font-mono">
-                    {inv.invoiceNumber}
-                  </TableCell>
-                  <TableCell className="text-neutral-600 font-mono text-[11px]">
-                    {inv.orderNumber}
-                  </TableCell>
-                  <TableCell className="text-neutral-600 whitespace-nowrap">
-                    {inv.issueDate}
-                  </TableCell>
-                  <TableCell className="text-neutral-700 font-medium max-w-[220px] truncate">
-                    {inv.itemsSummary}
-                  </TableCell>
-                  <TableCell className="font-semibold text-neutral-900 whitespace-nowrap">
-                    Rs. {inv.amount.toLocaleString()}
-                  </TableCell>
-                  <TableCell>
-                    {getStatusBadge(inv.status)}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-7 px-2.5 text-xs text-neutral-700 hover:text-neutral-900 border-neutral-200 cursor-pointer gap-1.5"
-                      onClick={() => setSelectedInvoice(inv)}
-                    >
-                      <Eye className="size-3.5" />
-                      <span>View</span>
-                    </Button>
+              {isLoading ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="h-44 text-center">
+                    <div className="flex flex-col items-center justify-center gap-2">
+                      <Loader2 className="size-5 animate-spin text-neutral-400" />
+                      <span className="text-xs text-neutral-500">Loading invoices...</span>
+                    </div>
                   </TableCell>
                 </TableRow>
-              ))}
+              ) : invoices.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="h-36 text-center text-xs text-neutral-500">
+                    No commercial invoices found.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                invoices.map((inv: any) => (
+                  <TableRow key={inv.id} className="text-xs hover:bg-neutral-50/50">
+                    <TableCell className="font-semibold text-neutral-900 font-mono">
+                      {inv.invoiceNumber}
+                    </TableCell>
+                    <TableCell className="text-neutral-600 font-mono text-[11px]">
+                      {inv.orderNumber}
+                    </TableCell>
+                    <TableCell className="text-neutral-600 whitespace-nowrap">
+                      {inv.issueDate}
+                    </TableCell>
+                    <TableCell className="text-neutral-700 font-medium max-w-[240px] truncate">
+                      {inv.itemsSummary}
+                    </TableCell>
+                    <TableCell className="font-bold text-neutral-900 whitespace-nowrap">
+                      Rs. {Number(inv.amount || 0).toLocaleString()}
+                    </TableCell>
+                    <TableCell>
+                      {getStatusBadge(inv.status)}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-7 px-2.5 text-xs text-neutral-700 hover:text-neutral-900 border-neutral-200 cursor-pointer gap-1.5"
+                        onClick={() => setSelectedInvoice(inv)}
+                      >
+                        <Eye className="size-3.5" />
+                        <span>View</span>
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </div>
+
+        <AdminPagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+        />
       </div>
 
       <CommercialInvoiceReceiptDialog

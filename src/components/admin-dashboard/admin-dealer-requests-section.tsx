@@ -12,8 +12,10 @@ import {
   Phone,
   Eye,
   Mail,
-  ShieldCheck,
+  Loader2,
 } from "lucide-react"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { toast } from "sonner"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -33,109 +35,60 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-
-const initialRequests = [
-  {
-    id: "REQ-104",
-    shopName: "Al-Madina Auto Spares",
-    ownerName: "Tariq Mahmood",
-    email: "tariq.madina@gmail.com",
-    phone: "0300-8472910",
-    city: "Faisalabad",
-    address: "Shop #12, Katchery Bazaar, Circular Road",
-    cnic: "33100-8492019-1",
-    ntn: "4192084-2",
-    date: "11 Oct 2026",
-    status: "Pending",
-  },
-  {
-    id: "REQ-103",
-    shopName: "Chaudhry Bike Center",
-    ownerName: "Muhammad Farooq",
-    email: "farooq.chaudhry@yahoo.com",
-    phone: "0321-9874512",
-    city: "Gujranwala",
-    address: "Near Sialkoti Gate, Main GT Road",
-    cnic: "34101-7294019-5",
-    ntn: "8204910-1",
-    date: "10 Oct 2026",
-    status: "Pending",
-  },
-  {
-    id: "REQ-102",
-    shopName: "Khan Brothers Motorcycles",
-    ownerName: "Imran Khan Niazi",
-    email: "khan.brothers@gmail.com",
-    phone: "0333-5129481",
-    city: "Rawalpindi",
-    address: "Plaza 4, Gawalmandi Auto Market",
-    cnic: "37405-1928475-3",
-    ntn: "9102847-8",
-    date: "09 Oct 2026",
-    status: "Approved",
-  },
-  {
-    id: "REQ-101",
-    shopName: "Multan Autos & Machinery",
-    ownerName: "Sheikh Abdul Rehman",
-    email: "rehman.multan@gmail.com",
-    phone: "0301-7482910",
-    city: "Multan",
-    address: "Shop #8, Hussain Agahi Auto Sector",
-    cnic: "36302-8471920-7",
-    ntn: "3819204-5",
-    date: "08 Oct 2026",
-    status: "Approved",
-  },
-  {
-    id: "REQ-100",
-    shopName: "Zubair Spare Traders",
-    ownerName: "Zubair Ahmed",
-    email: "zubair.traders@hotmail.com",
-    phone: "0345-2849102",
-    city: "Hyderabad",
-    address: "Auto Market, Station Road",
-    cnic: "41303-9182746-1",
-    ntn: "Unregistered",
-    date: "07 Oct 2026",
-    status: "Rejected",
-  },
-]
+import { getDealerRequests, updateDealerRequestStatus } from "@/lib/api/dealer-requests"
 
 export function AdminDealerRequestsSection() {
-  const [requests, setRequests] = useState(initialRequests)
+  const queryClient = useQueryClient()
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState("All")
   const [selectedDealer, setSelectedDealer] = useState<any>(null)
   const [currentPage, setCurrentPage] = useState(1)
+  const [updatingId, setUpdatingId] = useState<number | string | null>(null)
 
-  const pendingCount = requests.filter((r) => r.status === "Pending").length
-  const approvedCount = requests.filter((r) => r.status === "Approved").length
-  const rejectedCount = requests.filter((r) => r.status === "Rejected").length
+  const limit = 20
 
-  const filteredRequests = requests.filter((r) => {
-    const matchesSearch =
-      r.shopName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      r.ownerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      r.city.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      r.phone.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      r.id.toLowerCase().includes(searchQuery.toLowerCase())
-
-    const matchesStatus = statusFilter === "All" ? true : r.status === statusFilter
-    return matchesSearch && matchesStatus
+  const { data, isLoading } = useQuery({
+    queryKey: [
+      "dealer-requests",
+      {
+        page: currentPage,
+        limit,
+        search: searchQuery,
+        status: statusFilter === "All" ? "" : statusFilter.toLowerCase(),
+      },
+    ],
+    queryFn: () =>
+      getDealerRequests({
+        page: currentPage,
+        limit,
+        search: searchQuery,
+        status: statusFilter === "All" ? "" : statusFilter.toLowerCase(),
+      }),
   })
 
-  const updateStatus = (id: string, newStatus: "Approved" | "Rejected") => {
-    setRequests((prev) =>
-      prev.map((r) => (r.id === id ? { ...r, status: newStatus } : r))
-    )
-    if (selectedDealer && selectedDealer.id === id) {
-      setSelectedDealer((prev: any) => ({ ...prev, status: newStatus }))
+  const requests = data?.requests || []
+  const stats = data?.stats || { total: 0, pending: 0, approved: 0, rejected: 0 }
+  const totalPages = data?.pagination?.totalPages || 1
+
+  const updateStatus = async (id: string | number, newStatus: "Approved" | "Rejected") => {
+    try {
+      setUpdatingId(id)
+      await updateDealerRequestStatus(id, newStatus)
+      queryClient.invalidateQueries({ queryKey: ["dealer-requests"] })
+      toast.success(`Dealer request marked as ${newStatus}`)
+      if (selectedDealer && (selectedDealer.id === id || selectedDealer.requestId === id)) {
+        setSelectedDealer((prev: any) => prev ? { ...prev, status: newStatus } : null)
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Failed to update dealer request status")
+    } finally {
+      setUpdatingId(null)
     }
   }
 
   const getStatusBadge = (status: string) => {
-    if (status === "Approved") {
+    const s = (status || "").toLowerCase()
+    if (s === "approved") {
       return (
         <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 text-xs font-medium gap-1">
           <CheckCircle2 className="size-3" />
@@ -143,7 +96,7 @@ export function AdminDealerRequestsSection() {
         </Badge>
       )
     }
-    if (status === "Pending") {
+    if (s === "pending") {
       return (
         <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 text-xs font-medium gap-1">
           <Clock className="size-3" />
@@ -157,6 +110,20 @@ export function AdminDealerRequestsSection() {
         Rejected
       </Badge>
     )
+  }
+
+  const formatDate = (dateVal: any) => {
+    if (!dateVal) return "—"
+    try {
+      const d = new Date(dateVal)
+      return d.toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      })
+    } catch {
+      return String(dateVal)
+    }
   }
 
   return (
@@ -178,7 +145,7 @@ export function AdminDealerRequestsSection() {
             <Clock className="size-8 text-neutral-700 stroke-[1.5]" />
             <CardDescription className="pt-7">Pending Approvals</CardDescription>
             <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-              {pendingCount}
+              {stats.pending}
             </CardTitle>
             <CardAction>
               <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 text-xs">
@@ -193,7 +160,7 @@ export function AdminDealerRequestsSection() {
             <UserCheck className="size-8 text-neutral-700 stroke-[1.5]" />
             <CardDescription className="pt-7">Approved Dealers</CardDescription>
             <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-              {approvedCount}
+              {stats.approved}
             </CardTitle>
             <CardAction>
               <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 text-xs">
@@ -208,7 +175,7 @@ export function AdminDealerRequestsSection() {
             <XCircle className="size-8 text-neutral-700 stroke-[1.5]" />
             <CardDescription className="pt-7">Rejected Applications</CardDescription>
             <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-              {rejectedCount}
+              {stats.rejected}
             </CardTitle>
             <CardAction>
               <Badge variant="outline" className="bg-neutral-100 text-neutral-700 border-neutral-200 text-xs">
@@ -226,7 +193,10 @@ export function AdminDealerRequestsSection() {
             <Input
               placeholder="Search shop, owner, city, phone..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => {
+                setSearchQuery(e.target.value)
+                setCurrentPage(1)
+              }}
               className="pl-8 h-8 text-xs"
             />
           </div>
@@ -238,7 +208,10 @@ export function AdminDealerRequestsSection() {
                 type="button"
                 size="sm"
                 variant={statusFilter === st ? "default" : "outline"}
-                onClick={() => setStatusFilter(st)}
+                onClick={() => {
+                  setStatusFilter(st)
+                  setCurrentPage(1)
+                }}
                 className="h-8 text-xs cursor-pointer"
               >
                 {st}
@@ -261,18 +234,27 @@ export function AdminDealerRequestsSection() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredRequests.length === 0 ? (
+              {isLoading ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center py-8 text-neutral-500 text-xs">
+                    <div className="flex items-center justify-center gap-2">
+                      <Loader2 className="size-4 animate-spin" />
+                      <span>Loading dealer requests...</span>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : requests.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={7} className="text-center py-8 text-neutral-500 text-xs">
                     No dealer applications match your search.
                   </TableCell>
                 </TableRow>
               ) : (
-                filteredRequests.map((r) => (
+                requests.map((r: any) => (
                   <TableRow key={r.id} className="text-xs hover:bg-neutral-50/70">
                     <TableCell>
                       <div className="font-semibold text-neutral-900">{r.shopName}</div>
-                      <div className="text-[11px] text-neutral-400 font-mono">{r.id}</div>
+                      <div className="text-[11px] text-neutral-400 font-mono">{r.requestId || r.id}</div>
                     </TableCell>
                     <TableCell className="text-neutral-700 font-medium">
                       {r.ownerName}
@@ -285,11 +267,11 @@ export function AdminDealerRequestsSection() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div className="font-mono text-neutral-700 text-[11px]">{r.cnic}</div>
-                      <div className="text-[11px] text-neutral-400">NTN: {r.ntn}</div>
+                      <div className="font-mono text-neutral-700 text-[11px]">{r.cnic || "—"}</div>
+                      <div className="text-[11px] text-neutral-400">NTN: {r.ntn || "Unregistered"}</div>
                     </TableCell>
                     <TableCell className="text-neutral-600 whitespace-nowrap">
-                      {r.date}
+                      {formatDate(r.submittedAt || r.createdAt)}
                     </TableCell>
                     <TableCell>
                       {getStatusBadge(r.status)}
@@ -305,10 +287,11 @@ export function AdminDealerRequestsSection() {
                           <Eye className="size-3.5 mr-1" />
                           View
                         </Button>
-                        {r.status === "Pending" && (
+                        {(r.status || "").toLowerCase() === "pending" && (
                           <>
                             <Button
                               size="sm"
+                              disabled={updatingId === r.id}
                               className="h-7 px-2.5 text-xs bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer"
                               onClick={() => updateStatus(r.id, "Approved")}
                             >
@@ -317,6 +300,7 @@ export function AdminDealerRequestsSection() {
                             <Button
                               size="sm"
                               variant="outline"
+                              disabled={updatingId === r.id}
                               className="h-7 px-2 text-xs text-red-600 border-red-200 hover:bg-red-50 cursor-pointer"
                               onClick={() => updateStatus(r.id, "Rejected")}
                             >
@@ -324,20 +308,22 @@ export function AdminDealerRequestsSection() {
                             </Button>
                           </>
                         )}
-                        {r.status === "Approved" && (
+                        {(r.status || "").toLowerCase() === "approved" && (
                           <Button
                             size="sm"
                             variant="ghost"
+                            disabled={updatingId === r.id}
                             className="h-7 px-2 text-[11px] text-red-600 hover:bg-red-50 cursor-pointer"
                             onClick={() => updateStatus(r.id, "Rejected")}
                           >
                             Revoke
                           </Button>
                         )}
-                        {r.status === "Rejected" && (
+                        {(r.status || "").toLowerCase() === "rejected" && (
                           <Button
                             size="sm"
                             variant="ghost"
+                            disabled={updatingId === r.id}
                             className="h-7 px-2 text-[11px] text-emerald-600 hover:bg-emerald-50 cursor-pointer"
                             onClick={() => updateStatus(r.id, "Approved")}
                           >
@@ -353,11 +339,13 @@ export function AdminDealerRequestsSection() {
           </Table>
         </div>
 
-        <AdminPagination
-          currentPage={currentPage}
-          totalPages={5}
-          onPageChange={setCurrentPage}
-        />
+        {totalPages > 1 && (
+          <AdminPagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+          />
+        )}
       </div>
 
       <Dialog open={!!selectedDealer} onOpenChange={(open: boolean) => !open && setSelectedDealer(null)}>
@@ -377,7 +365,7 @@ export function AdminDealerRequestsSection() {
                 <div>
                   <h4 className="font-bold text-sm text-neutral-900">{selectedDealer.shopName}</h4>
                   <p className="text-neutral-500">Owner: {selectedDealer.ownerName}</p>
-                  <p className="text-neutral-400 font-mono text-[11px]">Application ID: {selectedDealer.id}</p>
+                  <p className="text-neutral-400 font-mono text-[11px]">Application ID: {selectedDealer.requestId || selectedDealer.id}</p>
                 </div>
               </div>
 
@@ -405,28 +393,29 @@ export function AdminDealerRequestsSection() {
                 </div>
                 <div>
                   <span className="text-neutral-500">Submitted Date</span>
-                  <p className="font-medium text-neutral-900 mt-0.5">{selectedDealer.date}</p>
+                  <p className="font-medium text-neutral-900 mt-0.5">{formatDate(selectedDealer.submittedAt || selectedDealer.createdAt)}</p>
                 </div>
                 <div>
                   <span className="text-neutral-500">Owner CNIC</span>
-                  <p className="font-mono font-medium text-neutral-900 mt-0.5">{selectedDealer.cnic}</p>
+                  <p className="font-mono font-medium text-neutral-900 mt-0.5">{selectedDealer.cnic || "—"}</p>
                 </div>
                 <div>
                   <span className="text-neutral-500">FBR NTN Number</span>
-                  <p className="font-mono font-medium text-neutral-900 mt-0.5">{selectedDealer.ntn}</p>
+                  <p className="font-mono font-medium text-neutral-900 mt-0.5">{selectedDealer.ntn || "Unregistered"}</p>
                 </div>
                 <div className="col-span-2">
                   <span className="text-neutral-500">Shop Physical Address</span>
-                  <p className="font-medium text-neutral-800 mt-0.5">{selectedDealer.address}</p>
+                  <p className="font-medium text-neutral-800 mt-0.5">{selectedDealer.address || "—"}</p>
                 </div>
               </div>
 
               <div className="flex items-center justify-end gap-2 pt-2 border-t border-neutral-100">
-                {selectedDealer.status === "Pending" ? (
+                {(selectedDealer.status || "").toLowerCase() === "pending" ? (
                   <>
                     <Button
                       size="sm"
                       variant="outline"
+                      disabled={updatingId === selectedDealer.id}
                       className="text-red-600 border-red-200 hover:bg-red-50 cursor-pointer text-xs"
                       onClick={() => updateStatus(selectedDealer.id, "Rejected")}
                     >
@@ -434,6 +423,7 @@ export function AdminDealerRequestsSection() {
                     </Button>
                     <Button
                       size="sm"
+                      disabled={updatingId === selectedDealer.id}
                       className="bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer text-xs"
                       onClick={() => updateStatus(selectedDealer.id, "Approved")}
                     >
@@ -458,3 +448,5 @@ export function AdminDealerRequestsSection() {
     </div>
   )
 }
+
+export default AdminDealerRequestsSection
